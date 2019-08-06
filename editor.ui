@@ -1,0 +1,1081 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1279</width>
+    <height>660</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>DuelEditor</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QListWidget" name="Operator_list">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>20</y>
+      <width>141</width>
+      <height>341</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>2</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="label_ope">
+    <property name="geometry">
+     <rect>
+      <x>1190</x>
+      <y>0</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>操作</string>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="Operator_detail">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>380</y>
+      <width>141</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="html">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;操作详细&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_target">
+    <property name="geometry">
+     <rect>
+      <x>870</x>
+      <y>0</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>操作对象</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="Target_list">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>20</y>
+      <width>141</width>
+      <height>341</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Delete_target">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>370</y>
+      <width>141</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>列表中删除</string>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="Target_detail">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>420</y>
+      <width>141</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="html">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;对象卡片&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CreateCard_Button">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>190</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>←创建卡片</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="MoveCard_Button">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>300</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>移动卡片</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CommentCard_Button">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>380</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>卡片注释</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Comment_Button">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>410</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>操作注释</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="DuelFrame" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>811</width>
+      <height>631</height>
+     </rect>
+    </property>
+    <widget class="QListWidget" name="Self_Ex">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>500</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>470</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方额外</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_Hand">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>500</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_2">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>470</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方手卡</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_3">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>390</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方右灵摆</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_S1">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>410</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_S2">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>410</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_S3">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>410</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_S4">
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>410</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_S5">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>410</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_P2">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>420</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_9">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>390</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方左灵摆</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_P1">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>420</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_10">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>310</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方场地</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_Field">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>340</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_11">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>330</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方基本分</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="Self_LP">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>360</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_M5">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>360</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_M1">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>360</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_M2">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>360</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_M4">
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>360</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_M3">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>360</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_14">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>470</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方墓地</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_Grave">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>500</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Self_Banish">
+     <property name="geometry">
+      <rect>
+       <x>650</x>
+       <y>500</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_15">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>470</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>己方除外</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_16">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>160</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方右灵摆</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_18">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>240</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方场地</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_P1">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>190</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_M4">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>240</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_19">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>160</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方左灵摆</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_S3">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>190</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="ExM_2">
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>300</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="Enemy_LP">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>270</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_Field">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>270</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_P2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>190</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_S2">
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>190</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="ExM_1">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>300</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_M2">
+     <property name="geometry">
+      <rect>
+       <x>460</x>
+       <y>240</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_M1">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>240</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_21">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>240</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方基本分</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_S4">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>190</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_S1">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>190</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_S5">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>190</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_M5">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>240</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_M3">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>240</y>
+       <width>111</width>
+       <height>51</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_Banish">
+     <property name="geometry">
+      <rect>
+       <x>650</x>
+       <y>40</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_Ex">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_17">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>10</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方墓地</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_4">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>10</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方手卡</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_Hand">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>40</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="Enemy_Grave">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>40</y>
+       <width>141</width>
+       <height>121</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_12">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>10</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方额外</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_self_hands_20">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>10</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>对方除外</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Delete_target_2">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>310</y>
+       <width>91</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>打开</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Delete_target_3">
+     <property name="geometry">
+      <rect>
+       <x>580</x>
+       <y>310</y>
+       <width>91</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>保存</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="EraseCard_Button">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>220</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>删除卡片</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="Dest_Box">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>270</y>
+      <width>131</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>己方手卡</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方魔陷_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方魔陷_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方魔陷_3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方魔陷_4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方魔陷_5</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方场地</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方灵摆_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方灵摆_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方怪兽_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方怪兽_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方怪兽_3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方怪兽_4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>己方怪兽_5</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="label_target_2">
+    <property name="geometry">
+     <rect>
+      <x>1010</x>
+      <y>0</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>新建列表</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="NewCard_line">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>20</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="Newcard_List">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>50</y>
+      <width>131</width>
+      <height>131</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="DeleteOpe_Button">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>540</y>
+      <width>141</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>删除操作</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CopyOpe_Button">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>570</y>
+      <width>141</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>复制操作</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="MoveOpe_Button">
+    <property name="geometry">
+     <rect>
+      <x>1130</x>
+      <y>600</y>
+      <width>141</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>移动操作</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="LPTarget_Box">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>450</y>
+      <width>131</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>己方</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>对方</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLineEdit" name="LP_line">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>480</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="AddLP_Button">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>510</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>增加基本分</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="DecLP_Button">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>540</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>减少基本分</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CgeLP_Button">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>570</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>变成基本分</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="HalLP_Button">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>600</y>
+      <width>131</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>基本分减半</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="NewCard_Rename">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>570</y>
+      <width>141</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="NewCard_Rename_Button">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>600</y>
+      <width>141</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>重命名</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="Comment_Line">
+    <property name="geometry">
+     <rect>
+      <x>980</x>
+      <y>350</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
