@@ -1,11 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import json
+from json import loads, dumps
 import sys
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from functools import partial
-import copy
-import os
-import sqlite3
+from copy import deepcopy
+from os.path import exists
+from sqlite3 import connect
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def labelset(self):
@@ -294,9 +294,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         self.card_names = []
         try:
-            if not os.path.exists("cards.cdb"):
-                a+=1
-            sql_conn = sqlite3.connect('cards.cdb')
+            if not exists("cards.cdb"):
+                raise
+            sql_conn = connect('cards.cdb')
             cur = sql_conn.cursor()
             sel = cur.execute("select * from texts;")
             for row in sel:
@@ -399,20 +399,24 @@ class Ui_MainWindow(QtWidgets.QWidget):
             return
         with open(fullname,'r') as f:
             json_data = f.read()
-            dict_data = json.loads(json_data)
+            dict_data = loads(json_data)
             self.operators = dict_data
             self.update_operationlist()
             self.make_fields()
             self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
             self.refresh_field()
+            return
+        QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
+        
     
     def savefile(self):
         fullname = str(QFileDialog.getSaveFileName(self,'保存为', "Untitle.json","*.json")[0])
         if len(fullname) == 0:
             return
-        json_data = json.dumps(self.operators,indent=2,)
+        json_data = dumps(self.operators,indent=2,)
         with open(fullname,'w') as f:
             f.write(json_data)
+            QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
 
     def make_fields(self):
         '''根据操作生成各操作的场地'''
@@ -435,7 +439,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 lastest_field["LP"][operation["args"][0]] = operation["args"][1]
             elif operation["type"] == "LPHal":
                 lastest_field["LP"][operation["args"][0]] = (lastest_field["LP"][operation["args"][0]] + 1) // 2
-            self.fields[idx] = copy.deepcopy(lastest_field)
+            self.fields[idx] = deepcopy(lastest_field)
 
     def get_last_location(self, card_id, ope_id):
         '''获取卡片的上一个位置'''
