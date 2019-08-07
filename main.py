@@ -7,7 +7,7 @@ from PyQt5.QtCore import QRect,QRegExp
 from PyQt5.QtGui import QRegExpValidator
 from functools import partial
 from copy import deepcopy
-from os.path import exists
+import os
 from sqlite3 import connect
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
@@ -451,7 +451,7 @@ class Ui_MainWindow(QWidget):
         # 读取卡片数据库
         self.card_names = []
         try:
-            if not exists("cards.cdb"):
+            if not os.path.exists("cards.cdb"):
                 raise
             sql_conn = connect('cards.cdb')
             cur = sql_conn.cursor()
@@ -468,13 +468,14 @@ class Ui_MainWindow(QWidget):
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:{"locations":{}, "desp":{}, "LP":[0,0]}}
         self.targets = []
+        self.filename = "Untitle.json"
 
         # 打开/保存文件
         self.Open_Buttom.clicked.connect(self.openfile)
         self.Save_Buttom.clicked.connect(self.savefile)
 
         # 操作部分
-        self.Operator_list.clicked.connect(self.click_operation_list)
+        self.Operator_list.itemSelectionChanged.connect(self.click_operation_list)
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         # TODO
@@ -483,7 +484,7 @@ class Ui_MainWindow(QWidget):
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
-        self.Target_list.clicked.connect(self.click_target_list)
+        self.Target_list.itemSelectionChanged.connect(self.click_target_list)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
 
         # 添加/删除卡片部分
@@ -507,7 +508,7 @@ class Ui_MainWindow(QWidget):
 
         # 场上的卡片
         for field_id in range(len(self.idx_represent_field)):
-            self.idx_represent_field[field_id].clicked.connect(partial(self.select_field, field_id))
+            self.idx_represent_field[field_id].itemSelectionChanged.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
     def retranslateUi(self, MainWindow):
@@ -560,6 +561,8 @@ class Ui_MainWindow(QWidget):
         fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
         if len(fullname) == 0:
             return
+        self.filename = os.path.split(fullname)[-1]
+        self.setWindowTitle("DuelEditor - %s"%self.filename)
         with open(fullname,'r') as f:
             json_data = f.read()
             dict_data = loads(json_data)
@@ -570,11 +573,13 @@ class Ui_MainWindow(QWidget):
             self.refresh_field()
             return
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
-           
+
     def savefile(self):
-        fullname = str(QFileDialog.getSaveFileName(self,'保存为', "Untitle.json","*.json")[0])
+        fullname = str(QFileDialog.getSaveFileName(self,'保存为', self.filename,"*.json")[0])
         if len(fullname) == 0:
             return
+        self.filename = os.path.split(fullname)[-1]
+        self.setWindowTitle("DuelEditor - %s"%self.filename)
         json_data = dumps(self.operators,indent=2,)
         with open(fullname,'w') as f:
             f.write(json_data)
@@ -770,16 +775,21 @@ class Ui_MainWindow(QWidget):
         ope = deepcopy(self.operators["operations"][idx])
         self.insert_operation(ope)
 
-    def click_target_list(self, qindex):
-        idx = qindex.row()
+    def click_target_list(self):
+        idx = self.Target_list.selectedIndexes()
+        if len(idx) == 0:
+            idx = -1
+        else:
+            idx = idx[0].row()
         if idx < 0:
             return
         for lst in self.idx_represent_field:
-            lst.clearSelection()
+            if len(lst.selectedIndexes()) > 0:
+                lst.clearSelection()
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
 
-    def click_operation_list(self, qindex):
+    def click_operation_list(self):
         self.refresh_field()
         self.show_opeinfo()
 
@@ -928,6 +938,8 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def erase_targets(self):
+        if len(self.targets) == 0:
+            return
         reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？\n被删除的卡片在之后的操作中不会再出现。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
