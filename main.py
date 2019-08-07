@@ -10,6 +10,155 @@ from copy import deepcopy
 from os.path import exists
 from sqlite3 import connect
 
+idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+
+class Ui_OSelector(QWidget):
+    def __init__(self):
+        super(Ui_OSelector, self).__init__()
+        self.result = -1
+        self.setObjectName("Ui_OSelector")
+        self.resize(439, 342)
+        self.setFixedSize(439, 342)
+        self.centralwidget = QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+        self.Confirm_Buttom = QPushButton(self.centralwidget)
+        self.Confirm_Buttom.setGeometry(QRect(200, 280, 91, 28))
+        self.Confirm_Buttom.setObjectName("Confirm_Buttom")
+        self.Delete_Buttom = QPushButton(self.centralwidget)
+        self.Delete_Buttom.setGeometry(QRect(330, 280, 91, 28))
+        self.Delete_Buttom.setObjectName("Delete_Buttom")
+        self.Operator_detail = QTextBrowser(self.centralwidget)
+        self.Operator_detail.setGeometry(QRect(200, 10, 231, 261))
+        self.Operator_detail.setObjectName("textBrowser")
+        self.Operator_list = QListWidget(self.centralwidget)
+        self.Operator_list.setGeometry(QRect(0, 10, 191, 301))
+        self.Operator_list.setObjectName("listView")
+
+        self.retranslateUi(self)
+
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle("选择要插入到的位置")
+        self.Confirm_Buttom.setText("确定")
+        self.Delete_Buttom.setText("取消")
+
+    def set_status(self, datas):
+        self.operators = deepcopy(datas)
+        self.show_list()
+
+    def show_list(self):
+        self.Operator_list.clear()
+        for operation in self.operators["operations"]:
+            if operation["type"] == "move":
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
+                result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+                self.Operator_list.addItem(result)
+            elif operation["type"] == "carddesp":
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
+                result = "%s %s"%(card_name, operation["desp"])
+                self.Operator_list.addItem(result)
+            elif operation["type"][0:2] == "LP":
+                if operation['args'][0]==0:
+                    target = "己方"
+                else:
+                    target = "对方"
+                actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
+                subope = operation["type"][2:]
+                action = actions[subope]
+                point = ""
+                if action != "减半":
+                    point = "%d"%operation['args'][1]
+                result = "%sLP%s%s"%(target,action,point)
+                self.Operator_list.addItem(result)
+            elif operation["type"] == "comment":
+                self.Operator_list.addItem(operation["desp"])
+            elif operation["type"] == "erase":
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
+                result = "%s 被移除"%(card_name)
+                self.Operator_list.addItem(result)
+
+    def show_opeinfo(self, idx=None):
+        if idx is None:
+            idx = self.Operator_list.selectedIndexes()
+            if len(idx) < 1:
+                return
+            idx = idx[0].row()
+        operation = self.operators["operations"][idx]
+        if operation["type"] == "move":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、"
+                last_location = self.get_last_location(card_idx,idx)
+                first_card = False
+                card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
+            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+            self.Operator_detail.setText(result)
+        elif operation["type"] == "carddesp":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、"
+                first_card = False
+                card_name += self.operators["cards"][card_idx]["Name"]
+            result = "%s %s"%(card_name, operation["desp"])
+            self.Operator_detail.setText(result)
+        elif operation["type"] == "erase":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、"
+                first_card = False
+                card_name += self.operators["cards"][card_idx]["Name"]
+            result = "%s 被移除"%(card_name)
+            self.Operator_detail.setText(result)
+        elif operation["type"][0:2] == "LP":
+            if operation['args'][0]==0:
+                target = "己方"
+            else:
+                target = "对方"
+            actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
+            subope = operation["type"][2:]
+            action = actions[subope]
+            point = ""
+            if action != "减半":
+                point = "%d"%operation['args'][1]
+            result = "%sLP%s%s"%(target,action,point)
+            self.Operator_detail.setText(result)
+        elif operation["type"] == "comment":
+            self.Operator_detail.setText(operation["desp"])
+
+    def get_result(self):
+        return self.result
+    
+    def confirm(self):
+        idx = self.Operator_list.selectedIndexes()
+        if len(idx) == 0:
+            result = -1
+        else:
+            result = idx[0].row()
+        self.close()
+    
+    def refuse(self):
+        self.close()
+
+    @staticmethod
+    def get_index():
+        dialog=Ui_OSelector()
+        result=dialog.exec_()
+        return dialog.get_result()
+
 class Ui_MainWindow(QWidget):
     def labelset(self):
         self.label_ope = QLabel(self.centralwidget)
@@ -73,6 +222,7 @@ class Ui_MainWindow(QWidget):
     def init_frame(self):
         self.setObjectName("MainWindow")
         self.resize(1306, 639)
+        self.setFixedSize(1306, 639)
         self.centralwidget = QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -82,10 +232,10 @@ class Ui_MainWindow(QWidget):
         self.labelset()
 
         self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(1130, 20, 141, 341))
+        self.Operator_list.setGeometry(QRect(1130, 20, 166, 341))
         self.Operator_list.setObjectName("Operator_list")
         self.Operator_detail = QTextBrowser(self.centralwidget)
-        self.Operator_detail.setGeometry(QRect(1130, 380, 141, 151))
+        self.Operator_detail.setGeometry(QRect(1130, 380, 166, 151))
         self.Operator_detail.setObjectName("Operator_detail")
         self.Operator_detail.setWordWrapMode(True)
         self.Target_list = QListWidget(self.centralwidget)
@@ -249,13 +399,13 @@ class Ui_MainWindow(QWidget):
         self.Newcard_List.setGeometry(QRect(980, 50, 131, 131))
         self.Newcard_List.setObjectName("Newcard_List")
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button.setGeometry(QRect(1130, 540, 141, 28))
+        self.DeleteOpe_Button.setGeometry(QRect(1130, 540, 166, 28))
         self.DeleteOpe_Button.setObjectName("DeleteOpe_Button")
         self.CopyOpe_Button = QPushButton(self.centralwidget)
-        self.CopyOpe_Button.setGeometry(QRect(1130, 570, 141, 28))
+        self.CopyOpe_Button.setGeometry(QRect(1130, 570, 166, 28))
         self.CopyOpe_Button.setObjectName("CopyOpe_Button")
         self.MoveOpe_Button = QPushButton(self.centralwidget)
-        self.MoveOpe_Button.setGeometry(QRect(1130, 600, 141, 28))
+        self.MoveOpe_Button.setGeometry(QRect(1130, 600, 166, 28))
         self.MoveOpe_Button.setObjectName("MoveOpe_Button")
         self.LPTarget_Box = QComboBox(self.centralwidget)
         self.LPTarget_Box.setGeometry(QRect(990, 450, 131, 22))
@@ -294,10 +444,11 @@ class Ui_MainWindow(QWidget):
         self.retranslateUi(self)
 
     def __init__(self):
-        self.idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+        idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
         super(Ui_MainWindow, self).__init__()
         self.init_frame()
 
+        # 读取卡片数据库
         self.card_names = []
         try:
             if not exists("cards.cdb"):
@@ -312,46 +463,52 @@ class Ui_MainWindow(QWidget):
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
 
+        # 初始化
         self.idx_represent_field = [self.Self_Hand, self.Self_S1, self.Self_S2, self.Self_S3, self.Self_S4, self.Self_S5, self.Self_Field, self.Self_P1, self.Self_P2, self.Self_M1, self.Self_M2, self.Self_M3, self.Self_M4, self.Self_M5, self.Self_Grave, self.Self_Banish, self.Self_Ex, self.Enemy_Hand, self.Enemy_S1, self.Enemy_S2, self.Enemy_S3, self.Enemy_S4, self.Enemy_S5, self.Enemy_Field, self.Enemy_P1, self.Enemy_P2, self.Enemy_M1, self.Enemy_M2, self.Enemy_M3, self.Enemy_M4, self.Enemy_M5, self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2]
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:{"locations":{}, "desp":{}, "LP":[0,0]}}
         self.targets = []
 
+        # 打开/保存文件
         self.Open_Buttom.clicked.connect(self.openfile)
         self.Save_Buttom.clicked.connect(self.savefile)
 
+        # 操作部分
+        self.Operator_list.clicked.connect(self.click_operation_list)
+        self.DeleteOpe_Button.clicked.connect(self.remove_operator)
+        self.CopyOpe_Button.clicked.connect(self.copy_ope)
+        # TODO
+        self.MoveOpe_Button.setEnabled(False)
+        self.MoveOpe_Button.clicked.connect(self.move_operator)
+
+        # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
         self.Target_list.clicked.connect(self.click_target_list)
+        self.MoveCard_Button.clicked.connect(self.ope_movecards)
 
-        self.Operator_list.clicked.connect(self.click_operation_list)
-
+        # 添加/删除卡片部分
+        self.NewCard_line.textChanged.connect(self.search_card)
         self.NewCard_line.returnPressed.connect(self.create_card)
+        self.Newcard_List.doubleClicked.connect(self.fix_cardname)
+        self.NewCard_Rename_Button.clicked.connect(self.card_rename)
         self.CreateCard_Button.clicked.connect(self.create_card)
+        self.EraseCard_Button.clicked.connect(self.erase_targets)
 
+        # 基本分变更部分
         self.AddLP_Button.clicked.connect(self.ope_LPAdd)
         self.DecLP_Button.clicked.connect(self.ope_LPDec)
         self.CgeLP_Button.clicked.connect(self.ope_LPCge)
         self.HalLP_Button.clicked.connect(self.ope_LPHal)
+        self.LP_line.returnPressed.connect(self.ope_LPDec)
 
+        # 注释部分
         self.Comment_Button.clicked.connect(self.ope_addcomment)
         self.CommentCard_Button.clicked.connect(self.ope_addcarddesp)
 
-        self.NewCard_line.textChanged.connect(self.search_card)
-        self.Newcard_List.doubleClicked.connect(self.fix_cardname)
-
-        self.DeleteOpe_Button.clicked.connect(self.remove_operator)
-
+        # 场上的卡片
         for field_id in range(len(self.idx_represent_field)):
             self.idx_represent_field[field_id].clicked.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
-
-        self.MoveCard_Button.clicked.connect(self.ope_movecards)
-
-        self.NewCard_Rename_Button.clicked.connect(self.card_rename)
-
-        # TODO
-        self.CopyOpe_Button.setEnabled(False)
-        self.MoveOpe_Button.setEnabled(False)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle("DuelEditor")
@@ -385,8 +542,8 @@ class Ui_MainWindow(QWidget):
         self.Open_Buttom.setText("打开")
         self.Save_Buttom.setText("保存")
         self.EraseCard_Button.setText("删除卡片")
-        for idx in range(len(self.idx_represent_str)):
-            self.Dest_Box.setItemText(idx, self.idx_represent_str[idx])
+        for idx in range(len(idx_represent_str)):
+            self.Dest_Box.setItemText(idx, idx_represent_str[idx])
         self.label_target_2.setText("新建列表")
         self.DeleteOpe_Button.setText("删除操作")
         self.CopyOpe_Button.setText("复制操作")
@@ -436,6 +593,10 @@ class Ui_MainWindow(QWidget):
             elif operation["type"] == "carddesp":
                 for card_idx in operation["args"]:
                     lastest_field["desp"][card_idx] = operation["desp"]
+            elif operation["type"] == "erase":
+                for card_idx in operation["args"]:
+                    if card_idx in lastest_field["locations"]:
+                        lastest_field["locations"].pop(card_idx)
             elif operation["type"] == "LPAdd":
                 lastest_field["LP"][operation["args"][0]] += operation["args"][1]
             elif operation["type"] == "LPDec":
@@ -454,7 +615,7 @@ class Ui_MainWindow(QWidget):
             return "未知"
         field = self.fields[ope_id-1]
         if card_id in field["locations"]:
-            return self.idx_represent_str[field["locations"][card_id]]
+            return idx_represent_str[field["locations"][card_id]]
         else:
             return "未知"
 
@@ -496,7 +657,7 @@ class Ui_MainWindow(QWidget):
         card_locat = "未知"
         card_desp = "无"
         if card_id in field["locations"]:
-            card_locat = self.idx_represent_str[field["locations"][card_id]]
+            card_locat = idx_represent_str[field["locations"][card_id]]
         if card_id in field["desp"]:
             card_desp = field["desp"][card_id]
         result = "[%s]\n位置：%s\n备注：%s"%(card_name, card_locat, card_desp)
@@ -515,9 +676,10 @@ class Ui_MainWindow(QWidget):
             for card_idx in operation["args"]:
                 if not first_card:
                     card_name += "、"
+                last_location = self.get_last_location(card_idx,idx)
                 first_card = False
-                card_name += self.operators["cards"][card_idx]["Name"]
-            result = "%s 移到%s"%(card_name, self.idx_represent_str[operation["dest"]])
+                card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
+            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
             self.Operator_detail.setText(result)
         elif operation["type"] == "carddesp":
             card_name = ""
@@ -525,9 +687,21 @@ class Ui_MainWindow(QWidget):
             for card_idx in operation["args"]:
                 if not first_card:
                     card_name += "、"
+                last_location = self.get_last_location(card_idx,idx)
                 first_card = False
-                card_name += self.operators["cards"][card_idx]["Name"]
+                card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
             result = "%s %s"%(card_name, operation["desp"])
+            self.Operator_detail.setText(result)
+        elif operation["type"] == "erase":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、"
+                last_location = self.get_last_location(card_idx,idx)
+                first_card = False
+                card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
+            result = "%s 被移除"%(card_name)
             self.Operator_detail.setText(result)
         elif operation["type"][0:2] == "LP":
             if operation['args'][0]==0:
@@ -569,6 +743,9 @@ class Ui_MainWindow(QWidget):
         idx = self.Operator_list.selectedIndexes()
         if len(idx) < 1:
             return
+        reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
         idx = idx[0].row()
         del self.operators["operations"][idx]
         self.make_fields()
@@ -576,6 +753,22 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.setCurrentRow(idx-1)
         self.refresh_field()
         self.show_opeinfo()
+
+    def move_operator(self):
+        dialogue = Ui_OSelector()
+        dialogue.set_status(self.operators)
+        dialogue.show()
+        #runner=dialogue.exec_()
+        result=dialogue.get_result()
+        print(result)
+
+    def copy_ope(self):
+        idx = self.Operator_list.selectedIndexes()
+        if len(idx) < 1:
+            return
+        idx = idx[0].row()
+        ope = deepcopy(self.operators["operations"][idx])
+        self.insert_operation(ope)
 
     def click_target_list(self, qindex):
         idx = qindex.row()
@@ -611,7 +804,7 @@ class Ui_MainWindow(QWidget):
                 card_name = self.operators["cards"][card_idx]["Name"]
                 if len(operation["args"])>1:
                     card_name += "等"
-                result = "%s 移到%s"%(card_name, self.idx_represent_str[operation["dest"]])
+                result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
                 self.Operator_list.addItem(result)
             elif operation["type"] == "carddesp":
                 card_idx = operation["args"][0]
@@ -635,6 +828,13 @@ class Ui_MainWindow(QWidget):
                 self.Operator_list.addItem(result)
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
+            elif operation["type"] == "erase":
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
+                result = "%s 被移除"%(card_name)
+                self.Operator_list.addItem(result)
 
     def refresh_field(self):
         '''刷新场地'''
@@ -725,6 +925,16 @@ class Ui_MainWindow(QWidget):
         self.targets.clear()
         self.Target_list.clear()
         self.Comment_Line.clear()
+        self.insert_operation(ope)
+
+    def erase_targets(self):
+        reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？\n被删除的卡片在之后的操作中不会再出现。", QMessageBox.Yes | QMessageBox.No)
+        if reply != QMessageBox.Yes:
+            return
+        self.Target_detail.setText("")
+        ope = {"type":"erase", "args":self.targets.copy(), "dest": 0, "desp":""}
+        self.targets.clear()
+        self.Target_list.clear()
         self.insert_operation(ope)
 
     def select_field(self, field_id):
