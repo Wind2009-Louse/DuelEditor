@@ -4,7 +4,7 @@ from json import loads, dumps
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox
 from PyQt5.QtCore import QRect, QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator
+from PyQt5.QtGui import QRegExpValidator, QColor
 from functools import partial
 from copy import deepcopy
 import os
@@ -492,6 +492,7 @@ class Ui_MainWindow(QWidget):
         self.NewCard_line.returnPressed.connect(self.create_card)
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
         self.NewCard_Rename_Button.clicked.connect(self.card_rename)
+        self.NewCard_Rename.returnPressed.connect(self.card_rename)
         self.CreateCard_Button.clicked.connect(self.create_card)
         self.EraseCard_Button.clicked.connect(self.erase_targets)
 
@@ -500,11 +501,11 @@ class Ui_MainWindow(QWidget):
         self.DecLP_Button.clicked.connect(self.ope_LPDec)
         self.CgeLP_Button.clicked.connect(self.ope_LPCge)
         self.HalLP_Button.clicked.connect(self.ope_LPHal)
-        self.LP_line.returnPressed.connect(self.ope_LPDec)
 
         # 注释部分
         self.Comment_Button.clicked.connect(self.ope_addcomment)
         self.CommentCard_Button.clicked.connect(self.ope_addcarddesp)
+        self.Comment_Line.returnPressed.connect(self.comment_enter)
 
         # 场上的卡片
         for field_id in range(len(self.idx_represent_field)):
@@ -522,7 +523,15 @@ class Ui_MainWindow(QWidget):
                 self.remove_from_targets()
             elif self.Operator_list.hasFocus():
                 self.remove_operator()
+        if self.LP_line.hasFocus() and event.key() == Qt.Key_Return:
+            self.ope_LPDec()
         QWidget.keyPressEvent(self, event)
+
+    def comment_enter(self):
+        if len(self.targets) > 0:
+            self.ope_addcarddesp()
+        else:
+            self.ope_addcomment()
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle("DuelEditor")
@@ -553,8 +562,8 @@ class Ui_MainWindow(QWidget):
         self.label_self_hands_4.setText("对方手卡")
         self.label_self_hands_12.setText("对方额外")
         self.label_self_hands_20.setText("对方除外")
-        self.Open_Buttom.setText("打开")
-        self.Save_Buttom.setText("保存")
+        self.Open_Buttom.setText("打开(O)")
+        self.Save_Buttom.setText("保存(S)")
         self.EraseCard_Button.setText("删除卡片")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
@@ -851,6 +860,7 @@ class Ui_MainWindow(QWidget):
                 self.Operator_list.addItem(result)
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
+                self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('green'))
             elif operation["type"] == "erase":
                 card_idx = operation["args"][0]
                 card_name = self.operators["cards"][card_idx]["Name"]
@@ -882,7 +892,6 @@ class Ui_MainWindow(QWidget):
         lp_target = self.LPTarget_Box.currentIndex()
         ope = {"type":"LPAdd", "args":[lp_target, lp_point], "dest":-1, "desp":""}
         self.insert_operation(ope)
-        self.update_operationlist()
     
     def ope_LPDec(self):
         '''减少对象LP。'''
@@ -894,7 +903,6 @@ class Ui_MainWindow(QWidget):
         lp_target = self.LPTarget_Box.currentIndex()
         ope = {"type":"LPDec", "args":[lp_target, lp_point], "dest":-1, "desp":""}
         self.insert_operation(ope)
-        self.update_operationlist()
     
     def ope_LPCge(self):
         '''更改对象LP。'''
@@ -906,7 +914,6 @@ class Ui_MainWindow(QWidget):
         lp_target = self.LPTarget_Box.currentIndex()
         ope = {"type":"LPCge", "args":[lp_target, lp_point], "dest":-1, "desp":""}
         self.insert_operation(ope)
-        self.update_operationlist()
 
     def ope_LPHal(self):
         '''对象LP减半。'''
