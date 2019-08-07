@@ -3,7 +3,7 @@ import sys
 from json import loads, dumps
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox
-from PyQt5.QtCore import QRect,QRegExp
+from PyQt5.QtCore import QRect, QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator
 from functools import partial
 from copy import deepcopy
@@ -511,6 +511,19 @@ class Ui_MainWindow(QWidget):
             self.idx_represent_field[field_id].itemSelectionChanged.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
+    def keyPressEvent(self, event):
+        if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if event.key() == Qt.Key_S:
+                self.savefile()
+            elif event.key() == Qt.Key_O:
+                self.openfile()
+        if event.key() == Qt.Key_Delete:
+            if self.Target_list.hasFocus():
+                self.remove_from_targets()
+            elif self.Operator_list.hasFocus():
+                self.remove_operator()
+        QWidget.keyPressEvent(self, event)
+
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle("DuelEditor")
         __sortingEnabled = self.Operator_list.isSortingEnabled()
@@ -580,7 +593,7 @@ class Ui_MainWindow(QWidget):
             return
         self.filename = os.path.split(fullname)[-1]
         self.setWindowTitle("DuelEditor - %s"%self.filename)
-        json_data = dumps(self.operators,indent=2,)
+        json_data = dumps(self.operators,indent=2,ensure_ascii=False)
         with open(fullname,'w') as f:
             f.write(json_data)
             QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
