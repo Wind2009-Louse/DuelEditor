@@ -885,11 +885,17 @@ class Ui_MainWindow(QWidget):
         field = self.get_current_field()
         self.Self_LP.setText("%d"%field["LP"][0])
         self.Enemy_LP.setText("%d"%field["LP"][1])
+        searching_name = self.NewCard_line.text()
         for card_id in field['locations'].keys():
             list_id = field["locations"][card_id]
             show_list = self.idx_represent_field[list_id]
             card_name = self.operators["cards"][card_id]["Name"]
             show_list.addItem(card_name)
+            if len(searching_name) > 0:
+                if searching_name in card_name:
+                    show_list.item(show_list.count()-1).setForeground(QColor('red'))
+                else:
+                    show_list.item(show_list.count()-1).setForeground(QColor('black'))
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
         self.label_enemy_hand.setText("对方手卡(%d)"%self.Enemy_Hand.count())
         self.label_enemy_grave.setText("对方墓地(%d)"%self.Enemy_Grave.count())
