@@ -191,9 +191,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands">
      <property name="geometry">
       <rect>
-       <x>50</x>
+       <x>10</x>
        <y>470</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -214,9 +214,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_2">
      <property name="geometry">
       <rect>
-       <x>260</x>
+       <x>220</x>
        <y>470</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -419,9 +419,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_14">
      <property name="geometry">
       <rect>
-       <x>480</x>
+       <x>440</x>
        <y>470</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -452,9 +452,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_15">
      <property name="geometry">
       <rect>
-       <x>690</x>
+       <x>650</x>
        <y>470</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -697,22 +697,28 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_17">
      <property name="geometry">
       <rect>
-       <x>480</x>
+       <x>440</x>
        <y>10</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
      <property name="text">
       <string>对方墓地</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
     <widget class="QLabel" name="label_self_hands_4">
      <property name="geometry">
       <rect>
-       <x>260</x>
+       <x>220</x>
        <y>10</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -743,9 +749,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_12">
      <property name="geometry">
       <rect>
-       <x>50</x>
+       <x>10</x>
        <y>10</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
@@ -756,9 +762,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_self_hands_20">
      <property name="geometry">
       <rect>
-       <x>690</x>
+       <x>650</x>
        <y>10</y>
-       <width>81</width>
+       <width>141</width>
        <height>20</height>
       </rect>
      </property>
