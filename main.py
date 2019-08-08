@@ -232,32 +232,32 @@ class Ui_MainWindow(QWidget):
         self.labelset()
 
         self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(1130, 20, 166, 341))
+        self.Operator_list.setGeometry(QRect(1120, 20, 181, 351))
         self.Operator_list.setObjectName("Operator_list")
         self.Operator_detail = QTextBrowser(self.centralwidget)
-        self.Operator_detail.setGeometry(QRect(1130, 380, 166, 151))
+        self.Operator_detail.setGeometry(QRect(1120, 380, 181, 151))
         self.Operator_detail.setObjectName("Operator_detail")
         self.Operator_detail.setWordWrapMode(True)
         self.Target_list = QListWidget(self.centralwidget)
-        self.Target_list.setGeometry(QRect(830, 20, 141, 341))
+        self.Target_list.setGeometry(QRect(830, 20, 141, 251))
         self.Target_list.setObjectName("Target_list")
         self.Delete_target = QPushButton(self.centralwidget)
-        self.Delete_target.setGeometry(QRect(830, 370, 141, 28))
+        self.Delete_target.setGeometry(QRect(830, 280, 141, 28))
         self.Delete_target.setObjectName("Delete_target")
         self.Target_detail = QTextBrowser(self.centralwidget)
         self.Target_detail.setGeometry(QRect(830, 420, 141, 141))
         self.Target_detail.setObjectName("Target_detail")
         self.CreateCard_Button = QPushButton(self.centralwidget)
-        self.CreateCard_Button.setGeometry(QRect(980, 190, 131, 28))
+        self.CreateCard_Button.setGeometry(QRect(980, 280, 131, 28))
         self.CreateCard_Button.setObjectName("CreateCard_Button")
         self.MoveCard_Button = QPushButton(self.centralwidget)
-        self.MoveCard_Button.setGeometry(QRect(980, 300, 131, 28))
+        self.MoveCard_Button.setGeometry(QRect(830, 350, 141, 28))
         self.MoveCard_Button.setObjectName("MoveCard_Button")
         self.CommentCard_Button = QPushButton(self.centralwidget)
-        self.CommentCard_Button.setGeometry(QRect(980, 380, 131, 28))
+        self.CommentCard_Button.setGeometry(QRect(980, 350, 131, 28))
         self.CommentCard_Button.setObjectName("CommentCard_Button")
         self.Comment_Button = QPushButton(self.centralwidget)
-        self.Comment_Button.setGeometry(QRect(980, 410, 131, 28))
+        self.Comment_Button.setGeometry(QRect(980, 380, 131, 28))
         self.Comment_Button.setObjectName("Comment_Button")
         self.Self_Ex = QListWidget(self.DuelFrame)
         self.Self_Ex.setGeometry(QRect(10, 500, 141, 121))
@@ -385,10 +385,10 @@ class Ui_MainWindow(QWidget):
         self.Save_Buttom.setGeometry(QRect(580, 310, 91, 28))
         self.Save_Buttom.setObjectName("Save_Buttom")
         self.EraseCard_Button = QPushButton(self.centralwidget)
-        self.EraseCard_Button.setGeometry(QRect(980, 220, 131, 28))
+        self.EraseCard_Button.setGeometry(QRect(830, 380, 141, 28))
         self.EraseCard_Button.setObjectName("EraseCard_Button")
         self.Dest_Box = QComboBox(self.centralwidget)
-        self.Dest_Box.setGeometry(QRect(980, 270, 131, 22))
+        self.Dest_Box.setGeometry(QRect(830, 320, 141, 22))
         self.Dest_Box.setObjectName("Dest_Box")
         for i in range(36):
             self.Dest_Box.addItem("")
@@ -396,40 +396,40 @@ class Ui_MainWindow(QWidget):
         self.NewCard_line.setGeometry(QRect(980, 20, 131, 21))
         self.NewCard_line.setObjectName("NewCard_line")
         self.Newcard_List = QListWidget(self.centralwidget)
-        self.Newcard_List.setGeometry(QRect(980, 50, 131, 131))
+        self.Newcard_List.setGeometry(QRect(980, 50, 131, 221))
         self.Newcard_List.setObjectName("Newcard_List")
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button.setGeometry(QRect(1130, 540, 166, 28))
+        self.DeleteOpe_Button.setGeometry(QRect(1120, 540, 181, 28))
         self.DeleteOpe_Button.setObjectName("DeleteOpe_Button")
         self.CopyOpe_Button = QPushButton(self.centralwidget)
-        self.CopyOpe_Button.setGeometry(QRect(1130, 570, 166, 28))
+        self.CopyOpe_Button.setGeometry(QRect(1120, 570, 181, 28))
         self.CopyOpe_Button.setObjectName("CopyOpe_Button")
         self.MoveOpe_Button = QPushButton(self.centralwidget)
-        self.MoveOpe_Button.setGeometry(QRect(1130, 600, 166, 28))
+        self.MoveOpe_Button.setGeometry(QRect(1120, 600, 181, 28))
         self.MoveOpe_Button.setObjectName("MoveOpe_Button")
         self.LPTarget_Box = QComboBox(self.centralwidget)
-        self.LPTarget_Box.setGeometry(QRect(990, 450, 131, 22))
+        self.LPTarget_Box.setGeometry(QRect(980, 450, 131, 22))
         self.LPTarget_Box.setObjectName("LPTarget_Box")
         self.LPTarget_Box.addItem("")
         self.LPTarget_Box.addItem("")
         self.LP_line = QLineEdit(self.centralwidget)
-        self.LP_line.setGeometry(QRect(990, 480, 131, 21))
+        self.LP_line.setGeometry(QRect(980, 480, 131, 21))
         self.LP_line.setObjectName("LP_line")
         regx = QRegExp("^[0-9]{15}$")
         validator = QRegExpValidator(regx, self.LP_line)
         self.LP_line.setValidator(validator)
 
         self.AddLP_Button = QPushButton(self.centralwidget)
-        self.AddLP_Button.setGeometry(QRect(990, 510, 131, 28))
+        self.AddLP_Button.setGeometry(QRect(980, 510, 131, 28))
         self.AddLP_Button.setObjectName("AddLP_Button")
         self.DecLP_Button = QPushButton(self.centralwidget)
-        self.DecLP_Button.setGeometry(QRect(990, 540, 131, 28))
+        self.DecLP_Button.setGeometry(QRect(980, 540, 131, 28))
         self.DecLP_Button.setObjectName("DecLP_Button")
         self.CgeLP_Button = QPushButton(self.centralwidget)
-        self.CgeLP_Button.setGeometry(QRect(990, 570, 131, 28))
+        self.CgeLP_Button.setGeometry(QRect(980, 570, 131, 28))
         self.CgeLP_Button.setObjectName("CgeLP_Button")
         self.HalLP_Button = QPushButton(self.centralwidget)
-        self.HalLP_Button.setGeometry(QRect(990, 600, 131, 28))
+        self.HalLP_Button.setGeometry(QRect(980, 600, 131, 28))
         self.HalLP_Button.setObjectName("HalLP_Button")
         self.NewCard_Rename = QLineEdit(self.centralwidget)
         self.NewCard_Rename.setGeometry(QRect(830, 570, 141, 21))
@@ -438,7 +438,7 @@ class Ui_MainWindow(QWidget):
         self.NewCard_Rename_Button.setGeometry(QRect(830, 600, 141, 28))
         self.NewCard_Rename_Button.setObjectName("NewCard_Rename_Button")
         self.Comment_Line = QLineEdit(self.centralwidget)
-        self.Comment_Line.setGeometry(QRect(980, 350, 131, 21))
+        self.Comment_Line.setGeometry(QRect(980, 320, 131, 21))
         self.Comment_Line.setObjectName("Comment_Line")
 
         self.retranslateUi(self)
@@ -485,6 +485,7 @@ class Ui_MainWindow(QWidget):
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
         self.Target_list.itemSelectionChanged.connect(self.click_target_list)
+        self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
 
         # 添加/删除卡片部分
@@ -541,10 +542,10 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.setSortingEnabled(__sortingEnabled)
         self.label_ope.setText("操作")
         self.label_target.setText("操作对象")
-        self.Delete_target.setText("列表中删除")
-        self.CreateCard_Button.setText("←创建卡片")
-        self.MoveCard_Button.setText("移动卡片")
-        self.CommentCard_Button.setText("卡片注释")
+        self.Delete_target.setText("对象中删除")
+        self.CreateCard_Button.setText("←添加到对象")
+        self.MoveCard_Button.setText("移动对象")
+        self.CommentCard_Button.setText("对象注释")
         self.Comment_Button.setText("操作注释")
         self.label_self_hands.setText("己方额外")
         self.label_self_hands_2.setText("己方手卡")
@@ -564,10 +565,10 @@ class Ui_MainWindow(QWidget):
         self.label_self_hands_20.setText("对方除外")
         self.Open_Buttom.setText("打开(O)")
         self.Save_Buttom.setText("保存(S)")
-        self.EraseCard_Button.setText("删除卡片")
+        self.EraseCard_Button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
-        self.label_target_2.setText("新建列表")
+        self.label_target_2.setText("创建卡片")
         self.DeleteOpe_Button.setText("删除操作")
         self.CopyOpe_Button.setText("复制操作")
         self.MoveOpe_Button.setText("移动操作")
@@ -974,6 +975,7 @@ class Ui_MainWindow(QWidget):
         selected = lst.selectedIndexes()
         if len(selected) < 1:
             return
+        self.Dest_Box.setCurrentIndex(field_id)
         selected = selected[0].row()
         self.Target_list.clearSelection()
         for other_lst in self.idx_represent_field:
@@ -1000,14 +1002,32 @@ class Ui_MainWindow(QWidget):
         for card_id in field["locations"].keys():
             if field["locations"][card_id] == field_id:
                 if selected == 0:
-                    self.targets.append(card_id)
-                    self.update_targetlist()
+                    if card_id not in self.targets:
+                        self.targets.append(card_id)
+                        self.update_targetlist()
                 selected -= 1
 
     def search_card(self):
+        text = self.NewCard_line.text()
+        for field in self.idx_represent_field:
+            for idx in range(field.count()):
+                if len(text) == 0:
+                    field.item(idx).setForeground(QColor('black'))
+                else:
+                    if text in field.item(idx).text():
+                        field.item(idx).setForeground(QColor('red'))
+                    else:
+                        field.item(idx).setForeground(QColor('black'))
+        for idx in range(self.Target_list.count()):
+            if len(text) == 0:
+                self.Target_list.item(idx).setForeground(QColor('black'))
+            else:
+                if text in self.operators["cards"][self.targets[idx]]["Name"]:
+                    self.Target_list.item(idx).setForeground(QColor('red'))
+                else:
+                    self.Target_list.item(idx).setForeground(QColor('black'))
         if not self.Newcard_List.isEnabled():
             return
-        text = self.NewCard_line.text()
         if len(text) == 0:
             return
         self.Newcard_List.clear()

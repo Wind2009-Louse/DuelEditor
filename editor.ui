@@ -17,10 +17,10 @@
    <widget class="QListWidget" name="Operator_list">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1120</x>
       <y>20</y>
-      <width>141</width>
-      <height>341</height>
+      <width>151</width>
+      <height>351</height>
      </rect>
     </property>
     <item>
@@ -50,9 +50,9 @@
    <widget class="QTextBrowser" name="Operator_detail">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1120</x>
       <y>380</y>
-      <width>141</width>
+      <width>151</width>
       <height>151</height>
      </rect>
     </property>
@@ -83,7 +83,7 @@ p, li { white-space: pre-wrap; }
       <x>830</x>
       <y>20</y>
       <width>141</width>
-      <height>341</height>
+      <height>251</height>
      </rect>
     </property>
    </widget>
@@ -91,7 +91,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>830</x>
-      <y>370</y>
+      <y>280</y>
       <width>141</width>
       <height>28</height>
      </rect>
@@ -121,7 +121,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>190</y>
+      <y>280</y>
       <width>131</width>
       <height>28</height>
      </rect>
@@ -133,9 +133,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="MoveCard_Button">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>300</y>
-      <width>131</width>
+      <x>830</x>
+      <y>350</y>
+      <width>141</width>
       <height>28</height>
      </rect>
     </property>
@@ -147,7 +147,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>380</y>
+      <y>350</y>
       <width>131</width>
       <height>28</height>
      </rect>
@@ -160,7 +160,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>410</y>
+      <y>380</y>
       <width>131</width>
       <height>28</height>
      </rect>
@@ -796,9 +796,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="EraseCard_Button">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>220</y>
-      <width>131</width>
+      <x>830</x>
+      <y>380</y>
+      <width>141</width>
       <height>28</height>
      </rect>
     </property>
@@ -809,9 +809,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QComboBox" name="Dest_Box">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>270</y>
-      <width>131</width>
+      <x>830</x>
+      <y>320</y>
+      <width>141</width>
       <height>22</height>
      </rect>
     </property>
@@ -915,16 +915,16 @@ p, li { white-space: pre-wrap; }
       <x>980</x>
       <y>50</y>
       <width>131</width>
-      <height>131</height>
+      <height>221</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="DeleteOpe_Button">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1120</x>
       <y>540</y>
-      <width>141</width>
+      <width>151</width>
       <height>28</height>
      </rect>
     </property>
@@ -935,9 +935,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="CopyOpe_Button">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1120</x>
       <y>570</y>
-      <width>141</width>
+      <width>151</width>
       <height>28</height>
      </rect>
     </property>
@@ -948,9 +948,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="MoveOpe_Button">
     <property name="geometry">
      <rect>
-      <x>1130</x>
+      <x>1120</x>
       <y>600</y>
-      <width>141</width>
+      <width>151</width>
       <height>28</height>
      </rect>
     </property>
@@ -961,7 +961,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QComboBox" name="LPTarget_Box">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>450</y>
       <width>131</width>
       <height>22</height>
@@ -981,7 +981,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLineEdit" name="LP_line">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>480</y>
       <width>131</width>
       <height>21</height>
@@ -991,7 +991,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="AddLP_Button">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>510</y>
       <width>131</width>
       <height>28</height>
@@ -1004,7 +1004,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="DecLP_Button">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>540</y>
       <width>131</width>
       <height>28</height>
@@ -1017,7 +1017,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="CgeLP_Button">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>570</y>
       <width>131</width>
       <height>28</height>
@@ -1030,7 +1030,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="HalLP_Button">
     <property name="geometry">
      <rect>
-      <x>990</x>
+      <x>980</x>
       <y>600</y>
       <width>131</width>
       <height>28</height>
@@ -1067,7 +1067,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>350</y>
+      <y>320</y>
       <width>131</width>
       <height>21</height>
      </rect>
