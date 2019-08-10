@@ -477,6 +477,7 @@ class Ui_MainWindow(QWidget):
         self.fields = {0:{"locations":{}, "desp":{}, "LP":[0,0]}}
         self.targets = []
         self.filename = "Untitle.json"
+        self.last_text = ""
 
         # 打开/保存文件
         self.Open_Buttom.clicked.connect(self.openfile)
@@ -682,6 +683,7 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.setCurrentRow(ope_id)
         self.refresh_field()
         self.show_opeinfo()
+        self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id):
         '''根据card_id，在信息栏显示卡片详情'''
@@ -882,20 +884,38 @@ class Ui_MainWindow(QWidget):
         '''刷新场地'''
         for cardlist in self.idx_represent_field:
             cardlist.clear()
+        
+        idx = self.Operator_list.selectedIndexes()
+        if len(idx) < 1:
+            operation = {"type":"None", "args":[]}
+        else:
+            idx = idx[0].row()
+            operation = deepcopy(self.operators["operations"][idx])
+        
         field = self.get_current_field()
         self.Self_LP.setText("%d"%field["LP"][0])
+        self.Self_LP.setStyleSheet("color:black")
         self.Enemy_LP.setText("%d"%field["LP"][1])
+        self.Enemy_LP.setStyleSheet("color:black")
+        if operation["type"][0:2] == "LP":
+            if operation["args"][0] == 0:
+                self.Self_LP.setStyleSheet("color:red")
+            else:
+                self.Enemy_LP.setStyleSheet("color:red")
+        if operation["type"] not in ["move","carddesp"]:
+            operation["args"].clear()
         searching_name = self.NewCard_line.text()
         for card_id in field['locations'].keys():
             list_id = field["locations"][card_id]
             show_list = self.idx_represent_field[list_id]
             card_name = self.operators["cards"][card_id]["Name"]
             show_list.addItem(card_name)
-            if len(searching_name) > 0:
-                if searching_name in card_name:
-                    show_list.item(show_list.count()-1).setForeground(QColor('red'))
-                else:
-                    show_list.item(show_list.count()-1).setForeground(QColor('black'))
+            if card_id in operation["args"]:
+                show_list.item(show_list.count()-1).setForeground(QColor('green'))
+            else:
+                show_list.item(show_list.count()-1).setForeground(QColor('black'))
+            if len(searching_name) > 0 and searching_name in card_name:
+                show_list.item(show_list.count()-1).setForeground(QColor('red'))
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
         self.label_enemy_hand.setText("对方手卡(%d)"%self.Enemy_Hand.count())
         self.label_enemy_grave.setText("对方墓地(%d)"%self.Enemy_Grave.count())
@@ -905,7 +925,6 @@ class Ui_MainWindow(QWidget):
         self.label_self_grave.setText("己方墓地(%d)"%self.Self_Grave.count())
         self.label_self_banish.setText("己方除外(%d)"%self.Self_Banish.count())
  
-    
     def ope_LPAdd(self):
         '''增加对象LP。'''
         lp_point = self.LP_line.text()
@@ -1031,27 +1050,14 @@ class Ui_MainWindow(QWidget):
                 selected -= 1
 
     def search_card(self):
+        if self.last_text != self.NewCard_line.text():
+            self.last_text = self.NewCard_line.text()
+            self.refresh_field()
         text = self.NewCard_line.text()
-        for field in self.idx_represent_field:
-            for idx in range(field.count()):
-                if len(text) == 0:
-                    field.item(idx).setForeground(QColor('black'))
-                else:
-                    if text in field.item(idx).text():
-                        field.item(idx).setForeground(QColor('red'))
-                    else:
-                        field.item(idx).setForeground(QColor('black'))
-        for idx in range(self.Target_list.count()):
-            if len(text) == 0:
-                self.Target_list.item(idx).setForeground(QColor('black'))
-            else:
-                if text in self.operators["cards"][self.targets[idx]]["Name"]:
-                    self.Target_list.item(idx).setForeground(QColor('red'))
-                else:
-                    self.Target_list.item(idx).setForeground(QColor('black'))
         if not self.Newcard_List.isEnabled():
             return
         if len(text) == 0:
+            self.Newcard_List.clear()
             return
         self.Newcard_List.clear()
         for cardname in self.card_names:
