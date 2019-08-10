@@ -484,7 +484,7 @@ class Ui_MainWindow(QWidget):
         self.Save_Buttom.clicked.connect(self.savefile)
 
         # 操作部分
-        self.Operator_list.itemSelectionChanged.connect(self.click_operation_list)
+        self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         # TODO
@@ -493,7 +493,7 @@ class Ui_MainWindow(QWidget):
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
-        self.Target_list.itemSelectionChanged.connect(self.click_target_list)
+        self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
 
@@ -602,7 +602,6 @@ class Ui_MainWindow(QWidget):
             self.update_operationlist()
             self.make_fields()
             self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
-            self.refresh_field()
             return
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
@@ -617,11 +616,14 @@ class Ui_MainWindow(QWidget):
             f.write(json_data)
             QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
 
-    def make_fields(self):
+    def make_fields(self, begin_at=0):
         '''根据操作生成各操作的场地'''
-        self.fields.clear()
-        lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000]}
-        for idx in range(len(self.operators["operations"])):
+        if begin_at == 0:
+            self.fields.clear()
+            lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000]}
+        else:
+            lastest_field = deepcopy(self.fields[begin_at-1])
+        for idx in range(begin_at, len(self.operators["operations"])):
             '''type(str), args(list of int), dest(int), desp(str)'''
             operation = self.operators["operations"][idx]
             if operation["type"] == "move":
@@ -678,12 +680,11 @@ class Ui_MainWindow(QWidget):
         else:
             ope_id = ope_id[0].row()+1
             self.operators["operations"].insert(ope_id, operation)
-        self.make_fields()
         self.update_operationlist()
+        self.make_fields(ope_id)
         self.Operator_list.setCurrentRow(ope_id)
-        self.refresh_field()
         self.show_opeinfo()
-        self.Operator_list.setFocus()
+        #self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id):
         '''根据card_id，在信息栏显示卡片详情'''
@@ -786,10 +787,9 @@ class Ui_MainWindow(QWidget):
             return
         idx = idx[0].row()
         del self.operators["operations"][idx]
-        self.make_fields()
+        self.make_fields(idx)
         self.update_operationlist()
         self.Operator_list.setCurrentRow(idx-1)
-        self.refresh_field()
         self.show_opeinfo()
 
     def move_operator(self):
@@ -808,7 +808,7 @@ class Ui_MainWindow(QWidget):
         ope = deepcopy(self.operators["operations"][idx])
         self.insert_operation(ope)
 
-    def click_target_list(self):
+    def target_index_changed(self):
         idx = self.Target_list.selectedIndexes()
         if len(idx) == 0:
             idx = -1
@@ -822,7 +822,7 @@ class Ui_MainWindow(QWidget):
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
 
-    def click_operation_list(self):
+    def operation_index_changed(self):
         self.refresh_field()
         self.show_opeinfo()
 
@@ -1083,7 +1083,7 @@ class Ui_MainWindow(QWidget):
         ope_idx = ope_idx[0].row()
 
         self.operators["cards"][self.showing_card_id]["Name"] = text
-        self.make_fields()
+        #self.make_fields()
         self.update_operationlist()
         self.Operator_list.setCurrentRow(ope_idx)
         self.refresh_field()
