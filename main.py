@@ -478,6 +478,7 @@ class Ui_MainWindow(QWidget):
         self.targets = []
         self.filename = "Untitle.json"
         self.last_text = ""
+        self.unsave_changed = False
 
         # 打开/保存文件
         self.Open_Buttom.clicked.connect(self.openfile)
@@ -537,6 +538,12 @@ class Ui_MainWindow(QWidget):
             self.ope_LPDec()
         QWidget.keyPressEvent(self, event)
 
+    def closeEvent(self, event):
+        if self.unsave_confirm():
+            event.ignore()
+        else:
+            event.accept()
+
     def comment_enter(self):
         if len(self.targets) > 0:
             self.ope_addcarddesp()
@@ -589,12 +596,21 @@ class Ui_MainWindow(QWidget):
         self.HalLP_Button.setText("基本分减半")
         self.NewCard_Rename_Button.setText("重命名")
 
+    def maketitle(self):
+        title_name = "DuelEditor - %s"%self.filename
+        if self.unsave_changed:
+            title_name += "*"
+        self.setWindowTitle(title_name)
+
     def openfile(self):
+        if self.unsave_confirm():
+            return
         fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
         if len(fullname) == 0:
             return
         self.filename = os.path.split(fullname)[-1]
-        self.setWindowTitle("DuelEditor - %s"%self.filename)
+        self.unsave_changed = False
+        self.maketitle()
         with open(fullname,'r') as f:
             json_data = f.read()
             dict_data = loads(json_data)
@@ -605,16 +621,27 @@ class Ui_MainWindow(QWidget):
             return
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
+    def unsave_confirm(self):
+        '''如果取消动作，则返回True，否则返回False'''
+        if self.unsave_changed:
+            reply = QMessageBox.warning(self, '保存', "是否保存当前文件'%s'？"%self.filename, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+            if reply == QMessageBox.Cancel:
+                return True
+            if reply == QMessageBox.Yes:
+                self.savefile()
+        return False
+    
     def savefile(self):
         fullname = str(QFileDialog.getSaveFileName(self,'保存为', self.filename,"*.json")[0])
         if len(fullname) == 0:
             return
         self.filename = os.path.split(fullname)[-1]
-        self.setWindowTitle("DuelEditor - %s"%self.filename)
         json_data = dumps(self.operators,indent=2,ensure_ascii=False)
         with open(fullname,'w') as f:
             f.write(json_data)
             QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
+            self.unsave_changed = False
+            self.maketitle()
 
     def make_fields(self, begin_at=0):
         '''根据操作生成各操作的场地'''
@@ -684,6 +711,8 @@ class Ui_MainWindow(QWidget):
         self.make_fields(ope_id)
         self.Operator_list.setCurrentRow(ope_id)
         self.show_opeinfo()
+        self.unsave_changed = True
+        self.maketitle()
         #self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id):
@@ -786,6 +815,8 @@ class Ui_MainWindow(QWidget):
         if reply != QMessageBox.Yes:
             return
         idx = idx[0].row()
+        self.unsave_changed = True
+        self.maketitle()
         del self.operators["operations"][idx]
         self.make_fields(idx)
         self.update_operationlist()
@@ -833,10 +864,13 @@ class Ui_MainWindow(QWidget):
         else:
             ope_id = ope_id[0].row()
         self.Target_list.clear()
+        searching_name = self.NewCard_line.text()
         for target in self.targets:
             target_name = self.operators["cards"][target]["Name"]
             target_field = self.get_last_location(target, ope_id+1)
             self.Target_list.addItem("[%s]%s"%(target_field, target_name))
+            if len(searching_name) > 0 and searching_name in target_name:
+                self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
     
     def update_operationlist(self):
         '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
@@ -1053,6 +1087,7 @@ class Ui_MainWindow(QWidget):
         if self.last_text != self.NewCard_line.text():
             self.last_text = self.NewCard_line.text()
             self.refresh_field()
+            self.update_targetlist()
         text = self.NewCard_line.text()
         if not self.Newcard_List.isEnabled():
             return
