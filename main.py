@@ -12,148 +12,6 @@ from sqlite3 import connect
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
 
-class Ui_OSelector(QWidget):
-    def __init__(self):
-        super(Ui_OSelector, self).__init__()
-        self.result = -1
-        self.setObjectName("Ui_OSelector")
-        self.resize(439, 342)
-        self.setFixedSize(439, 342)
-        self.centralwidget = QWidget(self)
-        self.Confirm_Buttom = QPushButton(self.centralwidget)
-        self.Confirm_Buttom.setGeometry(QRect(200, 280, 91, 28))
-        self.Delete_Buttom = QPushButton(self.centralwidget)
-        self.Delete_Buttom.setGeometry(QRect(330, 280, 91, 28))
-        self.Operator_detail = QTextBrowser(self.centralwidget)
-        self.Operator_detail.setGeometry(QRect(200, 10, 231, 261))
-        self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(0, 10, 191, 301))
-
-        self.retranslateUi(self)
-
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle("选择要插入到的位置")
-        self.Confirm_Buttom.setText("确定")
-        self.Delete_Buttom.setText("取消")
-
-    def set_status(self, datas):
-        self.operators = deepcopy(datas)
-        self.show_list()
-
-    def show_list(self):
-        self.Operator_list.clear()
-        for operation in self.operators["operations"]:
-            if operation["type"] == "move":
-                card_idx = operation["args"][0]
-                card_name = self.operators["cards"][card_idx]["Name"]
-                if len(operation["args"])>1:
-                    card_name += "等"
-                result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
-                self.Operator_list.addItem(result)
-            elif operation["type"] == "carddesp":
-                card_idx = operation["args"][0]
-                card_name = self.operators["cards"][card_idx]["Name"]
-                if len(operation["args"])>1:
-                    card_name += "等"
-                result = "%s %s"%(card_name, operation["desp"])
-                self.Operator_list.addItem(result)
-            elif operation["type"][0:2] == "LP":
-                if operation['args'][0]==0:
-                    target = "己方"
-                else:
-                    target = "对方"
-                actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
-                subope = operation["type"][2:]
-                action = actions[subope]
-                point = ""
-                if action != "减半":
-                    point = "%d"%operation['args'][1]
-                result = "%sLP%s%s"%(target,action,point)
-                self.Operator_list.addItem(result)
-            elif operation["type"] == "comment":
-                self.Operator_list.addItem(operation["desp"])
-            elif operation["type"] == "erase":
-                card_idx = operation["args"][0]
-                card_name = self.operators["cards"][card_idx]["Name"]
-                if len(operation["args"])>1:
-                    card_name += "等"
-                result = "%s 被移除"%(card_name)
-                self.Operator_list.addItem(result)
-
-    def show_opeinfo(self, idx=None):
-        if idx is None:
-            idx = self.Operator_list.selectedIndexes()
-            if len(idx) < 1:
-                return
-            idx = idx[0].row()
-        operation = self.operators["operations"][idx]
-        if operation["type"] == "move":
-            card_name = ""
-            first_card = True
-            for card_idx in operation["args"]:
-                if not first_card:
-                    card_name += "、"
-                last_location = self.get_last_location(card_idx,idx)
-                first_card = False
-                card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
-            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
-            self.Operator_detail.setText(result)
-        elif operation["type"] == "carddesp":
-            card_name = ""
-            first_card = True
-            for card_idx in operation["args"]:
-                if not first_card:
-                    card_name += "、"
-                first_card = False
-                card_name += self.operators["cards"][card_idx]["Name"]
-            result = "%s %s"%(card_name, operation["desp"])
-            self.Operator_detail.setText(result)
-        elif operation["type"] == "erase":
-            card_name = ""
-            first_card = True
-            for card_idx in operation["args"]:
-                if not first_card:
-                    card_name += "、"
-                first_card = False
-                card_name += self.operators["cards"][card_idx]["Name"]
-            result = "%s 被移除"%(card_name)
-            self.Operator_detail.setText(result)
-        elif operation["type"][0:2] == "LP":
-            if operation['args'][0]==0:
-                target = "己方"
-            else:
-                target = "对方"
-            actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
-            subope = operation["type"][2:]
-            action = actions[subope]
-            point = ""
-            if action != "减半":
-                point = "%d"%operation['args'][1]
-            result = "%sLP%s%s"%(target,action,point)
-            self.Operator_detail.setText(result)
-        elif operation["type"] == "comment":
-            self.Operator_detail.setText(operation["desp"])
-
-    def get_result(self):
-        return self.result
-    
-    def confirm(self):
-        idx = self.Operator_list.selectedIndexes()
-        if len(idx) == 0:
-            result = -1
-        else:
-            result = idx[0].row()
-        self.close()
-    
-    def refuse(self):
-        self.close()
-
-    @staticmethod
-    def get_index():
-        dialog=Ui_OSelector()
-        result=dialog.exec_()
-        return dialog.get_result()
-
 class Ui_MainWindow(QWidget):
     def labelset(self):
         self.label_operation_list = QLabel(self.centralwidget)
@@ -433,27 +291,40 @@ class Ui_MainWindow(QWidget):
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
     def keyPressEvent(self, event):
+        '''键盘事件响应'''
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            # Ctrl+S=保存
             if event.key() == Qt.Key_S:
                 self.savefile()
+            # Ctrl+O=打开
             elif event.key() == Qt.Key_O:
                 self.openfile()
         if event.key() == Qt.Key_Delete:
+            # Delete键删除目标
             if self.Target_list.hasFocus():
                 self.remove_from_targets()
+            # Delete键删除操作
             elif self.Operator_list.hasFocus():
                 self.remove_operator()
+        # 回车键默认减少LP
         if self.LP_line.hasFocus() and event.key() == Qt.Key_Return:
             self.ope_LPDec()
+        # 其它事件
         QWidget.keyPressEvent(self, event)
 
     def closeEvent(self, event):
+        '''重写关闭窗口事件
+        
+        用于退出前确认保存更改'''
         if self.unsave_confirm():
             event.ignore()
         else:
             event.accept()
 
     def comment_enter(self):
+        '''在注释栏回车时触发的事件
+        
+        根据目标数量确定为为卡片添加注释，或是添加操作备注'''
         if len(self.targets) > 0:
             self.ope_addcarddesp()
         else:
@@ -506,12 +377,14 @@ class Ui_MainWindow(QWidget):
         self.NewCard_Rename_Button.setText("重命名")
 
     def maketitle(self):
+        '''根据当前正在打开的文件修改窗口标题'''
         title_name = "DuelEditor - %s"%self.filename
         if self.unsave_changed:
             title_name += "*"
         self.setWindowTitle(title_name)
 
     def openfile(self):
+        '''打开文件'''
         if self.unsave_confirm():
             return
         fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
@@ -529,6 +402,7 @@ class Ui_MainWindow(QWidget):
                 self.make_fields()
                 self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
                 return
+        # 出错时尝试使用utf-8编码打开文件
         except:
             with open(fullname,'r',encoding='utf-8') as f:
                 json_data = f.read()
@@ -551,6 +425,7 @@ class Ui_MainWindow(QWidget):
         return False
     
     def savefile(self):
+        '''保存文件'''
         fullname = str(QFileDialog.getSaveFileName(self,'保存为', self.filename,"*.json")[0])
         if len(fullname) == 0:
             return
@@ -563,12 +438,16 @@ class Ui_MainWindow(QWidget):
             self.maketitle()
 
     def make_fields(self, begin_at=0):
-        '''根据操作生成各操作的场地'''
+        '''根据操作生成各操作的场地
+        
+        若begin_at为0，则从初始场地开始生成，否则从第begin_at个动作后开始生成场地'''
+        # 获取场地
         if begin_at == 0:
             self.fields.clear()
             lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000]}
         else:
             lastest_field = deepcopy(self.fields[begin_at-1])
+        # 遍历操作
         for idx in range(begin_at, len(self.operators["operations"])):
             '''type(str), args(list of int), dest(int), desp(str)'''
             operation = self.operators["operations"][idx]
@@ -590,12 +469,14 @@ class Ui_MainWindow(QWidget):
                 lastest_field["LP"][operation["args"][0]] = operation["args"][1]
             elif operation["type"] == "LPHal":
                 lastest_field["LP"][operation["args"][0]] = (lastest_field["LP"][operation["args"][0]] + 1) // 2
+            # 将场地复制到列表中用以读取
             self.fields[idx] = deepcopy(lastest_field)
+        # 没有操作会导致没有场地被放置到列表中，用以作为初始场地
         if len(self.fields) == 0:
             self.fields[0] = lastest_field
 
     def get_last_location(self, card_id, ope_id):
-        '''获取卡片的上一个位置'''
+        '''获取指定卡片在上一个操作中的位置'''
         if ope_id == 0:
             return "未知"
         field = self.fields[ope_id-1]
@@ -618,7 +499,8 @@ class Ui_MainWindow(QWidget):
         return self.fields[ope_id]
 
     def insert_operation(self, operation):
-        '''插入操作。格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
+        '''插入操作。操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
+        # 判断是插入或新增
         ope_id = self.Operator_list.selectedIndexes()
         if len(ope_id) == 0:
             self.operators["operations"].append(operation)
@@ -648,15 +530,18 @@ class Ui_MainWindow(QWidget):
         if card_id in field["desp"]:
             card_desp = field["desp"][card_id]
         result = "[%s]\n位置：%s\n备注：%s"%(card_name, card_locat, card_desp)
-        self.Target_detail.setText(result)
+        self.Operator_detail.setText(result)
     
     def show_opeinfo(self, idx=None):
+        '''显示指定操作详情\n\nidx为空时，显示选定操作的详情'''
+        # 获取操作
         if idx is None:
             idx = self.Operator_list.selectedIndexes()
             if len(idx) < 1:
                 return
             idx = idx[0].row()
         operation = self.operators["operations"][idx]
+
         if operation["type"] == "move":
             card_name = ""
             first_card = True
@@ -707,10 +592,12 @@ class Ui_MainWindow(QWidget):
             self.Operator_detail.setText(operation["desp"])
 
     def create_card(self):
+        '''新增卡片'''
         cardname = self.NewCard_line.text()
         self.NewCard_line.setText("")
         if cardname == "":
             return
+        # 获取当前卡片idx，通过+1来作为新卡片的idx
         idx = str(self.operators["cardindex"])
         self.operators["cardindex"] += 1
         self.operators["cards"][idx] = {"Name": cardname}
@@ -718,18 +605,24 @@ class Ui_MainWindow(QWidget):
         self.update_targetlist()
 
     def remove_from_targets(self):
+        '''从操作对象中移除卡片'''
         target_idx = self.Target_list.selectedIndexes()
+        # 如果没有选定卡片，则结束
         if len(target_idx) == 0:
             return
         target_idx = target_idx[0].row()
         del self.targets[target_idx]
+        # 刷新
         self.Target_detail.clear()
         self.update_targetlist()
 
     def remove_operator(self):
+        '''移除操作'''
+        # 从操作列表中获得当前选定的操作
         idx = self.Operator_list.selectedIndexes()
         if len(idx) < 1:
             return
+        # 确认提示
         reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
@@ -743,14 +636,11 @@ class Ui_MainWindow(QWidget):
         self.show_opeinfo()
 
     def move_operator(self):
-        dialogue = Ui_OSelector()
-        dialogue.set_status(self.operators)
-        dialogue.show()
-        #runner=dialogue.exec_()
-        result=dialogue.get_result()
-        print(result)
+        # TODO
+        pass
 
     def copy_ope(self):
+        '''复制操作'''
         idx = self.Operator_list.selectedIndexes()
         if len(idx) < 1:
             return
@@ -759,6 +649,7 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def target_index_changed(self):
+        '''对象列表发生变更时触发\n\n通常需要更新卡片描述'''
         idx = self.Target_list.selectedIndexes()
         if len(idx) == 0:
             idx = -1
@@ -773,11 +664,13 @@ class Ui_MainWindow(QWidget):
         self.show_cardinfo(card_id)
 
     def operation_index_changed(self):
+        '''选择其它操作时，更新显示的场地'''
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
 
     def update_targetlist(self):
+        '''更新对象列表'''
         ope_id = self.Operator_list.selectedIndexes()
         if len(ope_id) == 0:
             ope_id = 0
@@ -789,6 +682,7 @@ class Ui_MainWindow(QWidget):
             target_name = self.operators["cards"][target]["Name"]
             target_field = self.get_last_location(target, ope_id+1)
             self.Target_list.addItem("[%s]%s"%(target_field, target_name))
+            # 如果和搜索栏内容匹配则变色
             if len(searching_name) > 0 and searching_name in target_name:
                 self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
     
