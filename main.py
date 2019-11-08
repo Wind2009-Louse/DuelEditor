@@ -719,6 +719,7 @@ class Ui_MainWindow(QWidget):
                 self.Operator_list.addItem(result)
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
+                # 注释高亮
                 self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('green'))
             elif operation["type"] == "erase":
                 card_idx = operation["args"][0]
@@ -733,6 +734,7 @@ class Ui_MainWindow(QWidget):
         for cardlist in self.idx_represent_field:
             cardlist.clear()
         
+        # 获取最后一步操作
         idx = self.Operator_list.selectedIndexes()
         if len(idx) < 1:
             operation = {"type":"None", "args":[]}
@@ -740,30 +742,42 @@ class Ui_MainWindow(QWidget):
             idx = idx[0].row()
             operation = deepcopy(self.operators["operations"][idx])
         
+        # 获取当前场地
         field = self.get_current_field()
         self.Self_LP.setText("%d"%field["LP"][0])
         self.Self_LP.setStyleSheet("color:black")
         self.Enemy_LP.setText("%d"%field["LP"][1])
         self.Enemy_LP.setStyleSheet("color:black")
+        
+        # 若最后操作为LP修改，则高亮修改LP
         if operation["type"][0:2] == "LP":
             if operation["args"][0] == 0:
                 self.Self_LP.setStyleSheet("color:red")
             else:
                 self.Enemy_LP.setStyleSheet("color:red")
+        
+        # 清除操作对象，为后续判断使用
         if operation["type"] not in ["move","carddesp"]:
             operation["args"].clear()
+
+        # 获取搜索框内容
         searching_name = self.NewCard_line.text()
         for card_id in field['locations'].keys():
             list_id = field["locations"][card_id]
             show_list = self.idx_represent_field[list_id]
+            # 获取卡片名字
             card_name = self.operators["cards"][card_id]["Name"]
             show_list.addItem(card_name)
+            # 若为最后操作对象之一，绿色高亮
             if card_id in operation["args"]:
                 show_list.item(show_list.count()-1).setForeground(QColor('green'))
             else:
                 show_list.item(show_list.count()-1).setForeground(QColor('black'))
+            # 若符合搜索对象，红色高亮
             if len(searching_name) > 0 and searching_name in card_name:
                 show_list.item(show_list.count()-1).setForeground(QColor('red'))
+        
+        # 数量标注
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
         self.label_enemy_hand.setText("对方手卡(%d)"%self.Enemy_Hand.count())
         self.label_enemy_grave.setText("对方墓地(%d)"%self.Enemy_Grave.count())
@@ -813,6 +827,7 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def ope_movecards(self):
+        '''移动卡片'''
         if len(self.targets) == 0:
             return
         self.Target_detail.setText("")
@@ -822,6 +837,7 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def ope_addcomment(self):
+        '''添加注释'''
         comment = self.Comment_Line.text()
         if len(comment) == 0:
             return
@@ -830,6 +846,7 @@ class Ui_MainWindow(QWidget):
         self.Comment_Line.clear()
 
     def ope_addcarddesp(self):
+        '''添加卡片描述'''
         comment = self.Comment_Line.text()
         if len(comment) == 0 or len(self.targets) == 0:
             return
@@ -838,6 +855,8 @@ class Ui_MainWindow(QWidget):
             ope_id = 0
         else:
             ope_id = ope_id[0].row()
+
+        # 判断卡片是否在场上，若不在场上则不能添加注释
         for card_id in self.targets:
             if self.get_last_location(card_id, ope_id+1) == "未知":
                 QMessageBox.warning(self, "错误", "不能给尚未加入的卡片添加注释！", QMessageBox.Yes)
@@ -849,8 +868,10 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def erase_targets(self):
+        '''将对象卡片移除出场'''
         if len(self.targets) == 0:
             return
+        # 移除确认
         reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？\n被删除的卡片在之后的操作中不会再出现。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
@@ -861,16 +882,24 @@ class Ui_MainWindow(QWidget):
         self.insert_operation(ope)
 
     def select_field(self, field_id):
+        '''选择场上的卡片时调用'''
+        # 获取场地
         lst = self.idx_represent_field[field_id]
+        # 获取卡片
         selected = lst.selectedIndexes()
         if len(selected) < 1:
             return
+        # 设置动作目标（便携操作）
         self.Dest_Box.setCurrentIndex(field_id)
         selected = selected[0].row()
+        # 取消对象列表的焦点
         self.Target_list.clearSelection()
+        # 取消其它场地的焦点
         for other_lst in self.idx_represent_field:
             if other_lst != lst:
                 other_lst.clearSelection()
+        
+        # 查找选定卡片
         field = self.get_current_field()
         for card_id in field["locations"].keys():
             if field["locations"][card_id] == field_id:
@@ -879,15 +908,20 @@ class Ui_MainWindow(QWidget):
                 selected -= 1
     
     def target_field(self, field_id):
+        '''将场上的卡选为对象'''
+        # 获取场地
         lst = self.idx_represent_field[field_id]
+        # 获取卡片
         selected = lst.selectedIndexes()
         if len(selected) < 1:
             return
         selected = selected[0].row()
+        # 取消焦点
         self.Target_list.clearSelection()
         for other_lst in self.idx_represent_field:
             if other_lst != lst:
                 other_lst.clearSelection()
+        # 查找对应卡片
         field = self.get_current_field()
         for card_id in field["locations"].keys():
             if field["locations"][card_id] == field_id:
@@ -898,10 +932,13 @@ class Ui_MainWindow(QWidget):
                 selected -= 1
 
     def search_card(self):
+        '''根据输入框的名字，在下拉框查找卡片'''
+        # 名字修改过则进行高亮刷新
         if self.last_text != self.NewCard_line.text():
             self.last_text = self.NewCard_line.text()
             self.refresh_field()
             self.update_targetlist()
+        # 判断是否有名字
         text = self.NewCard_line.text()
         if not self.Newcard_List.isEnabled():
             return
@@ -909,31 +946,37 @@ class Ui_MainWindow(QWidget):
             self.Newcard_List.clear()
             return
         self.Newcard_List.clear()
+        # 遍历搜索符合条件的卡片
         for cardname in self.card_names:
             if text in cardname:
                 self.Newcard_List.addItem(cardname)
     
     def fix_cardname(self,qindex):
+        '''补全卡名'''
         index = qindex.row()
         if index < 0:
             return
         self.NewCard_line.setText(self.Newcard_List.item(index).text())
 
     def card_rename(self):
+        '''卡片重命名'''
         if self.showing_card_id is None:
             return
         text = self.NewCard_Rename.text()
         if len(text) == 0:
             return
+        # 提示
         reply = QMessageBox.warning(self, '提示', "是否要把这张卡片重命名为%s？"%text, QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.No:
             return
 
+        # 修改卡片信息
         ope_idx = self.Operator_list.selectedIndexes()
         if len(ope_idx) < 1:
             return
         ope_idx = ope_idx[0].row()
 
+        # 刷新
         self.operators["cards"][self.showing_card_id]["Name"] = text
         self.unsave_changed = True
         self.maketitle()
