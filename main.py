@@ -14,10 +14,16 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 
 class Ui_MainWindow(QWidget):
     def labelset(self):
-        self.label_operation_list = QLabel(self.centralwidget)
-        self.label_operation_list.setGeometry(QRect(1190, 0, 41, 16))
         self.label_target_list = QLabel(self.centralwidget)
-        self.label_target_list.setGeometry(QRect(870, 0, 81, 20))
+        self.label_target_list.setGeometry(QRect(830, 0, 181, 20))
+        self.label_target_list.setAlignment(Qt.AlignCenter)
+        self.label_cardsearch = QLabel(self.centralwidget)
+        self.label_cardsearch.setGeometry(QRect(1020, 0, 181, 20))
+        self.label_cardsearch.setAlignment(Qt.AlignCenter)
+        self.label_operation_list = QLabel(self.centralwidget)
+        self.label_operation_list.setGeometry(QRect(1210, 0, 181, 16))
+        self.label_operation_list.setAlignment(Qt.AlignCenter)
+
         self.label_self_ex = QLabel(self.DuelFrame)
         self.label_self_ex.setGeometry(QRect(10, 470, 141, 20))
         self.label_self_ex.setAlignment(Qt.AlignCenter)
@@ -58,38 +64,75 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_lpen.setGeometry(QRect(710, 160, 81, 20))
         self.label_enemy_lp = QLabel(self.DuelFrame)
         self.label_enemy_lp.setGeometry(QRect(30, 240, 81, 20))
-        self.label_cardsearch = QLabel(self.centralwidget)
-        self.label_cardsearch.setGeometry(QRect(1010, 0, 81, 20))
 
     def init_frame(self):
         self.setObjectName("MainWindow")
-        self.resize(1306, 639)
-        self.setFixedSize(1306, 639)
+        self.resize(1396, 639)
+        self.setFixedSize(1396, 639)
         self.centralwidget = QWidget(self)
 
         self.DuelFrame = QWidget(self.centralwidget)
         self.DuelFrame.setGeometry(QRect(10, 0, 811, 631))
         self.labelset()
 
-        self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(1120, 20, 181, 351))
-        self.Operator_detail = QTextBrowser(self.centralwidget)
-        self.Operator_detail.setGeometry(QRect(1120, 380, 181, 151))
-        self.Operator_detail.setWordWrapMode(True)
         self.Target_list = QListWidget(self.centralwidget)
-        self.Target_list.setGeometry(QRect(830, 20, 141, 251))
+        self.Target_list.setGeometry(QRect(830, 20, 181, 251))
         self.Delete_target = QPushButton(self.centralwidget)
-        self.Delete_target.setGeometry(QRect(830, 280, 141, 28))
-        self.Target_detail = QTextBrowser(self.centralwidget)
-        self.Target_detail.setGeometry(QRect(830, 420, 141, 141))
-        self.CreateCard_Button = QPushButton(self.centralwidget)
-        self.CreateCard_Button.setGeometry(QRect(980, 280, 131, 28))
+        self.Delete_target.setGeometry(QRect(830, 280, 181, 28))
+        self.Dest_Box = QComboBox(self.centralwidget)
+        self.Dest_Box.setGeometry(QRect(830, 320, 181, 22))
+        for i in range(36):
+            self.Dest_Box.addItem("")
         self.MoveCard_Button = QPushButton(self.centralwidget)
-        self.MoveCard_Button.setGeometry(QRect(830, 350, 141, 28))
+        self.MoveCard_Button.setGeometry(QRect(830, 350, 181, 28))
+        self.EraseCard_Button = QPushButton(self.centralwidget)
+        self.EraseCard_Button.setGeometry(QRect(830, 380, 181, 28))
+        self.Target_detail = QTextBrowser(self.centralwidget)
+        self.Target_detail.setGeometry(QRect(830, 420, 181, 141))
+        self.NewCard_Rename = QLineEdit(self.centralwidget)
+        self.NewCard_Rename.setGeometry(QRect(830, 570, 181, 21))
+        self.NewCard_Rename_Button = QPushButton(self.centralwidget)
+        self.NewCard_Rename_Button.setGeometry(QRect(830, 600, 181, 28))
+
+        self.NewCard_line = QLineEdit(self.centralwidget)
+        self.NewCard_line.setGeometry(QRect(1020, 20, 181, 21))
+        self.Newcard_List = QListWidget(self.centralwidget)
+        self.Newcard_List.setGeometry(QRect(1020, 50, 181, 221))
+        self.CreateCard_Button = QPushButton(self.centralwidget)
+        self.CreateCard_Button.setGeometry(QRect(1020, 280, 181, 28))
+        self.Comment_Line = QLineEdit(self.centralwidget)
+        self.Comment_Line.setGeometry(QRect(1020, 320, 181, 21))
         self.CommentCard_Button = QPushButton(self.centralwidget)
-        self.CommentCard_Button.setGeometry(QRect(980, 350, 131, 28))
+        self.CommentCard_Button.setGeometry(QRect(1020, 350, 181, 28))
         self.Comment_Button = QPushButton(self.centralwidget)
-        self.Comment_Button.setGeometry(QRect(980, 380, 131, 28))
+        self.Comment_Button.setGeometry(QRect(1020, 380, 181, 28))
+        self.LPTarget_Box = QComboBox(self.centralwidget)
+        self.LPTarget_Box.setGeometry(QRect(1020, 450, 181, 22))
+        self.LPTarget_Box.addItem("")
+        self.LPTarget_Box.addItem("")
+        self.LP_line = QLineEdit(self.centralwidget)
+        self.LP_line.setGeometry(QRect(1020, 480, 181, 21))
+        regx = QRegExp("^[0-9]{15}$")
+        validator = QRegExpValidator(regx, self.LP_line)
+        self.LP_line.setValidator(validator)
+        self.AddLP_Button = QPushButton(self.centralwidget)
+        self.AddLP_Button.setGeometry(QRect(1020, 510, 181, 28))
+        self.DecLP_Button = QPushButton(self.centralwidget)
+        self.DecLP_Button.setGeometry(QRect(1020, 540, 181, 28))
+        self.CgeLP_Button = QPushButton(self.centralwidget)
+        self.CgeLP_Button.setGeometry(QRect(1020, 570, 181, 28))
+        self.HalLP_Button = QPushButton(self.centralwidget)
+        self.HalLP_Button.setGeometry(QRect(1020, 600, 181, 28))
+
+        self.Operator_list = QListWidget(self.centralwidget)
+        self.Operator_list.setGeometry(QRect(1210, 20, 181, 510))
+        self.DeleteOpe_Button = QPushButton(self.centralwidget)
+        self.DeleteOpe_Button.setGeometry(QRect(1210, 540, 181, 28))
+        self.CopyOpe_Button = QPushButton(self.centralwidget)
+        self.CopyOpe_Button.setGeometry(QRect(1210, 570, 181, 28))
+        self.MoveOpe_Button = QPushButton(self.centralwidget)
+        self.MoveOpe_Button.setGeometry(QRect(1210, 600, 181, 28))
+
         self.Self_Ex = QListWidget(self.DuelFrame)
         self.Self_Ex.setGeometry(QRect(10, 500, 141, 121))
         self.Self_Hand = QListWidget(self.DuelFrame)
@@ -134,8 +177,12 @@ class Ui_MainWindow(QWidget):
         self.Enemy_M4.setGeometry(QRect(240, 240, 111, 51))
         self.Enemy_S3 = QListWidget(self.DuelFrame)
         self.Enemy_S3.setGeometry(QRect(350, 190, 111, 51))
+
         self.ExM_2 = QListWidget(self.DuelFrame)
         self.ExM_2.setGeometry(QRect(460, 300, 111, 51))
+        self.ExM_1 = QListWidget(self.DuelFrame)
+        self.ExM_1.setGeometry(QRect(240, 300, 111, 51))
+
         self.Enemy_LP = QLineEdit(self.DuelFrame)
         self.Enemy_LP.setGeometry(QRect(10, 270, 111, 21))
         self.Enemy_LP.setText("8000")
@@ -146,13 +193,10 @@ class Ui_MainWindow(QWidget):
         self.Enemy_P2.setGeometry(QRect(10, 190, 111, 41))
         self.Enemy_S2 = QListWidget(self.DuelFrame)
         self.Enemy_S2.setGeometry(QRect(460, 190, 111, 51))
-        self.ExM_1 = QListWidget(self.DuelFrame)
-        self.ExM_1.setGeometry(QRect(240, 300, 111, 51))
         self.Enemy_M2 = QListWidget(self.DuelFrame)
         self.Enemy_M2.setGeometry(QRect(460, 240, 111, 51))
         self.Enemy_M1 = QListWidget(self.DuelFrame)
         self.Enemy_M1.setGeometry(QRect(570, 240, 111, 51))
-
         self.Enemy_S4 = QListWidget(self.DuelFrame)
         self.Enemy_S4.setGeometry(QRect(240, 190, 111, 51))
         self.Enemy_S1 = QListWidget(self.DuelFrame)
@@ -175,46 +219,6 @@ class Ui_MainWindow(QWidget):
         self.Open_Buttom.setGeometry(QRect(140, 310, 91, 28))
         self.Save_Buttom = QPushButton(self.DuelFrame)
         self.Save_Buttom.setGeometry(QRect(580, 310, 91, 28))
-        self.EraseCard_Button = QPushButton(self.centralwidget)
-        self.EraseCard_Button.setGeometry(QRect(830, 380, 141, 28))
-        self.Dest_Box = QComboBox(self.centralwidget)
-        self.Dest_Box.setGeometry(QRect(830, 320, 141, 22))
-        for i in range(36):
-            self.Dest_Box.addItem("")
-        self.NewCard_line = QLineEdit(self.centralwidget)
-        self.NewCard_line.setGeometry(QRect(980, 20, 131, 21))
-        self.Newcard_List = QListWidget(self.centralwidget)
-        self.Newcard_List.setGeometry(QRect(980, 50, 131, 221))
-        self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button.setGeometry(QRect(1120, 540, 181, 28))
-        self.CopyOpe_Button = QPushButton(self.centralwidget)
-        self.CopyOpe_Button.setGeometry(QRect(1120, 570, 181, 28))
-        self.MoveOpe_Button = QPushButton(self.centralwidget)
-        self.MoveOpe_Button.setGeometry(QRect(1120, 600, 181, 28))
-        self.LPTarget_Box = QComboBox(self.centralwidget)
-        self.LPTarget_Box.setGeometry(QRect(980, 450, 131, 22))
-        self.LPTarget_Box.addItem("")
-        self.LPTarget_Box.addItem("")
-        self.LP_line = QLineEdit(self.centralwidget)
-        self.LP_line.setGeometry(QRect(980, 480, 131, 21))
-        regx = QRegExp("^[0-9]{15}$")
-        validator = QRegExpValidator(regx, self.LP_line)
-        self.LP_line.setValidator(validator)
-
-        self.AddLP_Button = QPushButton(self.centralwidget)
-        self.AddLP_Button.setGeometry(QRect(980, 510, 131, 28))
-        self.DecLP_Button = QPushButton(self.centralwidget)
-        self.DecLP_Button.setGeometry(QRect(980, 540, 131, 28))
-        self.CgeLP_Button = QPushButton(self.centralwidget)
-        self.CgeLP_Button.setGeometry(QRect(980, 570, 131, 28))
-        self.HalLP_Button = QPushButton(self.centralwidget)
-        self.HalLP_Button.setGeometry(QRect(980, 600, 131, 28))
-        self.NewCard_Rename = QLineEdit(self.centralwidget)
-        self.NewCard_Rename.setGeometry(QRect(830, 570, 141, 21))
-        self.NewCard_Rename_Button = QPushButton(self.centralwidget)
-        self.NewCard_Rename_Button.setGeometry(QRect(830, 600, 141, 28))
-        self.Comment_Line = QLineEdit(self.centralwidget)
-        self.Comment_Line.setGeometry(QRect(980, 320, 131, 21))
 
         self.retranslateUi(self)
 
@@ -530,7 +534,7 @@ class Ui_MainWindow(QWidget):
         if card_id in field["desp"]:
             card_desp = field["desp"][card_id]
         result = "[%s]\n位置：%s\n备注：%s"%(card_name, card_locat, card_desp)
-        self.Operator_detail.setText(result)
+        self.Target_detail.setText(result)
     
     def show_opeinfo(self, idx=None):
         '''显示指定操作详情\n\nidx为空时，显示选定操作的详情'''
@@ -542,6 +546,7 @@ class Ui_MainWindow(QWidget):
             idx = idx[0].row()
         operation = self.operators["operations"][idx]
 
+        result = ""
         if operation["type"] == "move":
             card_name = ""
             first_card = True
@@ -552,7 +557,6 @@ class Ui_MainWindow(QWidget):
                 first_card = False
                 card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
             result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
-            self.Operator_detail.setText(result)
         elif operation["type"] == "carddesp":
             card_name = ""
             first_card = True
@@ -563,7 +567,6 @@ class Ui_MainWindow(QWidget):
                 first_card = False
                 card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
             result = "%s %s"%(card_name, operation["desp"])
-            self.Operator_detail.setText(result)
         elif operation["type"] == "erase":
             card_name = ""
             first_card = True
@@ -574,7 +577,6 @@ class Ui_MainWindow(QWidget):
                 first_card = False
                 card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
             result = "%s 被移除"%(card_name)
-            self.Operator_detail.setText(result)
         elif operation["type"][0:2] == "LP":
             if operation['args'][0]==0:
                 target = "己方"
@@ -587,9 +589,9 @@ class Ui_MainWindow(QWidget):
             if action != "减半":
                 point = "%d"%operation['args'][1]
             result = "%sLP%s%s"%(target,action,point)
-            self.Operator_detail.setText(result)
         elif operation["type"] == "comment":
-            self.Operator_detail.setText(operation["desp"])
+            result = operation["desp"]
+        self.Target_detail.setText(result)
 
     def create_card(self):
         '''新增卡片'''
