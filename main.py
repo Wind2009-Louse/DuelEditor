@@ -14,6 +14,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 
 class Ui_MainWindow(QWidget):
     def labelset(self):
+        '''初始化label'''
         self.label_target_list = QLabel(self.centralwidget)
         self.label_target_list.setGeometry(QRect(830, 0, 181, 20))
         self.label_target_list.setAlignment(Qt.AlignCenter)
@@ -66,6 +67,7 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_lp.setGeometry(QRect(30, 240, 81, 20))
 
     def init_frame(self):
+        '''初始化UI'''
         self.setObjectName("MainWindow")
         self.resize(1396, 639)
         self.setFixedSize(1396, 639)
@@ -88,11 +90,7 @@ class Ui_MainWindow(QWidget):
         self.EraseCard_Button = QPushButton(self.centralwidget)
         self.EraseCard_Button.setGeometry(QRect(830, 380, 181, 28))
         self.Target_detail = QTextBrowser(self.centralwidget)
-        self.Target_detail.setGeometry(QRect(830, 420, 181, 141))
-        self.NewCard_Rename = QLineEdit(self.centralwidget)
-        self.NewCard_Rename.setGeometry(QRect(830, 570, 181, 21))
-        self.NewCard_Rename_Button = QPushButton(self.centralwidget)
-        self.NewCard_Rename_Button.setGeometry(QRect(830, 600, 181, 28))
+        self.Target_detail.setGeometry(QRect(830, 420, 181, 208))
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setGeometry(QRect(1020, 20, 181, 21))
@@ -100,12 +98,14 @@ class Ui_MainWindow(QWidget):
         self.Newcard_List.setGeometry(QRect(1020, 50, 181, 221))
         self.CreateCard_Button = QPushButton(self.centralwidget)
         self.CreateCard_Button.setGeometry(QRect(1020, 280, 181, 28))
+        self.NewCard_Rename_Button = QPushButton(self.centralwidget)
+        self.NewCard_Rename_Button.setGeometry(QRect(1020, 320, 181, 28))
         self.Comment_Line = QLineEdit(self.centralwidget)
-        self.Comment_Line.setGeometry(QRect(1020, 320, 181, 21))
+        self.Comment_Line.setGeometry(QRect(1020, 353, 181, 21))
         self.CommentCard_Button = QPushButton(self.centralwidget)
-        self.CommentCard_Button.setGeometry(QRect(1020, 350, 181, 28))
+        self.CommentCard_Button.setGeometry(QRect(1020, 380, 181, 28))
         self.Comment_Button = QPushButton(self.centralwidget)
-        self.Comment_Button.setGeometry(QRect(1020, 380, 181, 28))
+        self.Comment_Button.setGeometry(QRect(1020, 410, 181, 28))
         self.LPTarget_Box = QComboBox(self.centralwidget)
         self.LPTarget_Box.setGeometry(QRect(1020, 450, 181, 22))
         self.LPTarget_Box.addItem("")
@@ -125,9 +125,11 @@ class Ui_MainWindow(QWidget):
         self.HalLP_Button.setGeometry(QRect(1020, 600, 181, 28))
 
         self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(1210, 20, 181, 510))
+        self.Operator_list.setGeometry(QRect(1210, 20, 181, 440))
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button.setGeometry(QRect(1210, 540, 181, 28))
+        self.DeleteOpe_Button.setGeometry(QRect(1210, 470, 181, 28))
+        self.SelectedOpe_list = QListWidget(self.centralwidget)
+        self.SelectedOpe_list.setGeometry(QRect(1210, 510, 181, 51))
         self.CopyOpe_Button = QPushButton(self.centralwidget)
         self.CopyOpe_Button.setGeometry(QRect(1210, 570, 181, 28))
         self.MoveOpe_Button = QPushButton(self.centralwidget)
@@ -256,9 +258,12 @@ class Ui_MainWindow(QWidget):
         self.Save_Buttom.clicked.connect(self.savefile)
 
         # 操作部分
+        self.copying_operation = {}
         self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
+        self.Operator_list.doubleClicked.connect(self.copy_ope)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
+        self.SelectedOpe_list.itemSelectionChanged.connect(self.select_copying)
         # TODO
         self.MoveOpe_Button.setEnabled(False)
         self.MoveOpe_Button.clicked.connect(self.move_operator)
@@ -274,7 +279,6 @@ class Ui_MainWindow(QWidget):
         self.NewCard_line.returnPressed.connect(self.create_card)
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
         self.NewCard_Rename_Button.clicked.connect(self.card_rename)
-        self.NewCard_Rename.returnPressed.connect(self.card_rename)
         self.CreateCard_Button.clicked.connect(self.create_card)
         self.EraseCard_Button.clicked.connect(self.erase_targets)
 
@@ -368,17 +372,17 @@ class Ui_MainWindow(QWidget):
         self.EraseCard_Button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
-        self.label_cardsearch.setText("创建卡片")
+        self.label_cardsearch.setText("卡片搜索")
         self.DeleteOpe_Button.setText("删除操作")
         self.CopyOpe_Button.setText("复制操作")
-        self.MoveOpe_Button.setText("移动操作")
+        self.MoveOpe_Button.setText("粘贴操作")
         self.LPTarget_Box.setItemText(0, "己方")
         self.LPTarget_Box.setItemText(1, "对方")
         self.AddLP_Button.setText("增加基本分")
         self.DecLP_Button.setText("减少基本分")
         self.CgeLP_Button.setText("变成基本分")
         self.HalLP_Button.setText("基本分减半")
-        self.NewCard_Rename_Button.setText("重命名")
+        self.NewCard_Rename_Button.setText("重命名选定卡")
 
     def maketitle(self):
         '''根据当前正在打开的文件修改窗口标题'''
@@ -638,8 +642,12 @@ class Ui_MainWindow(QWidget):
         self.show_opeinfo()
 
     def move_operator(self):
-        # TODO
-        pass
+        '''粘贴操作'''
+        if self.copying_operation == {}:
+            return
+        self.insert_operation(self.copying_operation)
+        self.copying_operation = {}
+        self.draw_copying()
 
     def copy_ope(self):
         '''复制操作'''
@@ -648,7 +656,105 @@ class Ui_MainWindow(QWidget):
             return
         idx = idx[0].row()
         ope = deepcopy(self.operators["operations"][idx])
-        self.insert_operation(ope)
+        self.copying_operation = ope
+        self.draw_copying()
+    
+    def draw_copying(self):
+        '''描绘复制中的操作'''
+        self.SelectedOpe_list.clear()
+        operation = self.copying_operation
+        if self.copying_operation == {}:
+            self.MoveOpe_Button.setEnabled(False)
+            return
+        self.MoveOpe_Button.setEnabled(True)
+        if operation["type"] == "move":
+            card_idx = operation["args"][0]
+            card_name = self.operators["cards"][card_idx]["Name"]
+            if len(operation["args"])>1:
+                card_name += "等"
+            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+            self.SelectedOpe_list.addItem(result)
+        elif operation["type"] == "carddesp":
+            card_idx = operation["args"][0]
+            card_name = self.operators["cards"][card_idx]["Name"]
+            if len(operation["args"])>1:
+                card_name += "等"
+            result = "%s %s"%(card_name, operation["desp"])
+            self.SelectedOpe_list.addItem(result)
+        elif operation["type"][0:2] == "LP":
+            if operation['args'][0]==0:
+                target = "己方"
+            else:
+                target = "对方"
+            actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
+            subope = operation["type"][2:]
+            action = actions[subope]
+            point = ""
+            if action != "减半":
+                point = "%d"%operation['args'][1]
+            result = "%sLP%s%s"%(target,action,point)
+            self.SelectedOpe_list.addItem(result)
+        elif operation["type"] == "comment":
+            self.SelectedOpe_list.addItem(operation["desp"])
+            # 注释高亮
+            self.SelectedOpe_list.item(0).setForeground(QColor('green'))
+        elif operation["type"] == "erase":
+            card_idx = operation["args"][0]
+            card_name = self.operators["cards"][card_idx]["Name"]
+            if len(operation["args"])>1:
+                card_name += "等"
+            result = "%s 被移除"%(card_name)
+            self.SelectedOpe_list.addItem(result)
+
+    def select_copying(self):
+        '''选择复制中的操作时，显示内容'''
+        if self.copying_operation == {}:
+            return
+        operation = self.copying_operation
+        if operation != {}:
+            result = ""
+            if operation["type"] == "move":
+                card_name = ""
+                first_card = True
+                for card_idx in operation["args"]:
+                    if not first_card:
+                        card_name += "、"
+                    first_card = False
+                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
+                result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+            elif operation["type"] == "carddesp":
+                card_name = ""
+                first_card = True
+                for card_idx in operation["args"]:
+                    if not first_card:
+                        card_name += "、"
+                    first_card = False
+                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
+                result = "%s %s"%(card_name, operation["desp"])
+            elif operation["type"] == "erase":
+                card_name = ""
+                first_card = True
+                for card_idx in operation["args"]:
+                    if not first_card:
+                        card_name += "、"
+                    first_card = False
+                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
+                result = "%s 被移除"%(card_name)
+            elif operation["type"][0:2] == "LP":
+                if operation['args'][0]==0:
+                    target = "己方"
+                else:
+                    target = "对方"
+                actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
+                subope = operation["type"][2:]
+                action = actions[subope]
+                point = ""
+                if action != "减半":
+                    point = "%d"%operation['args'][1]
+                result = "%sLP%s%s"%(target,action,point)
+            elif operation["type"] == "comment":
+                result = operation["desp"]
+            self.Target_detail.setText(result)
 
     def target_index_changed(self):
         '''对象列表发生变更时触发\n\n通常需要更新卡片描述'''
@@ -667,6 +773,7 @@ class Ui_MainWindow(QWidget):
 
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
+        self.SelectedOpe_list.clearSelection()
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
@@ -964,7 +1071,7 @@ class Ui_MainWindow(QWidget):
         '''卡片重命名'''
         if self.showing_card_id is None:
             return
-        text = self.NewCard_Rename.text()
+        text = self.NewCard_line.text()
         if len(text) == 0:
             return
         # 提示
@@ -988,7 +1095,6 @@ class Ui_MainWindow(QWidget):
         self.refresh_field()
         self.update_targetlist()
         self.show_cardinfo(self.showing_card_id)
-        self.show_opeinfo()
         self.search_card()
 
 if __name__ == "__main__":
