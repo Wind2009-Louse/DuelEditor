@@ -245,7 +245,14 @@ class Ui_MainWindow(QWidget):
             self.Newcard_List.setEnabled(False)
 
         # 初始化
-        self.idx_represent_field = [self.Self_Hand, self.Self_S1, self.Self_S2, self.Self_S3, self.Self_S4, self.Self_S5, self.Self_Field, self.Self_P1, self.Self_P2, self.Self_M1, self.Self_M2, self.Self_M3, self.Self_M4, self.Self_M5, self.Self_Grave, self.Self_Banish, self.Self_Ex, self.Enemy_Hand, self.Enemy_S1, self.Enemy_S2, self.Enemy_S3, self.Enemy_S4, self.Enemy_S5, self.Enemy_Field, self.Enemy_P1, self.Enemy_P2, self.Enemy_M1, self.Enemy_M2, self.Enemy_M3, self.Enemy_M4, self.Enemy_M5, self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2]
+        self.idx_represent_field = [
+            self.Self_Hand, self.Self_S1, self.Self_S2, self.Self_S3, self.Self_S4, self.Self_S5,
+            self.Self_Field, self.Self_P1, self.Self_P2, self.Self_M1, self.Self_M2, self.Self_M3, self.Self_M4, self.Self_M5,
+            self.Self_Grave, self.Self_Banish, self.Self_Ex,
+            self.Enemy_Hand, self.Enemy_S1, self.Enemy_S2, self.Enemy_S3, self.Enemy_S4, self.Enemy_S5,
+            self.Enemy_Field, self.Enemy_P1, self.Enemy_P2, self.Enemy_M1, self.Enemy_M2, self.Enemy_M3, self.Enemy_M4, self.Enemy_M5,
+            self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2
+        ]
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:{"locations":{}, "desp":{}, "LP":[0,0]}}
         self.targets = []
@@ -264,9 +271,10 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.doubleClicked.connect(self.copy_ope)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         self.SelectedOpe_list.itemSelectionChanged.connect(self.select_copying)
-        # TODO
-        self.MoveOpe_Button.setEnabled(False)
         self.MoveOpe_Button.clicked.connect(self.move_operator)
+        self.SelectedOpe_list.addItem("无操作")
+        self.SelectedOpe_list.setEnabled(False)
+        self.MoveOpe_Button.setEnabled(False)
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
@@ -663,10 +671,16 @@ class Ui_MainWindow(QWidget):
         '''描绘复制中的操作'''
         self.SelectedOpe_list.clear()
         operation = self.copying_operation
+        # 判断当前是否有复制中的操作
         if self.copying_operation == {}:
             self.MoveOpe_Button.setEnabled(False)
+            self.SelectedOpe_list.addItem("无操作")
+            self.SelectedOpe_list.setEnabled(False)
             return
         self.MoveOpe_Button.setEnabled(True)
+        self.SelectedOpe_list.setEnabled(True)
+
+        # 根据类型描绘操作
         if operation["type"] == "move":
             card_idx = operation["args"][0]
             card_name = self.operators["cards"][card_idx]["Name"]
