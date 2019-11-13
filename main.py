@@ -460,7 +460,9 @@ class Ui_MainWindow(QWidget):
         # 获取场地
         if begin_at == 0:
             self.fields.clear()
-            lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000]}
+            lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
+            for t in range(len(idx_represent_str)):
+                lastest_field["fields"].append([])
         else:
             lastest_field = deepcopy(self.fields[begin_at-1])
         # 遍历操作
@@ -485,6 +487,15 @@ class Ui_MainWindow(QWidget):
                 lastest_field["LP"][operation["args"][0]] = operation["args"][1]
             elif operation["type"] == "LPHal":
                 lastest_field["LP"][operation["args"][0]] = (lastest_field["LP"][operation["args"][0]] + 1) // 2
+            # 卡片移动时，对场地列表进行更新
+            if operation["type"] in ["move","erase"]:
+                for card_idx in operation["args"]:
+                    if idx > 0 and card_idx in self.fields[idx-1]["locations"]:
+                        last_locat = self.fields[idx-1]["locations"][card_idx]
+                        lastest_field["fields"][last_locat].remove(card_idx)
+                    if operation["type"] == "move":
+                        lastest_field["fields"][operation["dest"]].append(card_idx)
+
             # 将场地复制到列表中用以读取
             self.fields[idx] = deepcopy(lastest_field)
         # 没有操作会导致没有场地被放置到列表中，用以作为初始场地
@@ -506,7 +517,7 @@ class Ui_MainWindow(QWidget):
 
         场地格式：
 
-        locations(dict), desp(dict), LP(list)'''
+        locations(dict), desp(dict), LP(list), fields(list of list)'''
         ope_id = self.Operator_list.selectedIndexes()
         if len(ope_id) == 0:
             ope_id = 0
@@ -885,20 +896,24 @@ class Ui_MainWindow(QWidget):
 
         # 获取搜索框内容
         searching_name = self.NewCard_line.text()
-        for card_id in field['locations'].keys():
-            list_id = field["locations"][card_id]
-            show_list = self.idx_represent_field[list_id]
-            # 获取卡片名字
-            card_name = self.operators["cards"][card_id]["Name"]
-            show_list.addItem(card_name)
-            # 若为最后操作对象之一，绿色高亮
-            if card_id in operation["args"]:
-                show_list.item(show_list.count()-1).setForeground(QColor('green'))
-            else:
-                show_list.item(show_list.count()-1).setForeground(QColor('black'))
-            # 若符合搜索对象，红色高亮
-            if len(searching_name) > 0 and searching_name in card_name:
-                show_list.item(show_list.count()-1).setForeground(QColor('red'))
+
+        # 描绘框内
+        for frameidx in range(len(idx_represent_str)):
+            frame = self.idx_represent_field[frameidx]
+            cardlist = field["fields"][frameidx]
+            for card_id in reversed(cardlist):
+                show_list = self.idx_represent_field[frameidx]
+                # 获取卡片名字
+                card_name = self.operators["cards"][card_id]["Name"]
+                show_list.addItem(card_name)
+                # 若为最后操作对象之一，绿色高亮
+                if card_id in operation["args"]:
+                    show_list.item(show_list.count()-1).setForeground(QColor('green'))
+                else:
+                    show_list.item(show_list.count()-1).setForeground(QColor('black'))
+                # 若符合搜索对象，红色高亮
+                if len(searching_name) > 0 and searching_name in card_name:
+                    show_list.item(show_list.count()-1).setForeground(QColor('red'))
         
         # 数量标注
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
@@ -1008,7 +1023,7 @@ class Ui_MainWindow(QWidget):
         '''选择场上的卡片时调用'''
         # 获取场地
         lst = self.idx_represent_field[field_id]
-        # 获取卡片
+        # 获取卡片索引
         selected = lst.selectedIndexes()
         if len(selected) < 1:
             return
@@ -1024,11 +1039,9 @@ class Ui_MainWindow(QWidget):
         
         # 查找选定卡片
         field = self.get_current_field()
-        for card_id in field["locations"].keys():
-            if field["locations"][card_id] == field_id:
-                if selected == 0:
-                    self.show_cardinfo(card_id)
-                selected -= 1
+        cardlist = field["fields"][field_id]
+        card_id = cardlist[len(cardlist)-1-selected]
+        self.show_cardinfo(card_id)
     
     def target_field(self, field_id):
         '''将场上的卡选为对象'''
@@ -1046,13 +1059,10 @@ class Ui_MainWindow(QWidget):
                 other_lst.clearSelection()
         # 查找对应卡片
         field = self.get_current_field()
-        for card_id in field["locations"].keys():
-            if field["locations"][card_id] == field_id:
-                if selected == 0:
-                    if card_id not in self.targets:
-                        self.targets.append(card_id)
-                        self.update_targetlist()
-                selected -= 1
+        cardlist = field["fields"][field_id]
+        card_id = cardlist[len(cardlist)-1-selected]
+        self.targets.append(card_id)
+        self.update_targetlist()
 
     def search_card(self):
         '''根据输入框的名字，在下拉框查找卡片'''
