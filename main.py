@@ -414,8 +414,8 @@ class Ui_MainWindow(QWidget):
                 json_data = f.read()
                 dict_data = loads(json_data)
                 self.operators = dict_data
-                self.update_operationlist()
                 self.make_fields()
+                self.update_operationlist()
                 self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
                 return
         # 出错时尝试使用utf-8编码打开文件
@@ -424,8 +424,8 @@ class Ui_MainWindow(QWidget):
                 json_data = f.read()
                 dict_data = loads(json_data)
                 self.operators = dict_data
-                self.update_operationlist()
                 self.make_fields()
+                self.update_operationlist()
                 self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
                 return
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
@@ -535,8 +535,8 @@ class Ui_MainWindow(QWidget):
         else:
             ope_id = ope_id[0].row()+1
             self.operators["operations"].insert(ope_id, operation)
-        self.update_operationlist()
         self.make_fields(ope_id)
+        self.update_operationlist()
         self.Operator_list.setCurrentRow(ope_id)
         self.show_opeinfo()
         self.unsave_changed = True
@@ -821,9 +821,12 @@ class Ui_MainWindow(QWidget):
                 self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
     
     def update_operationlist(self):
-        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
+        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)
+        
+        因为需要读取场地来判断LP是否归零，因此需要在调用make_fields()后再调用该函数'''
         self.Operator_list.clear()
-        for operation in self.operators["operations"]:
+        for ope_idx in range(len(self.operators["operations"])):
+            operation = self.operators["operations"][ope_idx]
             if operation["type"] == "move":
                 card_idx = operation["args"][0]
                 card_name = self.operators["cards"][card_idx]["Name"]
@@ -851,6 +854,11 @@ class Ui_MainWindow(QWidget):
                     point = "%d"%operation['args'][1]
                 result = "%sLP%s%s"%(target,action,point)
                 self.Operator_list.addItem(result)
+                # 判断是否导致基本分归零
+                field = self.fields[ope_idx]
+                if field["LP"][0] <= 0 or field["LP"][1] <= 0:
+                    # 归零高亮
+                    self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('red'))
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
                 # 注释高亮
@@ -1113,7 +1121,6 @@ class Ui_MainWindow(QWidget):
         self.operators["cards"][self.showing_card_id]["Name"] = text
         self.unsave_changed = True
         self.maketitle()
-        #self.make_fields()
         self.update_operationlist()
         self.Operator_list.setCurrentRow(ope_idx)
         self.refresh_field()
