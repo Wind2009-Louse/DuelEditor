@@ -1069,8 +1069,9 @@ class Ui_MainWindow(QWidget):
         field = self.get_current_field()
         cardlist = field["fields"][field_id]
         card_id = cardlist[len(cardlist)-1-selected]
-        self.targets.append(card_id)
-        self.update_targetlist()
+        if card_id not in self.targets:
+            self.targets.append(card_id)
+            self.update_targetlist()
 
     def search_card(self):
         '''根据输入框的名字，在下拉框查找卡片'''
