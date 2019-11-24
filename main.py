@@ -186,10 +186,19 @@ class Ui_MainWindow(QWidget):
         self.Self_LP.setEnabled(False)
         self.Self_LP.setGeometry(QRect(690, 335, 111, 21))
 
-        self.ExM_2 = QListWidget(self.DuelFrame)
-        self.ExM_2.setGeometry(QRect(460, 280, 111, 51))
+        # 130 280 111 51
+        self.New_Buttom = QPushButton(self.DuelFrame)
+        self.New_Buttom.setGeometry(QRect(140, 291, 91, 28))
         self.ExM_1 = QListWidget(self.DuelFrame)
         self.ExM_1.setGeometry(QRect(240, 280, 111, 51))
+        # 350 280 111 51
+        self.Open_Buttom = QPushButton(self.DuelFrame)
+        self.Open_Buttom.setGeometry(QRect(360, 291, 91, 28))
+        self.ExM_2 = QListWidget(self.DuelFrame)
+        self.ExM_2.setGeometry(QRect(460, 280, 111, 51))
+        # 570 280 111 51
+        self.Save_Buttom = QPushButton(self.DuelFrame)
+        self.Save_Buttom.setGeometry(QRect(580, 290, 91, 28))
 
         self.Enemy_Ex = QListWidget(self.DuelFrame)
         self.Enemy_Ex.setGeometry(QRect(10, 30, 141, 121))
@@ -230,11 +239,6 @@ class Ui_MainWindow(QWidget):
         self.Enemy_LP.setEnabled(False)
         self.Enemy_LP.setGeometry(QRect(10, 255, 111, 21))
 
-        self.Open_Buttom = QPushButton(self.DuelFrame)
-        self.Open_Buttom.setGeometry(QRect(140, 290, 91, 28))
-        self.Save_Buttom = QPushButton(self.DuelFrame)
-        self.Save_Buttom.setGeometry(QRect(580, 290, 91, 28))
-
         self.retranslateUi(self)
 
     def __init__(self):
@@ -274,6 +278,7 @@ class Ui_MainWindow(QWidget):
         self.unsave_changed = False
 
         # 打开/保存文件
+        self.New_Buttom.clicked.connect(self.newfile)
         self.Open_Buttom.clicked.connect(self.openfile)
         self.Save_Buttom.clicked.connect(self.savefile)
 
@@ -325,12 +330,15 @@ class Ui_MainWindow(QWidget):
     def keyPressEvent(self, event):
         '''键盘事件响应'''
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
-            # Ctrl+S=保存
-            if event.key() == Qt.Key_S:
-                self.savefile()
+            # Ctrl+N=新建
+            if event.key() == Qt.Key_N:
+                self.newfile()
             # Ctrl+O=打开
             elif event.key() == Qt.Key_O:
                 self.openfile()
+            # Ctrl+S=保存
+            elif event.key() == Qt.Key_S:
+                self.savefile()
         if event.key() == Qt.Key_Delete:
             # Delete键删除目标
             if self.Target_list.hasFocus():
@@ -391,6 +399,7 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_hand.setText("对方手卡(0)")
         self.label_enemy_ex.setText("对方额外(0)")
         self.label_enemy_banish.setText("对方除外(0)")
+        self.New_Buttom.setText("新建(N)")
         self.Open_Buttom.setText("打开(O)")
         self.Save_Buttom.setText("保存(S)")
         self.EraseCard_Button.setText("移除对象")
@@ -414,6 +423,25 @@ class Ui_MainWindow(QWidget):
         if self.unsave_changed:
             title_name += "*"
         self.setWindowTitle(title_name)
+
+    def newfile(self):
+        if self.unsave_confirm():
+            return
+        self.operators = {"cardindex":0, "cards":{}, "operations":[]}
+        self.fields = {0:deepcopy(init_field)}
+        self.targets = []
+        self.copying_operation = {}
+        self.filename = "Untitle.json"
+        self.last_text = ""
+        self.unsave_changed = False
+
+        self.maketitle()
+        self.update_operationlist()
+        self.update_copying()
+        self.refresh_field()
+        self.update_targetlist()
+        self.show_cardinfo()
+        self.search_card()
 
     def openfile(self):
         '''打开文件'''
@@ -557,8 +585,12 @@ class Ui_MainWindow(QWidget):
         self.maketitle()
         #self.Operator_list.setFocus()
 
-    def show_cardinfo(self, card_id):
+    def show_cardinfo(self, card_id=None):
         '''根据card_id，在信息栏显示卡片详情'''
+        # 清空
+        if card_id is None:
+            self.Target_detail.setText("")
+            return
         if card_id not in self.operators["cards"]:
             return
         self.showing_card_id = card_id
@@ -680,7 +712,7 @@ class Ui_MainWindow(QWidget):
             return
         self.insert_operation(self.copying_operation)
         self.copying_operation = {}
-        self.draw_copying()
+        self.update_copying()
 
     def copy_ope(self):
         '''复制操作'''
@@ -690,9 +722,9 @@ class Ui_MainWindow(QWidget):
         idx = idx[0].row()
         ope = deepcopy(self.operators["operations"][idx])
         self.copying_operation = ope
-        self.draw_copying()
+        self.update_copying()
     
-    def draw_copying(self):
+    def update_copying(self):
         '''描绘复制中的操作'''
         self.SelectedOpe_list.clear()
         operation = self.copying_operation
