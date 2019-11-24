@@ -270,12 +270,8 @@ class Ui_MainWindow(QWidget):
             self.Enemy_Field, self.Enemy_P1, self.Enemy_P2, self.Enemy_M1, self.Enemy_M2, self.Enemy_M3, self.Enemy_M4, self.Enemy_M5,
             self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2
         ]
-        self.operators = {"cardindex":0, "cards":{}, "operations":[]}
-        self.fields = {0:deepcopy(init_field)}
-        self.targets = []
-        self.filename = "Untitle.json"
-        self.last_text = ""
         self.unsave_changed = False
+        self.newfile()
 
         # 打开/保存文件
         self.New_Buttom.clicked.connect(self.newfile)
@@ -290,18 +286,12 @@ class Ui_MainWindow(QWidget):
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         self.SelectedOpe_list.itemSelectionChanged.connect(self.select_copying)
         self.MoveOpe_Button.clicked.connect(self.move_operator)
-        self.SelectedOpe_list.addItem("无操作")
-        self.SelectedOpe_list.setEnabled(False)
-        self.MoveOpe_Button.setEnabled(False)
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
-        self.MoveCard_Button.setEnabled(False)
-        self.EraseCard_Button.setEnabled(False)
-        self.CommentCard_Button.setEnabled(False)
 
         # 添加/删除卡片部分
         self.NewCard_line.textChanged.connect(self.search_card)
@@ -383,7 +373,7 @@ class Ui_MainWindow(QWidget):
         self.MoveCard_Button.setText("移动对象")
         self.CommentCard_Button.setText("对象注释")
         self.Comment_Button.setText("操作注释")
-        self.label_self_ex.setText("己方额外")
+        self.label_self_ex.setText("己方额外(0)")
         self.label_self_hand.setText("己方手卡(0)")
         self.label_self_rpen.setText("己方右灵摆")
         self.label_self_lpen.setText("己方左灵摆")
@@ -433,6 +423,7 @@ class Ui_MainWindow(QWidget):
         self.copying_operation = {}
         self.filename = "Untitle.json"
         self.last_text = ""
+        self.showing_card_id = None
         self.unsave_changed = False
 
         self.maketitle()
@@ -608,6 +599,7 @@ class Ui_MainWindow(QWidget):
     def show_opeinfo(self, idx=None):
         '''显示指定操作详情\n\nidx为空时，显示选定操作的详情'''
         # 获取操作
+        self.showing_card_id = None
         if idx is None:
             idx = self.Operator_list.selectedIndexes()
             if len(idx) < 1:
@@ -1165,7 +1157,7 @@ class Ui_MainWindow(QWidget):
         if len(text) == 0:
             return
         # 提示
-        reply = QMessageBox.warning(self, '提示', "是否要把这张卡片重命名为%s？"%text, QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.warning(self, '提示', "是否要把[%s]重命名为[%s]？"%(self.operators["cards"][self.showing_card_id]["Name"],text), QMessageBox.Yes | QMessageBox.No)
         if reply == QMessageBox.No:
             return
 
