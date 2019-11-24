@@ -11,6 +11,9 @@ import os
 from sqlite3 import connect
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
+for t in range(len(idx_represent_str)):
+    init_field["fields"].append([])
 
 class Ui_MainWindow(QWidget):
     def labelset(self):
@@ -254,7 +257,7 @@ class Ui_MainWindow(QWidget):
             self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2
         ]
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
-        self.fields = {0:{"locations":{}, "desp":{}, "LP":[0,0]}}
+        self.fields = {0:deepcopy(init_field)}
         self.targets = []
         self.filename = "Untitle.json"
         self.last_text = ""
@@ -281,6 +284,9 @@ class Ui_MainWindow(QWidget):
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
+        self.MoveCard_Button.setEnabled(False)
+        self.EraseCard_Button.setEnabled(False)
+        self.CommentCard_Button.setEnabled(False)
 
         # 添加/删除卡片部分
         self.NewCard_line.textChanged.connect(self.search_card)
@@ -371,10 +377,10 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_field.setText("对方场地")
         self.label_enemy_lpen.setText("对方左灵摆")
         self.label_enemy_lp.setText("对方基本分")
-        self.label_enemy_grave.setText("对方墓地")
-        self.label_enemy_hand.setText("对方手卡")
-        self.label_enemy_ex.setText("对方额外")
-        self.label_enemy_banish.setText("对方除外")
+        self.label_enemy_grave.setText("对方墓地(0)")
+        self.label_enemy_hand.setText("对方手卡(0)")
+        self.label_enemy_ex.setText("对方额外(0)")
+        self.label_enemy_banish.setText("对方除外(0)")
         self.Open_Buttom.setText("打开(O)")
         self.Save_Buttom.setText("保存(S)")
         self.EraseCard_Button.setText("移除对象")
@@ -460,9 +466,7 @@ class Ui_MainWindow(QWidget):
         # 获取场地
         if begin_at == 0:
             self.fields.clear()
-            lastest_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
-            for t in range(len(idx_represent_str)):
-                lastest_field["fields"].append([])
+            lastest_field = deepcopy(init_field)
         else:
             lastest_field = deepcopy(self.fields[begin_at-1])
         # 遍历操作
@@ -810,6 +814,17 @@ class Ui_MainWindow(QWidget):
             ope_id = 0
         else:
             ope_id = ope_id[0].row()
+        
+        # 按钮禁用/恢复
+        if len(self.targets) == 0:
+            self.MoveCard_Button.setEnabled(False)
+            self.EraseCard_Button.setEnabled(False)
+            self.CommentCard_Button.setEnabled(False)
+        else:
+            self.MoveCard_Button.setEnabled(True)
+            self.EraseCard_Button.setEnabled(True)
+            self.CommentCard_Button.setEnabled(True)
+
         self.Target_list.clear()
         searching_name = self.NewCard_line.text()
         for target in self.targets:
