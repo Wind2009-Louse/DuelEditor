@@ -285,7 +285,7 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.doubleClicked.connect(self.copy_ope)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         self.SelectedOpe_list.itemSelectionChanged.connect(self.select_copying)
-        self.MoveOpe_Button.clicked.connect(self.move_operator)
+        self.MoveOpe_Button.clicked.connect(self.paste_operator)
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
@@ -411,7 +411,7 @@ class Ui_MainWindow(QWidget):
         '''根据当前正在打开的文件修改窗口标题'''
         title_name = "DuelEditor - %s"%self.filename
         if self.unsave_changed:
-            title_name += "*"
+            title_name = "*" + title_name
         self.setWindowTitle(title_name)
 
     def newfile(self):
@@ -455,14 +455,17 @@ class Ui_MainWindow(QWidget):
                 return
         # 出错时尝试使用utf-8编码打开文件
         except:
-            with open(fullname,'r',encoding='utf-8') as f:
-                json_data = f.read()
-                dict_data = loads(json_data)
-                self.operators = dict_data
-                self.make_fields()
-                self.update_operationlist()
-                self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
-                return
+            try:
+                with open(fullname,'r',encoding='utf-8') as f:
+                    json_data = f.read()
+                    dict_data = loads(json_data)
+                    self.operators = dict_data
+                    self.make_fields()
+                    self.update_operationlist()
+                    self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                    return
+            except:
+                pass
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
     def unsave_confirm(self):
@@ -623,7 +626,7 @@ class Ui_MainWindow(QWidget):
             first_card = True
             for card_idx in operation["args"]:
                 if not first_card:
-                    card_name += "、"
+                    card_name += "、\n"
                 last_location = self.get_last_location(card_idx,idx)
                 first_card = False
                 card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
@@ -633,7 +636,7 @@ class Ui_MainWindow(QWidget):
             first_card = True
             for card_idx in operation["args"]:
                 if not first_card:
-                    card_name += "、"
+                    card_name += "、\n"
                 last_location = self.get_last_location(card_idx,idx)
                 first_card = False
                 card_name += "[%s]%s"%(last_location,self.operators["cards"][card_idx]["Name"])
@@ -695,10 +698,13 @@ class Ui_MainWindow(QWidget):
         del self.operators["operations"][idx]
         self.make_fields(idx)
         self.update_operationlist()
-        self.Operator_list.setCurrentRow(idx-1)
+        if len(self.operators["operations"]) > 0 and idx == 0:
+            self.Operator_list.setCurrentRow(0)
+        else:
+            self.Operator_list.setCurrentRow(idx-1)
         self.show_opeinfo()
 
-    def move_operator(self):
+    def paste_operator(self):
         '''粘贴操作'''
         if self.copying_operation == {}:
             return
@@ -781,7 +787,7 @@ class Ui_MainWindow(QWidget):
                 first_card = True
                 for card_idx in operation["args"]:
                     if not first_card:
-                        card_name += "、"
+                        card_name += "、\n"
                     first_card = False
                     card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
                 result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
@@ -790,7 +796,7 @@ class Ui_MainWindow(QWidget):
                 first_card = True
                 for card_idx in operation["args"]:
                     if not first_card:
-                        card_name += "、"
+                        card_name += "、\n"
                     first_card = False
                     card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
                 result = "%s %s"%(card_name, operation["desp"])
@@ -799,7 +805,7 @@ class Ui_MainWindow(QWidget):
                 first_card = True
                 for card_idx in operation["args"]:
                     if not first_card:
-                        card_name += "、"
+                        card_name += "、\n"
                     first_card = False
                     card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
                 result = "%s 被移除"%(card_name)
