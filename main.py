@@ -4,7 +4,7 @@ from json import loads, dumps
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox
 from PyQt5.QtCore import QRect, QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator, QColor
+from PyQt5.QtGui import QRegExpValidator, QColor, QFont, QPalette
 from functools import partial
 from copy import deepcopy
 import os
@@ -961,6 +961,18 @@ class Ui_MainWindow(QWidget):
         searching_name = self.NewCard_line.text()
 
         # 描绘框内
+        label_colors = ["QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}",
+                        "QLabel{color:rgb(0,0,0,255)}"]
+        searched_frames = [self.Enemy_Ex, self.Enemy_Hand, self.Enemy_Grave, self.Enemy_Banish,
+                self.Self_Ex, self.Self_Hand, self.Self_Grave, self.Self_Banish]
+        labels = [self.label_enemy_ex, self.label_enemy_hand, self.label_enemy_grave, self.label_enemy_banish,
+                self.label_self_ex, self.label_self_hand, self.label_self_grave, self.label_self_banish]
         for frameidx in range(len(idx_represent_str)):
             frame = self.idx_represent_field[frameidx]
             cardlist = field["fields"][frameidx]
@@ -977,6 +989,8 @@ class Ui_MainWindow(QWidget):
                 # 若符合搜索对象，红色高亮
                 if len(searching_name) > 0 and searching_name in card_name:
                     show_list.item(show_list.count()-1).setForeground(QColor('red'))
+                    if frame in searched_frames:
+                        label_colors[searched_frames.index(frame)] = "QLabel{color:rgb(255,0,102,255)}"
         
         # 数量标注
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
@@ -987,6 +1001,8 @@ class Ui_MainWindow(QWidget):
         self.label_self_hand.setText("己方手卡(%d)"%self.Self_Hand.count())
         self.label_self_grave.setText("己方墓地(%d)"%self.Self_Grave.count())
         self.label_self_banish.setText("己方除外(%d)"%self.Self_Banish.count())
+        for i in range(8):
+            labels[i].setStyleSheet(label_colors[i])
  
     def ope_LPAdd(self):
         '''增加对象LP。'''
