@@ -366,8 +366,8 @@ class Ui_MainWindow(QWidget):
         self.Operator_list.setSortingEnabled(False)
 
         self.Operator_list.setSortingEnabled(__sortingEnabled)
-        self.label_operation_list.setText("操作列表")
-        self.label_target_list.setText("操作对象")
+        self.label_operation_list.setText("操作列表(0/0)")
+        self.label_target_list.setText("操作对象(0)")
         self.Delete_target.setText("对象中删除")
         self.CreateCard_Button.setText("←添加到对象")
         self.MoveCard_Button.setText("移动对象")
@@ -668,6 +668,7 @@ class Ui_MainWindow(QWidget):
         self.operators["cardindex"] += 1
         self.operators["cards"][idx] = {"Name": cardname}
         self.targets.append(idx)
+        self.label_target_list.setText("操作对象(%d)"%len(self.targets))
         self.update_targetlist()
 
     def remove_from_targets(self):
@@ -679,6 +680,7 @@ class Ui_MainWindow(QWidget):
         target_idx = target_idx[0].row()
         del self.targets[target_idx]
         # 刷新
+        self.label_target_list.setText("操作对象(%d)"%len(self.targets))
         self.Target_detail.clear()
         self.update_targetlist()
 
@@ -846,6 +848,7 @@ class Ui_MainWindow(QWidget):
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
+        self.update_operation_label()
 
     def update_targetlist(self):
         '''更新对象列表'''
@@ -925,6 +928,17 @@ class Ui_MainWindow(QWidget):
                     card_name += "等"
                 result = "%s 被移除"%(card_name)
                 self.Operator_list.addItem(result)
+        self.update_operation_label()
+
+    def update_operation_label(self):
+        '''刷新显示的操作列表信息'''
+        ope_count = len(self.operators["operations"])
+        ope_index_list = self.Operator_list.selectedIndexes()
+        if len(ope_index_list) == 0:
+            ope_index = 0
+        else:
+            ope_index = ope_index_list[0].row()+1
+        self.label_operation_list.setText("操作列表(%d/%d)"%(ope_index, ope_count))
 
     def refresh_field(self):
         '''刷新场地'''
@@ -1142,6 +1156,7 @@ class Ui_MainWindow(QWidget):
         card_id = cardlist[len(cardlist)-1-selected]
         if card_id not in self.targets:
             self.targets.append(card_id)
+            self.label_target_list.setText("操作对象(%d)"%len(self.targets))
             self.update_targetlist()
 
     def search_card(self):
