@@ -243,19 +243,71 @@ class Ui_MainWindow(QWidget):
 
     def __init__(self):
         idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+        cardtypes = {0x1: "怪兽", 0x2: "魔法", 0x4: "陷阱", 0x10: "通常", 0x20: "效果", 0x40: "融合", 0x80: "仪式", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "超量", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "连接"}
+        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
+        cardattrs = {0x1: "地", 0x2: "水", 0x4: "炎", 0x8: "风", 0x10: "光", 0x20: "暗", 0x40: "神"}
         super(Ui_MainWindow, self).__init__()
         self.init_frame()
 
         # 读取卡片数据库
         self.card_names = []
+        self.card_datas = {}
         try:
             if not os.path.exists("cards.cdb"):
                 raise
             sql_conn = connect('cards.cdb')
             cur = sql_conn.cursor()
             sel = cur.execute("select * from texts;")
+            cur_2 = sql_conn.cursor()
             for row in sel:
                 self.card_names.append(row[1])
+                if row[1] not in self.card_datas.keys():
+                    carddata_search = cur_2.execute("select * from datas where id=%d;"%row[0])
+                    searched = False
+                    for carddata in carddata_search:
+                        searched = True
+                        # 生成描述
+                        desp = ""
+                        # 种类
+                        for types in cardtypes.keys():
+                            if carddata[4] & types != 0:
+                                if desp != "":
+                                    desp += "/"
+                                desp += cardtypes[types]
+                        # 怪兽信息
+                        if carddata[4] & 0x1 != 0:
+                            # 等阶/Link
+                            if carddata[4] & 0x4000000 != 0:
+                                desp += " Link-%d"%carddata[7]
+                            else:
+                                desp += " %d★"%(carddata[7]&0xffff)
+                            # 属性/种族
+                            attr_str = ""
+                            for attr in cardattrs.keys():
+                                if carddata[9] & attr != 0:
+                                    if attr_str != "":
+                                        attr_str += "&"
+                                    attr_str += cardattrs[attr]
+                            race_str = ""
+                            for race in cardraces.keys():
+                                if carddata[8] & race != 0:
+                                    if race_str != "":
+                                        race_str += "&"
+                                    race_str += cardraces[race]
+                            desp += " %s/%s"%(attr_str, race_str)
+                            if carddata[5] < 0:
+                                desp += " ?"
+                            else:
+                                desp += " %d"%carddata[5]
+                            if carddata[4] & 0x4000000 == 0:
+                                if carddata[6] < 0:
+                                    desp += "/?"
+                                else:
+                                    desp += "/%d"%carddata[6]
+                        desp += "\r\n%s"%row[2]
+                        self.card_datas[row[1]] = desp
+                    if not searched:
+                        continue
             sql_conn.close()
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
@@ -297,6 +349,7 @@ class Ui_MainWindow(QWidget):
         self.NewCard_line.textChanged.connect(self.search_card)
         self.NewCard_line.returnPressed.connect(self.create_card)
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
+        self.Newcard_List.itemSelectionChanged.connect(self.show_carddesp)
         self.NewCard_Rename_Button.clicked.connect(self.card_rename)
         self.CreateCard_Button.clicked.connect(self.create_card)
         self.EraseCard_Button.clicked.connect(self.erase_targets)
@@ -577,6 +630,7 @@ class Ui_MainWindow(QWidget):
         self.show_opeinfo()
         self.unsave_changed = True
         self.maketitle()
+        self.label_target_list.setText("操作对象(%d)"%len(self.targets))
         #self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id=None):
@@ -1179,6 +1233,15 @@ class Ui_MainWindow(QWidget):
             if text in cardname:
                 self.Newcard_List.addItem(cardname)
     
+    def show_carddesp(self):
+        idx = self.Newcard_List.selectedIndexes()
+        if len(idx) < 1:
+            return
+        cardname = self.Newcard_List.item(idx[0].row()).text()
+        if cardname in self.card_datas:
+            text = "[%s]\r\n%s"%(cardname, self.card_datas[cardname])
+            self.Target_detail.setText(text)
+
     def fix_cardname(self,qindex):
         '''补全卡名'''
         index = qindex.row()
