@@ -246,6 +246,7 @@ class Ui_MainWindow(QWidget):
         cardtypes = {0x1: "怪兽", 0x2: "魔法", 0x4: "陷阱", 0x10: "通常", 0x20: "效果", 0x40: "融合", 0x80: "仪式", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "超量", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "连接"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "地", 0x2: "水", 0x4: "炎", 0x8: "风", 0x10: "光", 0x20: "暗", 0x40: "神"}
+        linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         super(Ui_MainWindow, self).__init__()
         self.init_frame()
 
@@ -295,6 +296,7 @@ class Ui_MainWindow(QWidget):
                                         race_str += "&"
                                     race_str += cardraces[race]
                             desp += " %s/%s"%(attr_str, race_str)
+                            # ATK/DEF
                             if carddata[5] < 0:
                                 desp += " ?"
                             else:
@@ -304,6 +306,11 @@ class Ui_MainWindow(QWidget):
                                     desp += "/?"
                                 else:
                                     desp += "/%d"%carddata[6]
+                            else:
+                                desp += " "
+                                for marker in linkmarkers.keys():
+                                    if carddata[6] & marker != 0:
+                                        desp += linkmarkers[marker]
                         desp += "\r\n%s"%row[2]
                         self.card_datas[row[1]] = desp
                     if not searched:
