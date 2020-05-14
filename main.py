@@ -243,9 +243,9 @@ class Ui_MainWindow(QWidget):
 
     def __init__(self):
         idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
-        cardtypes = {0x1: "怪兽", 0x2: "魔法", 0x4: "陷阱", 0x10: "通常", 0x20: "效果", 0x40: "融合", 0x80: "仪式", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "超量", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "连接"}
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "超量", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "地", 0x2: "水", 0x4: "炎", 0x8: "风", 0x10: "光", 0x20: "暗", 0x40: "神"}
+        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         super(Ui_MainWindow, self).__init__()
         self.init_frame()
@@ -311,7 +311,7 @@ class Ui_MainWindow(QWidget):
                                 for marker in linkmarkers.keys():
                                     if carddata[6] & marker != 0:
                                         desp += linkmarkers[marker]
-                        desp += "\r\n%s"%row[2]
+                        desp += "<br>%s"%row[2]
                         self.card_datas[row[1]] = desp
                     if not searched:
                         continue
@@ -356,6 +356,7 @@ class Ui_MainWindow(QWidget):
         self.NewCard_line.textChanged.connect(self.search_card)
         self.NewCard_line.returnPressed.connect(self.create_card)
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
+        self.Newcard_List.clicked.connect(self.show_carddesp)
         self.Newcard_List.itemSelectionChanged.connect(self.show_carddesp)
         self.NewCard_Rename_Button.clicked.connect(self.card_rename)
         self.CreateCard_Button.clicked.connect(self.create_card)
@@ -1235,9 +1236,12 @@ class Ui_MainWindow(QWidget):
             self.Newcard_List.clear()
             return
         self.Newcard_List.clear()
+        # 名字相同的优先
+        if text in self.card_names:
+            self.Newcard_List.addItem(text)
         # 遍历搜索符合条件的卡片
         for cardname in self.card_names:
-            if text in cardname:
+            if text in cardname and text != cardname:
                 self.Newcard_List.addItem(cardname)
     
     def show_carddesp(self):
@@ -1246,8 +1250,8 @@ class Ui_MainWindow(QWidget):
             return
         cardname = self.Newcard_List.item(idx[0].row()).text()
         if cardname in self.card_datas:
-            text = "[%s]\r\n%s"%(cardname, self.card_datas[cardname])
-            self.Target_detail.setText(text)
+            text = "[%s]<br>%s"%(cardname, self.card_datas[cardname])
+            self.Target_detail.setHtml(text)
 
     def fix_cardname(self,qindex):
         '''补全卡名'''
