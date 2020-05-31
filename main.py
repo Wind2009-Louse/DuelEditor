@@ -376,6 +376,7 @@ class Ui_MainWindow(QWidget):
         # 场上的卡片
         for field_id in range(len(self.idx_represent_field)):
             self.idx_represent_field[field_id].itemSelectionChanged.connect(partial(self.select_field, field_id))
+            self.idx_represent_field[field_id].clicked.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
     def keyPressEvent(self, event):
@@ -649,9 +650,18 @@ class Ui_MainWindow(QWidget):
             return
         if card_id not in self.operators["cards"]:
             return
+        card_name = self.operators["cards"][card_id]["Name"]
+
+        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
+            search_list = [card_name, card_name[:-1]]
+            for name in search_list:
+                if name in self.card_datas:
+                    text = "[%s]<br>%s"%(name, self.card_datas[name])
+                    self.Target_detail.setHtml(text)
+                    return
+
         self.showing_card_id = card_id
         field = self.get_current_field()
-        card_name = self.operators["cards"][card_id]["Name"]
         card_locat = "未知"
         card_desp = "无"
         if card_id in field["locations"]:

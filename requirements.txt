@@ -1,0 +1,3 @@
+jsonschema==3.0.1
+PyQt5==5.12.2
+pyinstaller>=3.6
