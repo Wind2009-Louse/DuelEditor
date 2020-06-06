@@ -8,6 +8,7 @@ from PyQt5.QtGui import QRegExpValidator, QColor, QFont, QPalette
 from functools import partial
 from copy import deepcopy
 import os
+import re
 from sqlite3 import connect
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
@@ -29,16 +30,16 @@ class Ui_MainWindow(QWidget):
         self.label_operation_list.setAlignment(Qt.AlignCenter)
 
         self.label_self_ex = QLabel(self.DuelFrame)
-        self.label_self_ex.setGeometry(QRect(10, 460-22, 141, 20))
+        self.label_self_ex.setGeometry(QRect(10, 460-22, 191, 20))
         self.label_self_ex.setAlignment(Qt.AlignCenter)
         self.label_self_hand = QLabel(self.DuelFrame)
-        self.label_self_hand.setGeometry(QRect(220, 460-22, 141, 20))
+        self.label_self_hand.setGeometry(QRect(210, 460-22, 191, 20))
         self.label_self_hand.setAlignment(Qt.AlignCenter)
         self.label_self_grave = QLabel(self.DuelFrame)
-        self.label_self_grave.setGeometry(QRect(440, 460-22, 141, 20))
+        self.label_self_grave.setGeometry(QRect(410, 460-22, 191, 20))
         self.label_self_grave.setAlignment(Qt.AlignCenter)
         self.label_self_banish = QLabel(self.DuelFrame)
-        self.label_self_banish.setGeometry(QRect(650, 460-22, 141, 20))
+        self.label_self_banish.setGeometry(QRect(610, 460-22, 191, 20))
         self.label_self_banish.setAlignment(Qt.AlignCenter)
         self.label_self_lpen = QLabel(self.DuelFrame)
         self.label_self_lpen.setGeometry(QRect(10, 380-22, 111, 20))
@@ -54,16 +55,16 @@ class Ui_MainWindow(QWidget):
         self.label_self_lp.setAlignment(Qt.AlignCenter)
 
         self.label_enemy_ex = QLabel(self.DuelFrame)
-        self.label_enemy_ex.setGeometry(QRect(10, 30-22, 141, 20))
+        self.label_enemy_ex.setGeometry(QRect(10, 30-22, 191, 20))
         self.label_enemy_ex.setAlignment(Qt.AlignCenter)
         self.label_enemy_hand = QLabel(self.DuelFrame)
-        self.label_enemy_hand.setGeometry(QRect(220, 30-22, 141, 20))
+        self.label_enemy_hand.setGeometry(QRect(210, 30-22, 191, 20))
         self.label_enemy_hand.setAlignment(Qt.AlignCenter)
         self.label_enemy_grave = QLabel(self.DuelFrame)
-        self.label_enemy_grave.setGeometry(QRect(440, 30-22, 141, 20))
+        self.label_enemy_grave.setGeometry(QRect(410, 30-22, 191, 20))
         self.label_enemy_grave.setAlignment(Qt.AlignCenter)
         self.label_enemy_banish = QLabel(self.DuelFrame)
-        self.label_enemy_banish.setGeometry(QRect(650, 30-22, 141, 20))
+        self.label_enemy_banish.setGeometry(QRect(610, 30-22, 191, 20))
         self.label_enemy_banish.setAlignment(Qt.AlignCenter)
         self.label_enemy_lpen = QLabel(self.DuelFrame)
         self.label_enemy_lpen.setGeometry(QRect(690, 180-22, 111, 20))
@@ -106,6 +107,7 @@ class Ui_MainWindow(QWidget):
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setGeometry(QRect(1020, 20, 181, 21))
+        self.NewCard_line.setPlaceholderText("输入卡片名称")
         self.Newcard_List = QListWidget(self.centralwidget)
         self.Newcard_List.setGeometry(QRect(1020, 50, 181, 191))
         self.CreateCard_Button = QPushButton(self.centralwidget)
@@ -114,6 +116,7 @@ class Ui_MainWindow(QWidget):
         self.NewCard_Rename_Button.setGeometry(QRect(1020, 275, 181, 28))
         self.Comment_Line = QLineEdit(self.centralwidget)
         self.Comment_Line.setGeometry(QRect(1020, 313, 181, 21))
+        self.Comment_Line.setPlaceholderText("输入注释")
         self.CommentCard_Button = QPushButton(self.centralwidget)
         self.CommentCard_Button.setGeometry(QRect(1020, 340, 181, 28))
         self.Comment_Button = QPushButton(self.centralwidget)
@@ -127,6 +130,7 @@ class Ui_MainWindow(QWidget):
         regx = QRegExp("^[0-9]{15}$")
         validator = QRegExpValidator(regx, self.LP_line)
         self.LP_line.setValidator(validator)
+        self.LP_line.setPlaceholderText("输入基本分变动")
         self.AddLP_Button = QPushButton(self.centralwidget)
         self.AddLP_Button.setGeometry(QRect(1020, 470, 181, 28))
         self.DecLP_Button = QPushButton(self.centralwidget)
@@ -148,13 +152,13 @@ class Ui_MainWindow(QWidget):
         self.MoveOpe_Button.setGeometry(QRect(1210, 560, 181, 28))
 
         self.Self_Ex = QListWidget(self.DuelFrame)
-        self.Self_Ex.setGeometry(QRect(10, 460, 141, 121))
+        self.Self_Ex.setGeometry(QRect(10, 460, 191, 121))
         self.Self_Hand = QListWidget(self.DuelFrame)
-        self.Self_Hand.setGeometry(QRect(220, 460, 141, 121))
+        self.Self_Hand.setGeometry(QRect(210, 460, 191, 121))
         self.Self_Grave = QListWidget(self.DuelFrame)
-        self.Self_Grave.setGeometry(QRect(440, 460, 141, 121))
+        self.Self_Grave.setGeometry(QRect(410, 460, 191, 121))
         self.Self_Banish = QListWidget(self.DuelFrame)
-        self.Self_Banish.setGeometry(QRect(650, 460, 141, 121))
+        self.Self_Banish.setGeometry(QRect(610, 460, 191, 121))
         self.Self_S1 = QListWidget(self.DuelFrame)
         self.Self_S1.setGeometry(QRect(130, 380, 111, 51))
         self.Self_S2 = QListWidget(self.DuelFrame)
@@ -201,13 +205,13 @@ class Ui_MainWindow(QWidget):
         self.Save_Buttom.setGeometry(QRect(580, 290, 91, 28))
 
         self.Enemy_Ex = QListWidget(self.DuelFrame)
-        self.Enemy_Ex.setGeometry(QRect(10, 30, 141, 121))
+        self.Enemy_Ex.setGeometry(QRect(10, 30, 191, 121))
         self.Enemy_Hand = QListWidget(self.DuelFrame)
-        self.Enemy_Hand.setGeometry(QRect(220, 30, 141, 121))
+        self.Enemy_Hand.setGeometry(QRect(210, 30, 191, 121))
         self.Enemy_Grave = QListWidget(self.DuelFrame)
-        self.Enemy_Grave.setGeometry(QRect(440, 30, 141, 121))
+        self.Enemy_Grave.setGeometry(QRect(410, 30, 191, 121))
         self.Enemy_Banish = QListWidget(self.DuelFrame)
-        self.Enemy_Banish.setGeometry(QRect(650, 30, 141, 121))
+        self.Enemy_Banish.setGeometry(QRect(610, 30, 191, 121))
         self.Enemy_S1 = QListWidget(self.DuelFrame)
         self.Enemy_S1.setGeometry(QRect(570, 180, 111, 51))
         self.Enemy_S2 = QListWidget(self.DuelFrame)
@@ -243,7 +247,7 @@ class Ui_MainWindow(QWidget):
 
     def __init__(self):
         idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
-        cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "超量", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
@@ -311,7 +315,14 @@ class Ui_MainWindow(QWidget):
                                 for marker in linkmarkers.keys():
                                     if carddata[6] & marker != 0:
                                         desp += linkmarkers[marker]
-                        desp += "<br>%s"%row[2]
+                        # 效果换行
+                        eff_desp = row[2]
+                        eff_desp = re.sub(r"(\S+)①：",r"\1<br>①：",eff_desp)
+                        eff_desp = re.sub(r"②：",r"<br>②：",eff_desp)
+                        eff_desp = re.sub(r"③：",r"<br>③：",eff_desp)
+                        eff_desp = re.sub(r"④：",r"<br>④：",eff_desp)
+                        eff_desp = re.sub(r"⑤：",r"<br>⑤：",eff_desp)
+                        desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
                     if not searched:
                         continue
