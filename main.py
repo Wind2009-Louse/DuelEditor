@@ -317,11 +317,11 @@ class Ui_MainWindow(QWidget):
                                         desp += linkmarkers[marker]
                         # 效果换行
                         eff_desp = row[2]
-                        eff_desp = re.sub(r"(\S+)①：",r"\1<br>①：",eff_desp)
-                        eff_desp = re.sub(r"②：",r"<br>②：",eff_desp)
-                        eff_desp = re.sub(r"③：",r"<br>③：",eff_desp)
-                        eff_desp = re.sub(r"④：",r"<br>④：",eff_desp)
-                        eff_desp = re.sub(r"⑤：",r"<br>⑤：",eff_desp)
+                        eff_desp = re.sub(r"\r\n",r"<br>",eff_desp)
+                        #eff_desp = re.sub(r"②：",r"<br>②：",eff_desp)
+                        #eff_desp = re.sub(r"③：",r"<br>③：",eff_desp)
+                        #eff_desp = re.sub(r"④：",r"<br>④：",eff_desp)
+                        #eff_desp = re.sub(r"⑤：",r"<br>⑤：",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
                     if not searched:
