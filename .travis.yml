@@ -1,10 +1,10 @@
 language: python
 
 python:
-    - "3.7.3"
+  - "3.7.3"
 
 install:
-- pip install -r requirements.txt
+  - pip install -r requirements.txt
 
 script:
   - pyinstaller main.py -F -w -n DuelEditor.out
