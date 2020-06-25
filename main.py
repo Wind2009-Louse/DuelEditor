@@ -4,7 +4,7 @@ from json import loads, dumps
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox
 from PyQt5.QtCore import QRect, QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator, QColor, QFont, QPalette
+from PyQt5.QtGui import QRegExpValidator, QColor
 from functools import partial
 from copy import deepcopy
 import os
