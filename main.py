@@ -20,16 +20,20 @@ class Ui_MainWindow(QWidget):
     def placeframe(self):        
         width = self.width()
         height = self.height()
-        print(width, height)
+        # print(width, height)
 
         width_1_1 = 191 * width / self.origin_width
         height_1_1 = 143 * height / self.origin_height
+        if height < self.origin_height:
+            height_1_1 = 143 - (self.origin_height - height) / 2
         xline_1_1 = 10
         xline_1_2 = 10 + 200 * width / self.origin_width
         xline_1_3 = 10 + 400 * width / self.origin_width
         xline_1_4 = 10 + 600 * width / self.origin_width
         yline_1_1 = 8
-        yline_1_2 = 590 * height / self.origin_height - height_1_1
+        yline_1_2 = (self.origin_height - 10) * height / self.origin_height - height_1_1
+        if height < self.origin_height:
+            yline_1_2 = (self.origin_height - 153) - (self.origin_height - height) / 2
 
         # enemy/self place
         self.label_enemy_ex.setGeometry(
@@ -65,24 +69,37 @@ class Ui_MainWindow(QWidget):
         self.Self_Banish.setGeometry(
             QRect(xline_1_4, yline_1_2+22, width_1_1, height_1_1 - 22))
 
-        width_2_1 = 111 * width / self.origin_width
-        height_2_1 = 51 * height / self.origin_height
+        # field
+        width_2_0 = 110 * width // self.origin_width
+        width_2_1 = width_2_0 + 1
+        height_2_0 = (yline_1_2 - yline_1_1 - height_1_1 - 38) // 5
+        height_2_1 = height_2_0 + 1
         xline_2_1 = 10
         xline_2_2 = 10 + 120 * width / self.origin_width
-        xline_2_3 = 10 + 230 * width / self.origin_width
-        xline_2_4 = 10 + 340 * width / self.origin_width
-        xline_2_5 = 10 + 450 * width / self.origin_width
-        xline_2_6 = 10 + 560 * width / self.origin_width
+        xline_2_3 = 10 + 120 * width / self.origin_width + width_2_0
+        xline_2_4 = 10 + 120 * width / self.origin_width + width_2_0 * 2
+        xline_2_5 = 10 + 120 * width / self.origin_width + width_2_0 * 3
+        xline_2_6 = 10 + 120 * width / self.origin_width + width_2_0 * 4
         xline_2_7 = 10 + 680 * width / self.origin_width
-        yline_2_1 = 180 * height / self.origin_height
-        yline_2_2 = 230 * height / self.origin_height
-        yline_2_3 = 280 * height / self.origin_height
-        yline_2_4 = 330 * height / self.origin_height
-        yline_2_5 = 380 * height / self.origin_height
-        yline_2_6 = 255 * height / self.origin_height
-        yline_2_7 = 305 * height / self.origin_height
-        yline_2_8 = 335 * height / self.origin_height
-
+        yline_2_1 = yline_1_1 + height_1_1 + 30
+        yline_2_2 = yline_2_1 + height_2_0
+        yline_2_3 = yline_2_1 + height_2_0 * 2 # 280 * height / self.origin_height
+        yline_2_4 = yline_2_1 + height_2_0 * 3 # 330 * height / self.origin_height
+        yline_2_5 = yline_2_1 + height_2_0 * 4 # 380 * height / self.origin_height
+        yline_2_6 = yline_2_1 + height_2_0 + 25 # 255 * height / self.origin_height
+        yline_2_7 = yline_2_5 - height_2_0 - 25 # 305 * height / self.origin_height
+        yline_2_8 = yline_2_5 - 45 # 335 * height / self.origin_height
+        if height < self.origin_height:
+            diff = (self.origin_height - height) / 2
+            height_2_1 = 51
+            yline_2_1 = 180 - diff
+            yline_2_2 = 230 - diff
+            yline_2_3 = 280 - diff
+            yline_2_4 = 330 - diff
+            yline_2_5 = 380 - diff
+            yline_2_6 = 255 - diff
+            yline_2_7 = 305 - diff
+            yline_2_8 = 335 - diff
         self.Enemy_S1.setGeometry(QRect(xline_2_6, yline_2_1, width_2_1, height_2_1))
         self.Enemy_S2.setGeometry(QRect(xline_2_5, yline_2_1, width_2_1, height_2_1))
         self.Enemy_S3.setGeometry(QRect(xline_2_4, yline_2_1, width_2_1, height_2_1))
@@ -130,7 +147,7 @@ class Ui_MainWindow(QWidget):
         # target/desc
         magic_3_1 = 85
         width_3_1 = 181 * width / self.origin_width
-        height_3_1 = 250 * (height - magic_3_1) / (self.origin_height - magic_3_1)
+        height_3_1 = 235 * (height - magic_3_1) / (self.origin_height - magic_3_1)
         height_3_2 = height - 160 - height_3_1
         xline_3_1 = 810 * width / self.origin_width
         self.label_target_list.setGeometry(QRect(xline_3_1, 0, width_3_1, 20))
@@ -174,15 +191,19 @@ class Ui_MainWindow(QWidget):
 
     def init_frame(self):
         '''初始化UI'''
+        self.origin_width = 1380
+        self.origin_height = 590
+        self.mini_width = 960
+        self.mini_height = 540
         self.setObjectName("MainWindow")
-        self.setMinimumSize(1080, 600)
+        self.setMinimumSize(self.mini_width, self.mini_height)
         self.centralwidget = QWidget(self)
 
         # for small screen
         self.desktop = QApplication.desktop()
         self.screen = self.desktop.screenGeometry()
         if self.screen.width() < 1380:
-            self.resize(1080, self.origin_height)
+            self.resize(self.mini_width, self.mini_height)
         else:
             self.resize(self.origin_width, self.origin_height)
         
@@ -319,8 +340,6 @@ class Ui_MainWindow(QWidget):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
-        self.origin_width = 1380
-        self.origin_height = 600
         idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
