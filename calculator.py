@@ -1,4 +1,5 @@
 #encoding:utf-8
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QListWidget, QTextBrowser, QLabel
 from PyQt5.QtCore import QRegExp, QRect
 from PyQt5.QtGui import QRegExpValidator, QColor
