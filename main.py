@@ -17,241 +17,334 @@ for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
 
 class Ui_MainWindow(QWidget):
-    def labelset(self):
-        '''初始化label'''
-        self.label_target_list = QLabel(self.centralwidget)
-        self.label_target_list.setGeometry(QRect(830, 0, 181, 20))
-        self.label_target_list.setAlignment(Qt.AlignCenter)
-        self.label_cardsearch = QLabel(self.centralwidget)
-        self.label_cardsearch.setGeometry(QRect(1020, 0, 181, 20))
-        self.label_cardsearch.setAlignment(Qt.AlignCenter)
-        self.label_operation_list = QLabel(self.centralwidget)
-        self.label_operation_list.setGeometry(QRect(1210, 0, 181, 16))
-        self.label_operation_list.setAlignment(Qt.AlignCenter)
+    def placeframe(self):        
+        width = self.width()
+        height = self.height()
+        # print(width, height)
 
-        self.label_self_ex = QLabel(self.DuelFrame)
-        self.label_self_ex.setGeometry(QRect(10, 460-22, 191, 20))
-        self.label_self_ex.setAlignment(Qt.AlignCenter)
-        self.label_self_hand = QLabel(self.DuelFrame)
-        self.label_self_hand.setGeometry(QRect(210, 460-22, 191, 20))
-        self.label_self_hand.setAlignment(Qt.AlignCenter)
-        self.label_self_grave = QLabel(self.DuelFrame)
-        self.label_self_grave.setGeometry(QRect(410, 460-22, 191, 20))
-        self.label_self_grave.setAlignment(Qt.AlignCenter)
-        self.label_self_banish = QLabel(self.DuelFrame)
-        self.label_self_banish.setGeometry(QRect(610, 460-22, 191, 20))
-        self.label_self_banish.setAlignment(Qt.AlignCenter)
-        self.label_self_lpen = QLabel(self.DuelFrame)
-        self.label_self_lpen.setGeometry(QRect(10, 380-22, 111, 20))
-        self.label_self_lpen.setAlignment(Qt.AlignCenter)
-        self.label_self_rpen = QLabel(self.DuelFrame)
-        self.label_self_rpen.setGeometry(QRect(690, 380-22, 111, 20))
-        self.label_self_rpen.setAlignment(Qt.AlignCenter)
-        self.label_self_field = QLabel(self.DuelFrame)
-        self.label_self_field.setGeometry(QRect(10, 305-22, 111, 20))
-        self.label_self_field.setAlignment(Qt.AlignCenter)
-        self.label_self_lp = QLabel(self.DuelFrame)
-        self.label_self_lp.setGeometry(QRect(690, 335-22, 111, 20))
-        self.label_self_lp.setAlignment(Qt.AlignCenter)
+        width_1_1 = 191 * width / self.origin_width
+        height_1_1 = 143 * height / self.origin_height
+        if height < self.origin_height:
+            height_1_1 = 143 - (self.origin_height - height) / 2
+        xline_1_1 = 10
+        xline_1_2 = 10 + 200 * width / self.origin_width
+        xline_1_3 = 10 + 400 * width / self.origin_width
+        xline_1_4 = 10 + 600 * width / self.origin_width
+        yline_1_1 = 8
+        yline_1_2 = (self.origin_height - 10) * height / self.origin_height - height_1_1
+        if height < self.origin_height:
+            yline_1_2 = (self.origin_height - 153) - (self.origin_height - height) / 2
 
-        self.label_enemy_ex = QLabel(self.DuelFrame)
-        self.label_enemy_ex.setGeometry(QRect(10, 30-22, 191, 20))
-        self.label_enemy_ex.setAlignment(Qt.AlignCenter)
-        self.label_enemy_hand = QLabel(self.DuelFrame)
-        self.label_enemy_hand.setGeometry(QRect(210, 30-22, 191, 20))
-        self.label_enemy_hand.setAlignment(Qt.AlignCenter)
-        self.label_enemy_grave = QLabel(self.DuelFrame)
-        self.label_enemy_grave.setGeometry(QRect(410, 30-22, 191, 20))
-        self.label_enemy_grave.setAlignment(Qt.AlignCenter)
-        self.label_enemy_banish = QLabel(self.DuelFrame)
-        self.label_enemy_banish.setGeometry(QRect(610, 30-22, 191, 20))
-        self.label_enemy_banish.setAlignment(Qt.AlignCenter)
-        self.label_enemy_lpen = QLabel(self.DuelFrame)
-        self.label_enemy_lpen.setGeometry(QRect(690, 180-22, 111, 20))
-        self.label_enemy_lpen.setAlignment(Qt.AlignCenter)
-        self.label_enemy_rpen = QLabel(self.DuelFrame)
-        self.label_enemy_rpen.setGeometry(QRect(10, 180-22, 111, 20))
-        self.label_enemy_rpen.setAlignment(Qt.AlignCenter)
-        self.label_enemy_field = QLabel(self.DuelFrame)
-        self.label_enemy_field.setGeometry(QRect(690, 255-22, 111, 20))
-        self.label_enemy_field.setAlignment(Qt.AlignCenter)
-        self.label_enemy_lp = QLabel(self.DuelFrame)
-        self.label_enemy_lp.setGeometry(QRect(10, 255-22, 111, 20))
-        self.label_enemy_lp.setAlignment(Qt.AlignCenter)
+        # enemy/self place
+        self.label_enemy_ex.setGeometry(
+            QRect(xline_1_1, yline_1_1, width_1_1, 20))
+        self.Enemy_Ex.setGeometry(
+            QRect(xline_1_1, yline_1_1+22, width_1_1, height_1_1 - 22))
+        self.label_enemy_hand.setGeometry(
+            QRect(xline_1_2, yline_1_1, width_1_1, 20))
+        self.Enemy_Hand.setGeometry(
+            QRect(xline_1_2, yline_1_1+22, width_1_1, height_1_1 - 22))
+        self.label_enemy_grave.setGeometry(
+            QRect(xline_1_3, yline_1_1, width_1_1, 20))
+        self.Enemy_Grave.setGeometry(
+            QRect(xline_1_3, yline_1_1+22, width_1_1, height_1_1 - 22))
+        self.label_enemy_banish.setGeometry(
+            QRect(xline_1_4, yline_1_1, width_1_1, 20))
+        self.Enemy_Banish.setGeometry(
+            QRect(xline_1_4, yline_1_1+22, width_1_1, height_1_1 - 22))
+        self.label_self_ex.setGeometry(
+            QRect(xline_1_1, yline_1_2, width_1_1, 20))
+        self.Self_Ex.setGeometry(
+            QRect(xline_1_1, yline_1_2+22, width_1_1, height_1_1 - 22))
+        self.label_self_hand.setGeometry(
+            QRect(xline_1_2, yline_1_2, width_1_1, 20))
+        self.Self_Hand.setGeometry(
+            QRect(xline_1_2, yline_1_2+22, width_1_1, height_1_1 - 22))
+        self.label_self_grave.setGeometry(
+            QRect(xline_1_3, yline_1_2, width_1_1, 20))
+        self.Self_Grave.setGeometry(
+            QRect(xline_1_3, yline_1_2+22, width_1_1, height_1_1 - 22))
+        self.label_self_banish.setGeometry(
+            QRect(xline_1_4, yline_1_2, width_1_1, 20))
+        self.Self_Banish.setGeometry(
+            QRect(xline_1_4, yline_1_2+22, width_1_1, height_1_1 - 22))
+
+        # field
+        width_2_0 = 110 * width // self.origin_width
+        width_2_1 = width_2_0 + 1
+        height_2_0 = (yline_1_2 - yline_1_1 - height_1_1 - 38) // 5
+        height_2_1 = height_2_0 + 1
+        xline_2_1 = 10
+        xline_2_2 = 10 + 120 * width / self.origin_width
+        xline_2_3 = 10 + 120 * width / self.origin_width + width_2_0
+        xline_2_4 = 10 + 120 * width / self.origin_width + width_2_0 * 2
+        xline_2_5 = 10 + 120 * width / self.origin_width + width_2_0 * 3
+        xline_2_6 = 10 + 120 * width / self.origin_width + width_2_0 * 4
+        xline_2_7 = 10 + 680 * width / self.origin_width
+        yline_2_1 = yline_1_1 + height_1_1 + 30
+        yline_2_2 = yline_2_1 + height_2_0
+        yline_2_3 = yline_2_1 + height_2_0 * 2 # 280 * height / self.origin_height
+        yline_2_4 = yline_2_1 + height_2_0 * 3 # 330 * height / self.origin_height
+        yline_2_5 = yline_2_1 + height_2_0 * 4 # 380 * height / self.origin_height
+        yline_2_6 = yline_2_1 + height_2_0 + 25 # 255 * height / self.origin_height
+        yline_2_7 = yline_2_5 - height_2_0 - 25 # 305 * height / self.origin_height
+        yline_2_8 = yline_2_5 - 45 # 335 * height / self.origin_height
+        if height < self.origin_height:
+            diff = (self.origin_height - height) / 2
+            height_2_1 = 51
+            yline_2_1 = 180 - diff
+            yline_2_2 = 230 - diff
+            yline_2_3 = 280 - diff
+            yline_2_4 = 330 - diff
+            yline_2_5 = 380 - diff
+            yline_2_6 = 255 - diff
+            yline_2_7 = 305 - diff
+            yline_2_8 = 335 - diff
+        self.Enemy_S1.setGeometry(QRect(xline_2_6, yline_2_1, width_2_1, height_2_1))
+        self.Enemy_S2.setGeometry(QRect(xline_2_5, yline_2_1, width_2_1, height_2_1))
+        self.Enemy_S3.setGeometry(QRect(xline_2_4, yline_2_1, width_2_1, height_2_1))
+        self.Enemy_S4.setGeometry(QRect(xline_2_3, yline_2_1, width_2_1, height_2_1))
+        self.Enemy_S5.setGeometry(QRect(xline_2_2, yline_2_1, width_2_1, height_2_1))
+        self.Enemy_M1.setGeometry(QRect(xline_2_6, yline_2_2, width_2_1, height_2_1))
+        self.Enemy_M2.setGeometry(QRect(xline_2_5, yline_2_2, width_2_1, height_2_1))
+        self.Enemy_M3.setGeometry(QRect(xline_2_4, yline_2_2, width_2_1, height_2_1))
+        self.Enemy_M4.setGeometry(QRect(xline_2_3, yline_2_2, width_2_1, height_2_1))
+        self.Enemy_M5.setGeometry(QRect(xline_2_2, yline_2_2, width_2_1, height_2_1))
+        self.label_enemy_field.setGeometry(QRect(xline_2_7, yline_2_6-22, width_2_1, 20))
+        self.Enemy_Field.setGeometry(QRect(xline_2_7, yline_2_6, width_2_1, height_2_1))
+        self.label_enemy_lpen.setGeometry(QRect(xline_2_7, yline_2_1-22, width_2_1, 20))
+        self.Enemy_P1.setGeometry(QRect(xline_2_7, yline_2_1, width_2_1, height_2_1))
+        self.label_enemy_rpen.setGeometry(QRect(xline_2_1, yline_2_1-22, width_2_1, 20))
+        self.Enemy_P2.setGeometry(QRect(xline_2_1, yline_2_1, width_2_1, height_2_1))
+        self.label_enemy_lp.setGeometry(QRect(xline_2_1, yline_2_6-22, width_2_1, 20))
+        self.Enemy_LP.setGeometry(QRect(xline_2_1, yline_2_6, width_2_1, 21))
+        # middle
+        self.New_Buttom.setGeometry(QRect(xline_2_2+10, yline_2_3+10, width_2_1-20, height_2_1-20))
+        self.ExM_1.setGeometry(QRect(xline_2_3, yline_2_3, width_2_1, height_2_1))
+        self.Open_Buttom.setGeometry(QRect(xline_2_4+10, yline_2_3+10, width_2_1-20, height_2_1-20))
+        self.ExM_2.setGeometry(QRect(xline_2_5, yline_2_3, width_2_1, height_2_1))
+        self.Save_Buttom.setGeometry(QRect(xline_2_6+10, yline_2_3+10, width_2_1-20, height_2_1-20))
+        # self place
+        self.Self_S1.setGeometry(QRect(xline_2_2, yline_2_5, width_2_1, height_2_1))
+        self.Self_S2.setGeometry(QRect(xline_2_3, yline_2_5, width_2_1, height_2_1))
+        self.Self_S3.setGeometry(QRect(xline_2_4, yline_2_5, width_2_1, height_2_1))
+        self.Self_S4.setGeometry(QRect(xline_2_5, yline_2_5, width_2_1, height_2_1))
+        self.Self_S5.setGeometry(QRect(xline_2_6, yline_2_5, width_2_1, height_2_1))
+        self.Self_M1.setGeometry(QRect(xline_2_2, yline_2_4, width_2_1, height_2_1))
+        self.Self_M2.setGeometry(QRect(xline_2_3, yline_2_4, width_2_1, height_2_1))
+        self.Self_M3.setGeometry(QRect(xline_2_4, yline_2_4, width_2_1, height_2_1))
+        self.Self_M4.setGeometry(QRect(xline_2_5, yline_2_4, width_2_1, height_2_1))
+        self.Self_M5.setGeometry(QRect(xline_2_6, yline_2_4, width_2_1, height_2_1))
+        self.label_self_lpen.setGeometry(QRect(xline_2_1, yline_2_5-22, width_2_1, 20))
+        self.Self_P1.setGeometry(QRect(xline_2_1, yline_2_5, width_2_1, height_2_1))
+        self.label_self_rpen.setGeometry(QRect(xline_2_7, yline_2_5-22, width_2_1, 20))
+        self.Self_P2.setGeometry(QRect(xline_2_7, yline_2_5, width_2_1, height_2_1))
+        self.label_self_field.setGeometry(QRect(xline_2_1, yline_2_7-22, width_2_1, 20))
+        self.Self_Field.setGeometry(QRect(xline_2_1, yline_2_7, width_2_1, height_2_1))
+        self.label_self_lp.setGeometry(QRect(xline_2_7, yline_2_8-22, width_2_1, 20))
+        self.Self_LP.setGeometry(QRect(xline_2_7, yline_2_8, width_2_1, 21))
+
+        # target/desc
+        magic_3_1 = 85
+        width_3_1 = 181 * width / self.origin_width
+        height_3_1 = 235 * (height - magic_3_1) / (self.origin_height - magic_3_1)
+        height_3_2 = height - 160 - height_3_1
+        xline_3_1 = 810 * width / self.origin_width
+        self.label_target_list.setGeometry(QRect(xline_3_1, 0, width_3_1, 20))
+        self.Target_list.setGeometry(QRect(xline_3_1, 20, width_3_1, height_3_1))
+        self.Delete_target.setGeometry(QRect(xline_3_1, height_3_1+25, width_3_1, 28))
+        self.Dest_Box.setGeometry(QRect(xline_3_1, height_3_1+63, width_3_1, 22))
+        self.MoveCard_Button.setGeometry(QRect(xline_3_1, height_3_1+90, width_3_1, 28))
+        self.EraseCard_Button.setGeometry(QRect(xline_3_1, height_3_1+120, width_3_1, 28))
+        self.Target_detail.setGeometry(QRect(xline_3_1, height_3_1+150, width_3_1, height_3_2))
+
+        # search/operation buttoms
+        width_4_1 = 181 * width / self.origin_width
+        height_4_1 = height - 410
+        xline_4_1 = 1000 * width / self.origin_width
+        self.label_cardsearch.setGeometry(QRect(xline_4_1, 0, width_4_1, 20))
+        self.NewCard_line.setGeometry(QRect(xline_4_1, 20, width_4_1, 21))
+        self.Newcard_List.setGeometry(QRect(xline_4_1, 50, width_4_1, height_4_1))
+        self.CreateCard_Button.setGeometry(QRect(xline_4_1, height_4_1+55, width_4_1, 28))
+        self.NewCard_Rename_Button.setGeometry(QRect(xline_4_1, height_4_1+85, width_4_1, 28))
+        self.Comment_Line.setGeometry(QRect(xline_4_1, height_4_1+123, width_4_1, 21))
+        self.CommentCard_Button.setGeometry(QRect(xline_4_1, height_4_1+150, width_4_1, 28))
+        self.Comment_Button.setGeometry(QRect(xline_4_1, height_4_1+180, width_4_1, 28))
+        self.LPTarget_Box.setGeometry(QRect(xline_4_1, height_4_1+220, width_4_1, 22))
+        self.LP_line.setGeometry(QRect(xline_4_1, height_4_1+250, width_4_1, 21))
+        self.AddLP_Button.setGeometry(QRect(xline_4_1, height_4_1+280, width_4_1, 28))
+        self.DecLP_Button.setGeometry(QRect(xline_4_1, height_4_1+310, width_4_1, 28))
+        self.CgeLP_Button.setGeometry(QRect(xline_4_1, height_4_1+340, width_4_1, 28))
+        self.HalLP_Button.setGeometry(QRect(xline_4_1, height_4_1+370, width_4_1, 28))
+
+        # operation list
+        width_5_1 = 181 * width / self.origin_width
+        height_5_1 = height - 200
+        xline_5_1 = 1190 * width / self.origin_width
+
+        self.label_operation_list.setGeometry(QRect(xline_5_1, 0, width_5_1, 16))
+        self.Operator_list.setGeometry(QRect(xline_5_1, 20, width_5_1, height_5_1))
+        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+30, width_5_1, 28))
+        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, height_5_1+70, width_5_1, 51))
+        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+130, width_5_1, 28))
+        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+160, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
+        self.origin_width = 1380
+        self.origin_height = 590
+        self.mini_width = 960
+        self.mini_height = 540
         self.setObjectName("MainWindow")
-        self.resize(1396, 600)
-        self.setFixedSize(1396, 600)
+        self.setMinimumSize(self.mini_width, self.mini_height)
         self.centralwidget = QWidget(self)
 
-        self.DuelFrame = QWidget(self.centralwidget)
-        self.DuelFrame.setGeometry(QRect(10, 0, 811, 631))
-        self.labelset()
+        # for small screen
+        self.desktop = QApplication.desktop()
+        self.screen = self.desktop.screenGeometry()
+        if self.screen.width() < 1380:
+            self.resize(self.mini_width, self.mini_height)
+        else:
+            self.resize(self.origin_width, self.origin_height)
+        
+
+        '''初始化label'''
+        self.label_target_list = QLabel(self.centralwidget)
+        self.label_target_list.setAlignment(Qt.AlignCenter)
+        self.label_cardsearch = QLabel(self.centralwidget)
+        self.label_cardsearch.setAlignment(Qt.AlignCenter)
+        self.label_operation_list = QLabel(self.centralwidget)
+        self.label_operation_list.setAlignment(Qt.AlignCenter)
+
+        self.label_self_ex = QLabel(self.centralwidget)
+        self.label_self_ex.setAlignment(Qt.AlignCenter)
+        self.label_self_hand = QLabel(self.centralwidget)
+        self.label_self_hand.setAlignment(Qt.AlignCenter)
+        self.label_self_grave = QLabel(self.centralwidget)
+        self.label_self_grave.setAlignment(Qt.AlignCenter)
+        self.label_self_banish = QLabel(self.centralwidget)
+        self.label_self_banish.setAlignment(Qt.AlignCenter)
+        self.label_self_lpen = QLabel(self.centralwidget)
+        self.label_self_lpen.setAlignment(Qt.AlignCenter)
+        self.label_self_rpen = QLabel(self.centralwidget)
+        self.label_self_rpen.setAlignment(Qt.AlignCenter)
+        self.label_self_field = QLabel(self.centralwidget)
+        self.label_self_field.setAlignment(Qt.AlignCenter)
+        self.label_self_lp = QLabel(self.centralwidget)
+        self.label_self_lp.setAlignment(Qt.AlignCenter)
+
+        self.label_enemy_ex = QLabel(self.centralwidget)
+        self.label_enemy_ex.setAlignment(Qt.AlignCenter)
+        self.label_enemy_hand = QLabel(self.centralwidget)
+        self.label_enemy_hand.setAlignment(Qt.AlignCenter)
+        self.label_enemy_grave = QLabel(self.centralwidget)
+        self.label_enemy_grave.setAlignment(Qt.AlignCenter)
+        self.label_enemy_banish = QLabel(self.centralwidget)
+        self.label_enemy_banish.setAlignment(Qt.AlignCenter)
+        self.label_enemy_lpen = QLabel(self.centralwidget)
+        self.label_enemy_lpen.setAlignment(Qt.AlignCenter)
+        self.label_enemy_rpen = QLabel(self.centralwidget)
+        self.label_enemy_rpen.setAlignment(Qt.AlignCenter)
+        self.label_enemy_field = QLabel(self.centralwidget)
+        self.label_enemy_field.setAlignment(Qt.AlignCenter)
+        self.label_enemy_lp = QLabel(self.centralwidget)
+        self.label_enemy_lp.setAlignment(Qt.AlignCenter)
 
         self.Target_list = QListWidget(self.centralwidget)
-        self.Target_list.setGeometry(QRect(830, 20, 181, 251))
         self.Delete_target = QPushButton(self.centralwidget)
-        self.Delete_target.setGeometry(QRect(830, 275, 181, 28))
         self.Dest_Box = QComboBox(self.centralwidget)
-        self.Dest_Box.setGeometry(QRect(830, 313, 181, 22))
         for i in range(36):
             self.Dest_Box.addItem("")
         self.MoveCard_Button = QPushButton(self.centralwidget)
-        self.MoveCard_Button.setGeometry(QRect(830, 340, 181, 28))
         self.EraseCard_Button = QPushButton(self.centralwidget)
-        self.EraseCard_Button.setGeometry(QRect(830, 370, 181, 28))
         self.Target_detail = QTextBrowser(self.centralwidget)
-        self.Target_detail.setGeometry(QRect(830, 403, 181, 185))
 
         self.NewCard_line = QLineEdit(self.centralwidget)
-        self.NewCard_line.setGeometry(QRect(1020, 20, 181, 21))
         self.NewCard_line.setPlaceholderText("输入卡片名称")
         self.Newcard_List = QListWidget(self.centralwidget)
-        self.Newcard_List.setGeometry(QRect(1020, 50, 181, 191))
         self.CreateCard_Button = QPushButton(self.centralwidget)
-        self.CreateCard_Button.setGeometry(QRect(1020, 245, 181, 28))
         self.NewCard_Rename_Button = QPushButton(self.centralwidget)
-        self.NewCard_Rename_Button.setGeometry(QRect(1020, 275, 181, 28))
         self.Comment_Line = QLineEdit(self.centralwidget)
-        self.Comment_Line.setGeometry(QRect(1020, 313, 181, 21))
         self.Comment_Line.setPlaceholderText("输入注释")
         self.CommentCard_Button = QPushButton(self.centralwidget)
-        self.CommentCard_Button.setGeometry(QRect(1020, 340, 181, 28))
         self.Comment_Button = QPushButton(self.centralwidget)
-        self.Comment_Button.setGeometry(QRect(1020, 370, 181, 28))
         self.LPTarget_Box = QComboBox(self.centralwidget)
-        self.LPTarget_Box.setGeometry(QRect(1020, 410, 181, 22))
         self.LPTarget_Box.addItem("")
         self.LPTarget_Box.addItem("")
         self.LP_line = QLineEdit(self.centralwidget)
-        self.LP_line.setGeometry(QRect(1020, 440, 181, 21))
         regx = QRegExp("^[0-9]{15}$")
         validator = QRegExpValidator(regx, self.LP_line)
         self.LP_line.setValidator(validator)
         self.LP_line.setPlaceholderText("输入基本分变动")
         self.AddLP_Button = QPushButton(self.centralwidget)
-        self.AddLP_Button.setGeometry(QRect(1020, 470, 181, 28))
         self.DecLP_Button = QPushButton(self.centralwidget)
-        self.DecLP_Button.setGeometry(QRect(1020, 500, 181, 28))
         self.CgeLP_Button = QPushButton(self.centralwidget)
-        self.CgeLP_Button.setGeometry(QRect(1020, 530, 181, 28))
         self.HalLP_Button = QPushButton(self.centralwidget)
-        self.HalLP_Button.setGeometry(QRect(1020, 560, 181, 28))
 
         self.Operator_list = QListWidget(self.centralwidget)
-        self.Operator_list.setGeometry(QRect(1210, 20, 181, 400))
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button.setGeometry(QRect(1210, 430, 181, 28))
         self.SelectedOpe_list = QListWidget(self.centralwidget)
-        self.SelectedOpe_list.setGeometry(QRect(1210, 470, 181, 51))
         self.CopyOpe_Button = QPushButton(self.centralwidget)
-        self.CopyOpe_Button.setGeometry(QRect(1210, 530, 181, 28))
         self.MoveOpe_Button = QPushButton(self.centralwidget)
-        self.MoveOpe_Button.setGeometry(QRect(1210, 560, 181, 28))
 
-        self.Self_Ex = QListWidget(self.DuelFrame)
-        self.Self_Ex.setGeometry(QRect(10, 460, 191, 121))
-        self.Self_Hand = QListWidget(self.DuelFrame)
-        self.Self_Hand.setGeometry(QRect(210, 460, 191, 121))
-        self.Self_Grave = QListWidget(self.DuelFrame)
-        self.Self_Grave.setGeometry(QRect(410, 460, 191, 121))
-        self.Self_Banish = QListWidget(self.DuelFrame)
-        self.Self_Banish.setGeometry(QRect(610, 460, 191, 121))
-        self.Self_S1 = QListWidget(self.DuelFrame)
-        self.Self_S1.setGeometry(QRect(130, 380, 111, 51))
-        self.Self_S2 = QListWidget(self.DuelFrame)
-        self.Self_S2.setGeometry(QRect(240, 380, 111, 51))
-        self.Self_S3 = QListWidget(self.DuelFrame)
-        self.Self_S3.setGeometry(QRect(350, 380, 111, 51))
-        self.Self_S4 = QListWidget(self.DuelFrame)
-        self.Self_S4.setGeometry(QRect(460, 380, 111, 51))
-        self.Self_S5 = QListWidget(self.DuelFrame)
-        self.Self_S5.setGeometry(QRect(570, 380, 111, 51))
-        self.Self_M1 = QListWidget(self.DuelFrame)
-        self.Self_M1.setGeometry(QRect(130, 330, 111, 51))
-        self.Self_M2 = QListWidget(self.DuelFrame)
-        self.Self_M2.setGeometry(QRect(240, 330, 111, 51))
-        self.Self_M3 = QListWidget(self.DuelFrame)
-        self.Self_M3.setGeometry(QRect(350, 330, 111, 51))
-        self.Self_M4 = QListWidget(self.DuelFrame)
-        self.Self_M4.setGeometry(QRect(460, 330, 111, 51))
-        self.Self_M5 = QListWidget(self.DuelFrame)
-        self.Self_M5.setGeometry(QRect(570, 330, 111, 51))
-        self.Self_P1 = QListWidget(self.DuelFrame)
-        self.Self_P1.setGeometry(QRect(10, 380, 111, 51))
-        self.Self_P2 = QListWidget(self.DuelFrame)
-        self.Self_P2.setGeometry(QRect(690, 380, 111, 51))
-        self.Self_Field = QListWidget(self.DuelFrame)
-        self.Self_Field.setGeometry(QRect(10, 305, 111, 51))
-        self.Self_LP = QLineEdit(self.DuelFrame)
+        self.Self_Ex = QListWidget(self.centralwidget)
+        self.Self_Hand = QListWidget(self.centralwidget)
+        self.Self_Grave = QListWidget(self.centralwidget)
+        self.Self_Banish = QListWidget(self.centralwidget)
+        self.Self_S1 = QListWidget(self.centralwidget)
+        self.Self_S2 = QListWidget(self.centralwidget)
+        self.Self_S3 = QListWidget(self.centralwidget)
+        self.Self_S4 = QListWidget(self.centralwidget)
+        self.Self_S5 = QListWidget(self.centralwidget)
+        self.Self_M1 = QListWidget(self.centralwidget)
+        self.Self_M2 = QListWidget(self.centralwidget)
+        self.Self_M3 = QListWidget(self.centralwidget)
+        self.Self_M4 = QListWidget(self.centralwidget)
+        self.Self_M5 = QListWidget(self.centralwidget)
+        self.Self_P1 = QListWidget(self.centralwidget)
+        self.Self_P2 = QListWidget(self.centralwidget)
+        self.Self_Field = QListWidget(self.centralwidget)
+        self.Self_LP = QLineEdit(self.centralwidget)
         self.Self_LP.setText("8000")
         self.Self_LP.setEnabled(False)
-        self.Self_LP.setGeometry(QRect(690, 335, 111, 21))
 
-        # 130 280 111 51
-        self.New_Buttom = QPushButton(self.DuelFrame)
-        self.New_Buttom.setGeometry(QRect(140, 291, 91, 28))
-        self.ExM_1 = QListWidget(self.DuelFrame)
-        self.ExM_1.setGeometry(QRect(240, 280, 111, 51))
-        # 350 280 111 51
-        self.Open_Buttom = QPushButton(self.DuelFrame)
-        self.Open_Buttom.setGeometry(QRect(360, 291, 91, 28))
-        self.ExM_2 = QListWidget(self.DuelFrame)
-        self.ExM_2.setGeometry(QRect(460, 280, 111, 51))
-        # 570 280 111 51
-        self.Save_Buttom = QPushButton(self.DuelFrame)
-        self.Save_Buttom.setGeometry(QRect(580, 290, 91, 28))
+        self.New_Buttom = QPushButton(self.centralwidget)
+        self.ExM_1 = QListWidget(self.centralwidget)
+        self.Open_Buttom = QPushButton(self.centralwidget)
+        self.ExM_2 = QListWidget(self.centralwidget)
+        self.Save_Buttom = QPushButton(self.centralwidget)
 
-        self.Enemy_Ex = QListWidget(self.DuelFrame)
-        self.Enemy_Ex.setGeometry(QRect(10, 30, 191, 121))
-        self.Enemy_Hand = QListWidget(self.DuelFrame)
-        self.Enemy_Hand.setGeometry(QRect(210, 30, 191, 121))
-        self.Enemy_Grave = QListWidget(self.DuelFrame)
-        self.Enemy_Grave.setGeometry(QRect(410, 30, 191, 121))
-        self.Enemy_Banish = QListWidget(self.DuelFrame)
-        self.Enemy_Banish.setGeometry(QRect(610, 30, 191, 121))
-        self.Enemy_S1 = QListWidget(self.DuelFrame)
-        self.Enemy_S1.setGeometry(QRect(570, 180, 111, 51))
-        self.Enemy_S2 = QListWidget(self.DuelFrame)
-        self.Enemy_S2.setGeometry(QRect(460, 180, 111, 51))
-        self.Enemy_S3 = QListWidget(self.DuelFrame)
-        self.Enemy_S3.setGeometry(QRect(350, 180, 111, 51))
-        self.Enemy_S4 = QListWidget(self.DuelFrame)
-        self.Enemy_S4.setGeometry(QRect(240, 180, 111, 51))
-        self.Enemy_S5 = QListWidget(self.DuelFrame)
-        self.Enemy_S5.setGeometry(QRect(130, 180, 111, 51))
-        self.Enemy_M1 = QListWidget(self.DuelFrame)
-        self.Enemy_M1.setGeometry(QRect(570, 230, 111, 51))
-        self.Enemy_M2 = QListWidget(self.DuelFrame)
-        self.Enemy_M2.setGeometry(QRect(460, 230, 111, 51))
-        self.Enemy_M3 = QListWidget(self.DuelFrame)
-        self.Enemy_M3.setGeometry(QRect(350, 230, 111, 51))
-        self.Enemy_M4 = QListWidget(self.DuelFrame)
-        self.Enemy_M4.setGeometry(QRect(240, 230, 111, 51))
-        self.Enemy_M5 = QListWidget(self.DuelFrame)
-        self.Enemy_M5.setGeometry(QRect(130, 230, 111, 51))
-        self.Enemy_Field = QListWidget(self.DuelFrame)
-        self.Enemy_Field.setGeometry(QRect(690, 255, 111, 51))
-        self.Enemy_P1 = QListWidget(self.DuelFrame)
-        self.Enemy_P1.setGeometry(QRect(690, 180, 111, 51))
-        self.Enemy_P2 = QListWidget(self.DuelFrame)
-        self.Enemy_P2.setGeometry(QRect(10, 180, 111, 51))
-        self.Enemy_LP = QLineEdit(self.DuelFrame)
+        self.Enemy_Ex = QListWidget(self.centralwidget)
+        self.Enemy_Hand = QListWidget(self.centralwidget)
+        self.Enemy_Grave = QListWidget(self.centralwidget)
+        self.Enemy_Banish = QListWidget(self.centralwidget)
+        self.Enemy_S1 = QListWidget(self.centralwidget)
+        self.Enemy_S2 = QListWidget(self.centralwidget)
+        self.Enemy_S3 = QListWidget(self.centralwidget)
+        self.Enemy_S4 = QListWidget(self.centralwidget)
+        self.Enemy_S5 = QListWidget(self.centralwidget)
+        self.Enemy_M1 = QListWidget(self.centralwidget)
+        self.Enemy_M2 = QListWidget(self.centralwidget)
+        self.Enemy_M3 = QListWidget(self.centralwidget)
+        self.Enemy_M4 = QListWidget(self.centralwidget)
+        self.Enemy_M5 = QListWidget(self.centralwidget)
+        self.Enemy_Field = QListWidget(self.centralwidget)
+        self.Enemy_P1 = QListWidget(self.centralwidget)
+        self.Enemy_P2 = QListWidget(self.centralwidget)
+        self.Enemy_LP = QLineEdit(self.centralwidget)
         self.Enemy_LP.setText("8000")
         self.Enemy_LP.setEnabled(False)
-        self.Enemy_LP.setGeometry(QRect(10, 255, 111, 21))
+        self.placeframe()
 
-        self.retranslateUi(self)
+        self.retranslateUi()
 
     def __init__(self):
+        super(Ui_MainWindow, self).__init__()
         idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        cardattrs = {0x1: "<font color='#height_1_1 - 22516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
-        super(Ui_MainWindow, self).__init__()
         self.init_frame()
 
         # 读取卡片数据库
@@ -415,6 +508,10 @@ class Ui_MainWindow(QWidget):
         # 其它事件
         QWidget.keyPressEvent(self, event)
 
+    def resizeEvent(self, event):
+        self.centralwidget.resize(self.width(), self.height())
+        self.placeframe()
+
     def closeEvent(self, event):
         '''重写关闭窗口事件
         
@@ -433,12 +530,9 @@ class Ui_MainWindow(QWidget):
         else:
             self.ope_addcomment()
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle("DuelEditor")
-        __sortingEnabled = self.Operator_list.isSortingEnabled()
+    def retranslateUi(self):
+        self.setWindowTitle("DuelEditor")
         self.Operator_list.setSortingEnabled(False)
-
-        self.Operator_list.setSortingEnabled(__sortingEnabled)
         self.label_operation_list.setText("操作列表(0/0)")
         self.label_target_list.setText("操作对象(0)")
         self.Delete_target.setText("对象中删除")
