@@ -1,8 +1,8 @@
 #encoding:utf-8
 import sys
 from json import loads, dumps
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
-from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QAction, QMenuBar
+from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox, QMainWindow
 from PyQt5.QtCore import QRect, QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QColor, QFont, QPalette
 from functools import partial
@@ -16,10 +16,11 @@ init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
 
-class Ui_MainWindow(QWidget):
-    def placeframe(self):        
+class Ui_MainWindow(QMainWindow):
+    def placeframe(self):
+        menu_height = self.menuBar().height()
         width = self.width()
-        height = self.height()
+        height = self.height() - menu_height
         # print(width, height)
 
         width_1_1 = 191 * width / self.origin_width
@@ -30,10 +31,10 @@ class Ui_MainWindow(QWidget):
         xline_1_2 = 10 + 200 * width / self.origin_width
         xline_1_3 = 10 + 400 * width / self.origin_width
         xline_1_4 = 10 + 600 * width / self.origin_width
-        yline_1_1 = 8
-        yline_1_2 = (self.origin_height - 10) * height / self.origin_height - height_1_1
+        yline_1_1 = menu_height + 8
+        yline_1_2 = menu_height + (self.origin_height - 10) * height / self.origin_height - height_1_1
         if height < self.origin_height:
-            yline_1_2 = (self.origin_height - 153) - (self.origin_height - height) / 2
+            yline_1_2 = menu_height + (self.origin_height - 153) - (self.origin_height - height) / 2
 
         # enemy/self place
         self.label_enemy_ex.setGeometry(
@@ -92,14 +93,15 @@ class Ui_MainWindow(QWidget):
         if height < self.origin_height:
             diff = (self.origin_height - height) / 2
             height_2_1 = 51
-            yline_2_1 = 180 - diff
-            yline_2_2 = 230 - diff
-            yline_2_3 = 280 - diff
-            yline_2_4 = 330 - diff
-            yline_2_5 = 380 - diff
-            yline_2_6 = 255 - diff
-            yline_2_7 = 305 - diff
-            yline_2_8 = 335 - diff
+            yline_2_0 = 180 + menu_height
+            yline_2_1 = yline_2_0 - diff
+            yline_2_2 = yline_2_0 + 50 - diff
+            yline_2_3 = yline_2_0 + 100 - diff
+            yline_2_4 = yline_2_0 + 150 - diff
+            yline_2_5 = yline_2_0 + 200 - diff
+            yline_2_6 = yline_2_0 + 75 - diff
+            yline_2_7 = yline_2_0 + 125 - diff
+            yline_2_8 = yline_2_0 + 155 - diff
         self.Enemy_S1.setGeometry(QRect(xline_2_6, yline_2_1, width_2_1, height_2_1))
         self.Enemy_S2.setGeometry(QRect(xline_2_5, yline_2_1, width_2_1, height_2_1))
         self.Enemy_S3.setGeometry(QRect(xline_2_4, yline_2_1, width_2_1, height_2_1))
@@ -119,11 +121,8 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_lp.setGeometry(QRect(xline_2_1, yline_2_6-22, width_2_1, 20))
         self.Enemy_LP.setGeometry(QRect(xline_2_1, yline_2_6, width_2_1, 21))
         # middle
-        self.New_Buttom.setGeometry(QRect(xline_2_2+10, yline_2_3+10, width_2_1-20, height_2_1-20))
         self.ExM_1.setGeometry(QRect(xline_2_3, yline_2_3, width_2_1, height_2_1))
-        self.Open_Buttom.setGeometry(QRect(xline_2_4+10, yline_2_3+10, width_2_1-20, height_2_1-20))
         self.ExM_2.setGeometry(QRect(xline_2_5, yline_2_3, width_2_1, height_2_1))
-        self.Save_Buttom.setGeometry(QRect(xline_2_6+10, yline_2_3+10, width_2_1-20, height_2_1-20))
         # self place
         self.Self_S1.setGeometry(QRect(xline_2_2, yline_2_5, width_2_1, height_2_1))
         self.Self_S2.setGeometry(QRect(xline_2_3, yline_2_5, width_2_1, height_2_1))
@@ -150,44 +149,44 @@ class Ui_MainWindow(QWidget):
         height_3_1 = 235 * (height - magic_3_1) / (self.origin_height - magic_3_1)
         height_3_2 = height - 160 - height_3_1
         xline_3_1 = 810 * width / self.origin_width
-        self.label_target_list.setGeometry(QRect(xline_3_1, 0, width_3_1, 20))
-        self.Target_list.setGeometry(QRect(xline_3_1, 20, width_3_1, height_3_1))
-        self.Delete_target.setGeometry(QRect(xline_3_1, height_3_1+25, width_3_1, 28))
-        self.Dest_Box.setGeometry(QRect(xline_3_1, height_3_1+63, width_3_1, 22))
-        self.MoveCard_Button.setGeometry(QRect(xline_3_1, height_3_1+90, width_3_1, 28))
-        self.EraseCard_Button.setGeometry(QRect(xline_3_1, height_3_1+120, width_3_1, 28))
-        self.Target_detail.setGeometry(QRect(xline_3_1, height_3_1+150, width_3_1, height_3_2))
+        self.label_target_list.setGeometry(QRect(xline_3_1, menu_height, width_3_1, 20))
+        self.Target_list.setGeometry(QRect(xline_3_1, menu_height + 20, width_3_1, height_3_1))
+        self.Delete_target.setGeometry(QRect(xline_3_1, menu_height + height_3_1+25, width_3_1, 28))
+        self.Dest_Box.setGeometry(QRect(xline_3_1, menu_height + height_3_1+63, width_3_1, 22))
+        self.MoveCard_Button.setGeometry(QRect(xline_3_1, menu_height + height_3_1+90, width_3_1, 28))
+        self.EraseCard_Button.setGeometry(QRect(xline_3_1, menu_height + height_3_1+120, width_3_1, 28))
+        self.Target_detail.setGeometry(QRect(xline_3_1, menu_height + height_3_1+150, width_3_1, height_3_2))
 
         # search/operation buttoms
         width_4_1 = 181 * width / self.origin_width
         height_4_1 = height - 410
         xline_4_1 = 1000 * width / self.origin_width
-        self.label_cardsearch.setGeometry(QRect(xline_4_1, 0, width_4_1, 20))
-        self.NewCard_line.setGeometry(QRect(xline_4_1, 20, width_4_1, 21))
-        self.Newcard_List.setGeometry(QRect(xline_4_1, 50, width_4_1, height_4_1))
-        self.CreateCard_Button.setGeometry(QRect(xline_4_1, height_4_1+55, width_4_1, 28))
-        self.NewCard_Rename_Button.setGeometry(QRect(xline_4_1, height_4_1+85, width_4_1, 28))
-        self.Comment_Line.setGeometry(QRect(xline_4_1, height_4_1+123, width_4_1, 21))
-        self.CommentCard_Button.setGeometry(QRect(xline_4_1, height_4_1+150, width_4_1, 28))
-        self.Comment_Button.setGeometry(QRect(xline_4_1, height_4_1+180, width_4_1, 28))
-        self.LPTarget_Box.setGeometry(QRect(xline_4_1, height_4_1+220, width_4_1, 22))
-        self.LP_line.setGeometry(QRect(xline_4_1, height_4_1+250, width_4_1, 21))
-        self.AddLP_Button.setGeometry(QRect(xline_4_1, height_4_1+280, width_4_1, 28))
-        self.DecLP_Button.setGeometry(QRect(xline_4_1, height_4_1+310, width_4_1, 28))
-        self.CgeLP_Button.setGeometry(QRect(xline_4_1, height_4_1+340, width_4_1, 28))
-        self.HalLP_Button.setGeometry(QRect(xline_4_1, height_4_1+370, width_4_1, 28))
+        self.label_cardsearch.setGeometry(QRect(xline_4_1, menu_height, width_4_1, 20))
+        self.NewCard_line.setGeometry(QRect(xline_4_1, menu_height + 20, width_4_1, 21))
+        self.Newcard_List.setGeometry(QRect(xline_4_1, menu_height + 50, width_4_1, height_4_1))
+        self.CreateCard_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+55, width_4_1, 28))
+        self.NewCard_Rename_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+85, width_4_1, 28))
+        self.Comment_Line.setGeometry(QRect(xline_4_1, menu_height + height_4_1+123, width_4_1, 21))
+        self.CommentCard_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+150, width_4_1, 28))
+        self.Comment_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+180, width_4_1, 28))
+        self.LPTarget_Box.setGeometry(QRect(xline_4_1, menu_height + height_4_1+220, width_4_1, 22))
+        self.LP_line.setGeometry(QRect(xline_4_1, menu_height + height_4_1+250, width_4_1, 21))
+        self.AddLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+280, width_4_1, 28))
+        self.DecLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+310, width_4_1, 28))
+        self.CgeLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+340, width_4_1, 28))
+        self.HalLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+370, width_4_1, 28))
 
         # operation list
         width_5_1 = 181 * width / self.origin_width
         height_5_1 = height - 200
         xline_5_1 = 1190 * width / self.origin_width
 
-        self.label_operation_list.setGeometry(QRect(xline_5_1, 0, width_5_1, 16))
-        self.Operator_list.setGeometry(QRect(xline_5_1, 20, width_5_1, height_5_1))
-        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+30, width_5_1, 28))
-        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, height_5_1+70, width_5_1, 51))
-        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+130, width_5_1, 28))
-        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, height_5_1+160, width_5_1, 28))
+        self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
+        self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1, height_5_1))
+        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+30, width_5_1, 28))
+        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, 51))
+        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+130, width_5_1, 28))
+        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+160, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
@@ -196,16 +195,16 @@ class Ui_MainWindow(QWidget):
         self.mini_width = 960
         self.mini_height = 540
         self.setObjectName("MainWindow")
-        self.setMinimumSize(self.mini_width, self.mini_height)
+        self.setMinimumSize(self.mini_width, self.mini_height + self.menuBar().height())
         self.centralwidget = QWidget(self)
 
         # for small screen
         self.desktop = QApplication.desktop()
         self.screen = self.desktop.screenGeometry()
         if self.screen.width() < 1380:
-            self.resize(self.mini_width, self.mini_height)
+            self.resize(self.mini_width, self.mini_height + self.menuBar().height())
         else:
-            self.resize(self.origin_width, self.origin_height)
+            self.resize(self.origin_width, self.origin_height + self.menuBar().height())
         
 
         '''初始化label'''
@@ -308,11 +307,8 @@ class Ui_MainWindow(QWidget):
         self.Self_LP.setText("8000")
         self.Self_LP.setEnabled(False)
 
-        self.New_Buttom = QPushButton(self.centralwidget)
         self.ExM_1 = QListWidget(self.centralwidget)
-        self.Open_Buttom = QPushButton(self.centralwidget)
         self.ExM_2 = QListWidget(self.centralwidget)
-        self.Save_Buttom = QPushButton(self.centralwidget)
 
         self.Enemy_Ex = QListWidget(self.centralwidget)
         self.Enemy_Hand = QListWidget(self.centralwidget)
@@ -346,6 +342,22 @@ class Ui_MainWindow(QWidget):
         cardattrs = {0x1: "<font color='#height_1_1 - 22516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         self.init_frame()
+
+        # bar init
+        bar = QMenuBar(self) #self.menuBar()
+        self.setMenuBar(bar)
+        self.new_bar = QAction("新建(&N)",self)
+        self.save_bar.setShortcut("Ctrl+N")
+        self.new_bar.triggered.connect(self.newfile)
+        bar.addAction(self.new_bar)
+        self.open_bar = QAction("打开(&O)",self)
+        self.save_bar.setShortcut("Ctrl+O")
+        self.open_bar.triggered.connect(self.openfile)
+        bar.addAction(self.open_bar)
+        self.save_bar = QAction("保存(&S)",self)
+        self.save_bar.setShortcut("Ctrl+S")
+        self.save_bar.triggered.connect(self.savefile)
+        bar.addAction(self.save_bar)
 
         # 读取卡片数据库
         self.card_names = []
@@ -436,11 +448,6 @@ class Ui_MainWindow(QWidget):
         self.unsave_changed = False
         self.newfile()
 
-        # 打开/保存文件
-        self.New_Buttom.clicked.connect(self.newfile)
-        self.Open_Buttom.clicked.connect(self.openfile)
-        self.Save_Buttom.clicked.connect(self.savefile)
-
         # 操作部分
         self.copying_operation = {}
         self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
@@ -485,16 +492,6 @@ class Ui_MainWindow(QWidget):
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
-        if QApplication.keyboardModifiers() == Qt.ControlModifier:
-            # Ctrl+N=新建
-            if event.key() == Qt.Key_N:
-                self.newfile()
-            # Ctrl+O=打开
-            elif event.key() == Qt.Key_O:
-                self.openfile()
-            # Ctrl+S=保存
-            elif event.key() == Qt.Key_S:
-                self.savefile()
         if event.key() == Qt.Key_Delete:
             # Delete键删除目标
             if self.Target_list.hasFocus():
@@ -556,9 +553,6 @@ class Ui_MainWindow(QWidget):
         self.label_enemy_hand.setText("对方手卡(0)")
         self.label_enemy_ex.setText("对方额外(0)")
         self.label_enemy_banish.setText("对方除外(0)")
-        self.New_Buttom.setText("新建(N)")
-        self.Open_Buttom.setText("打开(O)")
-        self.Save_Buttom.setText("保存(S)")
         self.EraseCard_Button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
