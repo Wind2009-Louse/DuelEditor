@@ -9,6 +9,7 @@ from functools import partial
 from copy import deepcopy
 import os
 import re
+import calculator, about
 from sqlite3 import connect
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
@@ -194,7 +195,6 @@ class Ui_MainWindow(QMainWindow):
         self.origin_height = 590
         self.mini_width = 960
         self.mini_height = 540
-        self.setObjectName("MainWindow")
         self.setMinimumSize(self.mini_width, self.mini_height + self.menuBar().height())
         self.centralwidget = QWidget(self)
 
@@ -344,24 +344,34 @@ class Ui_MainWindow(QMainWindow):
         self.init_frame()
 
         # bar init
-        bar = QMenuBar(self) #self.menuBar()
+        bar = QMenuBar(self)
         self.setMenuBar(bar)
         self.new_bar = QAction("新建(&N)",self)
-        self.save_bar.setShortcut("Ctrl+N")
+        self.new_bar.setShortcut("Ctrl+N")
         self.new_bar.triggered.connect(self.newfile)
         bar.addAction(self.new_bar)
         self.open_bar = QAction("打开(&O)",self)
-        self.save_bar.setShortcut("Ctrl+O")
+        self.open_bar.setShortcut("Ctrl+O")
         self.open_bar.triggered.connect(self.openfile)
         bar.addAction(self.open_bar)
         self.save_bar = QAction("保存(&S)",self)
         self.save_bar.setShortcut("Ctrl+S")
         self.save_bar.triggered.connect(self.savefile)
         bar.addAction(self.save_bar)
+        self.calculator_bar = QAction("计算器",self)
+        self.calculator_bar.triggered.connect(self.open_calculator)
+        bar.addAction(self.calculator_bar)
+        self.about_bar = QAction("关于", self)
+        self.about_bar.triggered.connect(self.open_about)
+        bar.addAction(self.about_bar)
+        self.quit_bar = QAction("退出", self)
+        self.quit_bar.triggered.connect(self.close)
+        bar.addAction(self.quit_bar)
 
         # 读取卡片数据库
         self.card_names = []
         self.card_datas = {}
+        self.monster_datas = {}
         try:
             if not os.path.exists("cards.cdb"):
                 raise
@@ -406,11 +416,13 @@ class Ui_MainWindow(QMainWindow):
                                     race_str += cardraces[race]
                             desp += " %s/%s"%(attr_str, race_str)
                             # ATK/DEF
+                            monster_ad = [carddata[5],0]
                             if carddata[5] < 0:
                                 desp += " ?"
                             else:
                                 desp += " %d"%carddata[5]
                             if carddata[4] & 0x4000000 == 0:
+                                monster_ad[1] = carddata[6]
                                 if carddata[6] < 0:
                                     desp += "/?"
                                 else:
@@ -420,13 +432,10 @@ class Ui_MainWindow(QMainWindow):
                                 for marker in linkmarkers.keys():
                                     if carddata[6] & marker != 0:
                                         desp += linkmarkers[marker]
+                            self.monster_datas[row[1]] = monster_ad
                         # 效果换行
                         eff_desp = row[2]
                         eff_desp = re.sub(r"\r\n",r"<br>",eff_desp)
-                        #eff_desp = re.sub(r"②：",r"<br>②：",eff_desp)
-                        #eff_desp = re.sub(r"③：",r"<br>③：",eff_desp)
-                        #eff_desp = re.sub(r"④：",r"<br>④：",eff_desp)
-                        #eff_desp = re.sub(r"⑤：",r"<br>⑤：",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
                     if not searched:
@@ -435,6 +444,10 @@ class Ui_MainWindow(QMainWindow):
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
+        
+        self.calculate_window = calculator.Calculator()
+        self.calculate_window.setdatas(self.monster_datas)
+        self.about_window = about.UI_About()
 
         # 初始化
         self.idx_represent_field = [
@@ -516,6 +529,8 @@ class Ui_MainWindow(QMainWindow):
         if self.unsave_confirm():
             event.ignore()
         else:
+            self.calculate_window.close()
+            self.about_window.close()
             event.accept()
 
     def comment_enter(self):
@@ -1397,6 +1412,14 @@ class Ui_MainWindow(QMainWindow):
         self.update_targetlist()
         self.show_cardinfo(self.showing_card_id)
         self.search_card()
+    
+    # 打开计算器
+    def open_calculator(self):
+        self.calculate_window.show()
+    
+    # 打开关于
+    def open_about(self):
+        self.about_window.show()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
