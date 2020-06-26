@@ -15,7 +15,8 @@ class UI_About(QWidget):
 
         self.label = QLabel(self)
         self.label.setGeometry(QRect(10, 10, 211, 21))
-        self.label.setText('Duel Editor v1.%d'%self.last_version_idx)
+        ver_str = str(idx)
+        self.label.setText('Duel Editor v1.%s.%s'%(ver_str[0:-1], ver_str[-1]))
         self.label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.label_2 = QLabel(self)
         self.label_2.setGeometry(QRect(10, 30, 211, 21))
