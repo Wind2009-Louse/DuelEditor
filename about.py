@@ -1,3 +1,4 @@
+#encoding:utf-8
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
 import sys
@@ -5,8 +6,8 @@ import requests
 import json
 
 class UI_About(QWidget):
-    def __init__(self):
-        self.last_version_idx = 11
+    def __init__(self, idx=12):
+        self.last_version_idx = idx
 
         super(UI_About, self).__init__()
         self.setWindowTitle("About")
@@ -14,12 +15,12 @@ class UI_About(QWidget):
 
         self.label = QLabel(self)
         self.label.setGeometry(QRect(10, 10, 211, 21))
-        self.label.setText('Duel Editor v1.11')
+        self.label.setText('Duel Editor v1.%d'%self.last_version_idx)
         self.label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.label_2 = QLabel(self)
         self.label_2.setGeometry(QRect(10, 30, 211, 21))
         self.label_2.setOpenExternalLinks(True)
-        self.label_2.setText('作者：虱子（<a href="https://www.github.com/wind2009-louse/DuelEditor">项目地址<a>）')
+        self.label_2.setText('作者：虱子（<a href="https://github.com/Wind2009-Louse/DuelEditor/">项目地址</a>）')
         self.label_2.setTextInteractionFlags(Qt.TextBrowserInteraction)
 
         self.pushButton = QPushButton(self)
@@ -27,10 +28,11 @@ class UI_About(QWidget):
         self.pushButton.setText("检查更新")
         self.pushButton.clicked.connect(self.check_update)
         self.label_3 = QLabel(self)
-        self.label_3.setGeometry(QRect(110, 60, 211, 16))
+        self.label_3.setGeometry(QRect(110, 65, 211, 16))
 
     def check_update(self):
         self.label_3.setText("检查更新中……")
+        QApplication.processEvents()
         try:
             url = "https://raw.githubusercontent.com/Wind2009-Louse/DuelEditor/preupdate/version.json"
             json_result = json.loads(requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))

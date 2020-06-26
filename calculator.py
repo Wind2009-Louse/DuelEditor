@@ -1,14 +1,6 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'calculator.ui'
-#
-# Created by: PyQt5 UI code generator 5.12.2
-#
-# WARNING! All changes made in this file will be lost!
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QTextBrowser
-from PyQt5.QtCore import QRegExp
+#encoding:utf-8
+from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QListWidget, QTextBrowser, QLabel
+from PyQt5.QtCore import QRegExp, QRect
 from PyQt5.QtGui import QRegExpValidator, QColor
 import sys
 
@@ -18,45 +10,45 @@ class Calculator(QWidget):
         self.setWindowTitle("Calculator")
         self.resize(400, 286)
         self.setFixedSize(400, 286)
-        self.name_line = QtWidgets.QLineEdit(self)
-        self.name_line.setGeometry(QtCore.QRect(240, 10, 151, 21))
-        self.card_list = QtWidgets.QListWidget(self)
-        self.card_list.setGeometry(QtCore.QRect(10, 10, 151, 261))
-        self.atk_line = QtWidgets.QTextBrowser(self)
-        self.atk_line.setGeometry(QtCore.QRect(240, 40, 151, 21))
-        self.def_line = QtWidgets.QTextBrowser(self)
-        self.def_line.setGeometry(QtCore.QRect(240, 70, 151, 21))
-        self.num_a_line = QtWidgets.QLineEdit(self)
-        self.num_a_line.setGeometry(QtCore.QRect(240, 100, 151, 21))
-        self.num_b_line = QtWidgets.QLineEdit(self)
-        self.num_b_line.setGeometry(QtCore.QRect(240, 130, 151, 21))
-        self.add_line = QtWidgets.QTextBrowser(self)
-        self.add_line.setGeometry(QtCore.QRect(240, 160, 151, 21))
-        self.sub_line = QtWidgets.QTextBrowser(self)
-        self.sub_line.setGeometry(QtCore.QRect(240, 190, 151, 21))
-        self.mul_line = QtWidgets.QTextBrowser(self)
-        self.mul_line.setGeometry(QtCore.QRect(240, 220, 151, 21))
-        self.div_line = QtWidgets.QTextBrowser(self)
-        self.div_line.setGeometry(QtCore.QRect(240, 250, 151, 21))
+        self.name_line = QLineEdit(self)
+        self.name_line.setGeometry(QRect(240, 10, 151, 21))
+        self.card_list = QListWidget(self)
+        self.card_list.setGeometry(QRect(10, 10, 151, 261))
+        self.atk_line = QTextBrowser(self)
+        self.atk_line.setGeometry(QRect(240, 40, 151, 21))
+        self.def_line = QTextBrowser(self)
+        self.def_line.setGeometry(QRect(240, 70, 151, 21))
+        self.num_a_line = QLineEdit(self)
+        self.num_a_line.setGeometry(QRect(240, 100, 151, 21))
+        self.num_b_line = QLineEdit(self)
+        self.num_b_line.setGeometry(QRect(240, 130, 151, 21))
+        self.add_line = QTextBrowser(self)
+        self.add_line.setGeometry(QRect(240, 160, 151, 21))
+        self.sub_line = QTextBrowser(self)
+        self.sub_line.setGeometry(QRect(240, 190, 151, 21))
+        self.mul_line = QTextBrowser(self)
+        self.mul_line.setGeometry(QRect(240, 220, 151, 21))
+        self.div_line = QTextBrowser(self)
+        self.div_line.setGeometry(QRect(240, 250, 151, 21))
 
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(170, 10, 41, 16))
-        self.label_2 = QtWidgets.QLabel(self)
-        self.label_2.setGeometry(QtCore.QRect(170, 40, 61, 20))
-        self.label_3 = QtWidgets.QLabel(self)
-        self.label_3.setGeometry(QtCore.QRect(170, 70, 61, 20))
-        self.label_4 = QtWidgets.QLabel(self)
-        self.label_4.setGeometry(QtCore.QRect(170, 100, 61, 20))
-        self.label_5 = QtWidgets.QLabel(self)
-        self.label_5.setGeometry(QtCore.QRect(170, 130, 61, 20))
-        self.label_6 = QtWidgets.QLabel(self)
-        self.label_6.setGeometry(QtCore.QRect(170, 160, 61, 20))
-        self.label_7 = QtWidgets.QLabel(self)
-        self.label_7.setGeometry(QtCore.QRect(170, 190, 61, 20))
-        self.label_8 = QtWidgets.QLabel(self)
-        self.label_8.setGeometry(QtCore.QRect(170, 220, 61, 20))
-        self.label_9 = QtWidgets.QLabel(self)
-        self.label_9.setGeometry(QtCore.QRect(170, 250, 61, 20))
+        self.label = QLabel(self)
+        self.label.setGeometry(QRect(170, 10, 41, 16))
+        self.label_2 = QLabel(self)
+        self.label_2.setGeometry(QRect(170, 40, 61, 20))
+        self.label_3 = QLabel(self)
+        self.label_3.setGeometry(QRect(170, 70, 61, 20))
+        self.label_4 = QLabel(self)
+        self.label_4.setGeometry(QRect(170, 100, 61, 20))
+        self.label_5 = QLabel(self)
+        self.label_5.setGeometry(QRect(170, 130, 61, 20))
+        self.label_6 = QLabel(self)
+        self.label_6.setGeometry(QRect(170, 160, 61, 20))
+        self.label_7 = QLabel(self)
+        self.label_7.setGeometry(QRect(170, 190, 61, 20))
+        self.label_8 = QLabel(self)
+        self.label_8.setGeometry(QRect(170, 220, 61, 20))
+        self.label_9 = QLabel(self)
+        self.label_9.setGeometry(QRect(170, 250, 61, 20))
         self.label.setText("卡名")
         self.label_2.setText("攻击力")
         self.label_3.setText("防御力")
@@ -72,7 +64,7 @@ class Calculator(QWidget):
         for num_line in [self.num_a_line, self.num_b_line]:
             validator = QRegExpValidator(regx, num_line)
             num_line.setValidator(validator)
-        
+
         self.name_line.setPlaceholderText("输入卡名")
         self.num_a_line.setPlaceholderText("输入非负整数")
         self.num_b_line.setPlaceholderText("输入非负整数")
@@ -95,6 +87,7 @@ class Calculator(QWidget):
             self.name_line.setEnabled(False)
             self.card_list.clear()
             self.card_list.addItem("无数据库")
+            self.name_line.setPlaceholderText("无数据库")
             self.card_list.setEnabled(False)
         else:
             self.card_list.clear()

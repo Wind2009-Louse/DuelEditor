@@ -16,6 +16,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
+version = 12
 
 class Ui_MainWindow(QMainWindow):
     def placeframe(self):
@@ -445,9 +446,10 @@ class Ui_MainWindow(QMainWindow):
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
         
+        # sub windows
         self.calculate_window = calculator.Calculator()
         self.calculate_window.setdatas(self.monster_datas)
-        self.about_window = about.UI_About()
+        self.about_window = about.UI_About(version)
 
         # 初始化
         self.idx_represent_field = [
