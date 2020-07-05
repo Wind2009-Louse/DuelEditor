@@ -16,7 +16,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 121
+version = 122
 
 class Ui_MainWindow(QMainWindow):
     def placeframe(self):
@@ -184,9 +184,10 @@ class Ui_MainWindow(QMainWindow):
         xline_5_1 = 1190 * width / self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
-        self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1, height_5_1))
-        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+30, width_5_1, 28))
-        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, 51))
+        self.Operator_search.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1, 21))
+        self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 50, width_5_1, height_5_1 - 20))
+        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+35, width_5_1, 28))
+        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, 55))
         self.CopyOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+130, width_5_1, 28))
         self.MoveOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+160, width_5_1, 28))
 
@@ -282,6 +283,8 @@ class Ui_MainWindow(QMainWindow):
         self.HalLP_Button = QPushButton(self.centralwidget)
 
         self.Operator_list = QListWidget(self.centralwidget)
+        self.Operator_search = QLineEdit(self.centralwidget)
+        self.Operator_search.setPlaceholderText("输入操作内容搜索")
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
         self.SelectedOpe_list = QListWidget(self.centralwidget)
         self.CopyOpe_Button = QPushButton(self.centralwidget)
@@ -465,6 +468,8 @@ class Ui_MainWindow(QMainWindow):
 
         # 操作部分
         self.copying_operation = {}
+        self.Operator_search.textChanged.connect(self.search_operation)
+        self.Operator_search.returnPressed.connect(self.search_operation_cycle)
         self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
         self.Operator_list.doubleClicked.connect(self.copy_ope)
@@ -619,9 +624,7 @@ class Ui_MainWindow(QMainWindow):
         fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
         if len(fullname) == 0:
             return
-        self.filename = os.path.split(fullname)[-1]
-        self.unsave_changed = False
-        self.maketitle()
+        origin_data = deepcopy(self.operators)
         try:
             with open(fullname,'r') as f:
                 json_data = f.read()
@@ -630,6 +633,9 @@ class Ui_MainWindow(QMainWindow):
                 self.make_fields()
                 self.update_operationlist()
                 self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                self.filename = os.path.split(fullname)[-1]
+                self.unsave_changed = False
+                self.maketitle()
                 return
         # 出错时尝试使用utf-8编码打开文件
         except:
@@ -641,9 +647,14 @@ class Ui_MainWindow(QMainWindow):
                     self.make_fields()
                     self.update_operationlist()
                     self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                    self.filename = os.path.split(fullname)[-1]
+                    self.unsave_changed = False
+                    self.maketitle()
                     return
             except:
                 pass
+        self.operators = origin_data
+        self.make_fields()
         QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
     def unsave_confirm(self):
@@ -1370,6 +1381,28 @@ class Ui_MainWindow(QMainWindow):
             if text in cardname and text != cardname:
                 self.Newcard_List.addItem(cardname)
     
+    def search_operation_cycle(self):
+        self.search_operation(True)
+
+    def search_operation(self, cycle=False):
+        text = self.Operator_search.text()
+        if text == "":
+            return
+        
+        current_index = self.Operator_list.selectedIndexes()
+        if len(current_index) < 1:
+            return
+        current_index = current_index[0].row()
+        if not cycle:
+            current_index = 0
+
+        index_pointer = (current_index + 1) % self.Operator_list.count()
+        while(index_pointer != current_index):
+            if text in self.Operator_list.item(index_pointer).text():
+                self.Operator_list.setCurrentRow(index_pointer)
+                return
+            index_pointer = (index_pointer + 1) % self.Operator_list.count()
+
     def show_carddesp(self):
         idx = self.Newcard_List.selectedIndexes()
         if len(idx) < 1:
@@ -1415,12 +1448,12 @@ class Ui_MainWindow(QMainWindow):
         self.show_cardinfo(self.showing_card_id)
         self.search_card()
     
-    # 打开计算器
     def open_calculator(self):
+        '''打开计算器'''
         self.calculate_window.show()
     
-    # 打开关于
     def open_about(self):
+        '''打开关于窗口'''
         self.about_window.show()
 
 if __name__ == "__main__":
