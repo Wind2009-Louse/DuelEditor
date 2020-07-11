@@ -16,7 +16,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 122
+version = 123
 
 class Ui_MainWindow(QMainWindow):
     def placeframe(self):
@@ -184,7 +184,8 @@ class Ui_MainWindow(QMainWindow):
         xline_5_1 = 1190 * width / self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
-        self.Operator_search.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1, 21))
+        self.Operator_search.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1 - 23, 21))
+        self.Operator_search_button.setGeometry(QRect(xline_5_1 + width_5_1 - 21, menu_height + 20, 21, 21))
         self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 50, width_5_1, height_5_1 - 20))
         self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+35, width_5_1, 28))
         self.SelectedOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, 55))
@@ -285,6 +286,7 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_list = QListWidget(self.centralwidget)
         self.Operator_search = QLineEdit(self.centralwidget)
         self.Operator_search.setPlaceholderText("输入操作内容搜索")
+        self.Operator_search_button = QPushButton(self.centralwidget)
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
         self.SelectedOpe_list = QListWidget(self.centralwidget)
         self.CopyOpe_Button = QPushButton(self.centralwidget)
@@ -470,6 +472,7 @@ class Ui_MainWindow(QMainWindow):
         self.copying_operation = {}
         self.Operator_search.textChanged.connect(self.search_operation)
         self.Operator_search.returnPressed.connect(self.search_operation_cycle)
+        self.Operator_search_button.clicked.connect(self.search_operation_cycle)
         self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
         self.Operator_list.doubleClicked.connect(self.copy_ope)
@@ -589,6 +592,7 @@ class Ui_MainWindow(QMainWindow):
         self.CgeLP_Button.setText("变成基本分")
         self.HalLP_Button.setText("基本分减半")
         self.NewCard_Rename_Button.setText("重命名选定卡")
+        self.Operator_search_button.setText("↓")
 
     def maketitle(self):
         '''根据当前正在打开的文件修改窗口标题'''
