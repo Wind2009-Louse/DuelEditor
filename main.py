@@ -16,7 +16,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 123
+version = 124
 
 class Ui_MainWindow(QMainWindow):
     def placeframe(self):
@@ -1377,13 +1377,27 @@ class Ui_MainWindow(QMainWindow):
             self.Newcard_List.clear()
             return
         self.Newcard_List.clear()
-        # 名字相同的优先
-        if text in self.card_names:
-            self.Newcard_List.addItem(text)
+        # 缓存
+        hit = []
+        hit_in_name = []
+        hit_in_effect = []
         # 遍历搜索符合条件的卡片
-        for cardname in self.card_names:
-            if text in cardname and text != cardname:
-                self.Newcard_List.addItem(cardname)
+        for cardname in self.card_datas.keys():
+            if text == cardname:
+                hit.append(cardname)
+            elif text in cardname:
+                hit_in_name.append(cardname)
+            elif text in self.card_datas[cardname]:
+                hit_in_effect.append(cardname)
+        # 添加到列表
+        for name in hit:
+            self.Newcard_List.addItem(name)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(QColor('green'))
+        for name in hit_in_name:
+            self.Newcard_List.addItem(name)
+        for name in hit_in_effect:
+            self.Newcard_List.addItem(name)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(QColor('grey'))
     
     def search_operation_cycle(self):
         self.search_operation(True)
