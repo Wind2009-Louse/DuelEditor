@@ -1,9 +1,11 @@
 #encoding:utf-8
-from PyQt5.QtCore import QRect, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
-import sys
-import requests
 import json
+import sys
+
+import requests
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget
+
 
 class UI_About(QWidget):
     def __init__(self, idx=12):

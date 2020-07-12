@@ -1,24 +1,46 @@
 #encoding:utf-8
-import sys
-from json import loads, dumps
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QAction, QMenuBar
-from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox, QMainWindow
-from PyQt5.QtCore import QRect, QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator, QColor
-from functools import partial
-from copy import deepcopy
 import os
-import re
-import calculator, about
+import sys
+import webbrowser
+from copy import deepcopy
+from functools import partial
+from json import dumps, loads
+from re import sub
 from sqlite3 import connect
+from threading import Thread
+
+from PyQt5.QtCore import QRect, QRegExp, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QRegExpValidator
+from PyQt5.QtWidgets import (QAction, QApplication, QComboBox, QFileDialog,
+                             QLabel, QLineEdit, QListWidget, QMainWindow,
+                             QMenuBar, QMessageBox, QPushButton, QTextBrowser,
+                             QWidget)
+
+import about
+import calculator
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 130
+version = 13
+
+class Update_Thread(Thread):
+    def __init__(self, window):
+        self.window = window
+        super().__init__()
+    def run(self):
+        try:
+            url = "https://raw.githubusercontent.com/Wind2009-Louse/DuelEditor/master/version.json"
+            json_result = loads(about.requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
+            if json_result["version"] > version:
+                self.window.update_signal.emit(json_result["name"])
+        except Exception as e:
+            print(e)
 
 class Ui_MainWindow(QMainWindow):
+    update_signal = pyqtSignal(str)
+
     def placeframe(self):
         menu_height = self.menuBar().height()
         width = self.width()
@@ -441,7 +463,7 @@ class Ui_MainWindow(QMainWindow):
                             self.monster_datas[row[1]] = monster_ad
                         # 效果换行
                         eff_desp = row[2]
-                        eff_desp = re.sub(r"\r\n",r"<br>",eff_desp)
+                        eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
                     if not searched:
@@ -512,6 +534,10 @@ class Ui_MainWindow(QMainWindow):
             self.idx_represent_field[field_id].itemSelectionChanged.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].clicked.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
+
+        self.update_signal.connect(self.update_hint)
+        update = Update_Thread(self)
+        update.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -1473,6 +1499,11 @@ class Ui_MainWindow(QMainWindow):
     def open_about(self):
         '''打开关于窗口'''
         self.about_window.show()
+
+    def update_hint(self, name):
+        reply = QMessageBox.question(self, "检查更新", "检查到最新版本：%s，是否前往下载？"%name, QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
