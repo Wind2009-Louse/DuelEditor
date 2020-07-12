@@ -23,7 +23,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 13
+version = 131
 
 class Update_Thread(Thread):
     def __init__(self, window):
