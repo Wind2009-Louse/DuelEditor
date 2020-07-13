@@ -23,7 +23,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 131
+version = 132
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -1306,7 +1306,7 @@ class Ui_MainWindow(QMainWindow):
         self.Comment_Line.clear()
 
     def ope_addcarddesp(self):
-        '''添加卡片描述'''
+        '''添加��片描述'''
         comment = self.Comment_Line.text()
         if len(comment) == 0 or len(self.targets) == 0:
             return
@@ -1407,13 +1407,34 @@ class Ui_MainWindow(QMainWindow):
         hit = []
         hit_in_name = []
         hit_in_effect = []
+        # 多条件搜索
+        included = []
+        excluded = []
+        split_text = text.split(" ")
+        for sub_text in split_text:
+            if len(sub_text) == 0:
+                continue
+            if sub_text[0] == "-":
+                excluded.append(sub_text[1:])
+            else:
+                included.append(sub_text)
+        if len(included)+len(excluded)==0:
+            return
+        def check_legal(text, included, excluded):
+            for i in included:
+                if i not in text:
+                    return False
+            for e in excluded:
+                if e in text:
+                    return False
+            return True
         # 遍历搜索符合条件的卡片
         for cardname in self.card_datas.keys():
             if text == cardname:
                 hit.append(cardname)
-            elif text in cardname:
+            elif check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif text in self.card_datas[cardname]:
+            elif check_legal(self.card_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
         for name in hit:
