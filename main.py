@@ -23,7 +23,7 @@ idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 132
+version = 133
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -364,11 +364,15 @@ class Ui_MainWindow(QMainWindow):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
-        idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "<font color='#height_1_1 - 22516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
+
+        search_type = {0x1: 1, 0x2: 2, 0x4:3}
+        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
+            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
         self.init_frame()
 
         # bar init
@@ -397,9 +401,9 @@ class Ui_MainWindow(QMainWindow):
         bar.addAction(self.quit_bar)
 
         # 读取卡片数据库
-        self.card_names = []
         self.card_datas = {}
         self.monster_datas = {}
+        card_sorted = {}
         try:
             if not os.path.exists("cards.cdb"):
                 raise
@@ -408,12 +412,19 @@ class Ui_MainWindow(QMainWindow):
             sel = cur.execute("select * from texts;")
             cur_2 = sql_conn.cursor()
             for row in sel:
-                self.card_names.append(row[1])
                 if row[1] not in self.card_datas.keys():
                     carddata_search = cur_2.execute("select * from datas where id=%d;"%row[0])
                     searched = False
+                    card_sorted_index = [0,2,0,0,0]
                     for carddata in carddata_search:
                         searched = True
+                        # 卡片类型（排序）
+                        for c_type in search_type.keys():
+                            if carddata[4] & c_type != 0:
+                                card_sorted_index[0] = search_type[c_type]
+                        for c_subtype in search_subtype.keys():
+                            if carddata[4] & c_subtype != 0:
+                                card_sorted_index[1] = search_subtype[c_subtype]
                         # 生成描述
                         desp = ""
                         # 种类
@@ -427,8 +438,10 @@ class Ui_MainWindow(QMainWindow):
                             # 等阶/Link
                             if carddata[4] & 0x4000000 != 0:
                                 desp += " Link-%d"%carddata[7]
+                                card_sorted_index[2] = 13 - carddata[7]
                             else:
                                 desp += " %d★"%(carddata[7]&0xffff)
+                                card_sorted_index[2] = 13 - carddata[7]&0xffff
                             # 属性/种族
                             attr_str = ""
                             for attr in cardattrs.keys():
@@ -449,6 +462,8 @@ class Ui_MainWindow(QMainWindow):
                                 desp += " ?"
                             else:
                                 desp += " %d"%carddata[5]
+                            card_sorted_index[3] = -max(carddata[5], 0)
+                            card_sorted_index[4] = -carddata[6]
                             if carddata[4] & 0x4000000 == 0:
                                 monster_ad[1] = carddata[6]
                                 if carddata[6] < 0:
@@ -466,12 +481,15 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
-                    if not searched:
-                        continue
+                    if searched:
+                        card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
+        
+        self.card_names = list(self.card_datas.keys())
+        self.card_names.sort(key=lambda x: (card_sorted[x]))
         
         # sub windows
         self.calculate_window = calculator.Calculator()
@@ -656,7 +674,7 @@ class Ui_MainWindow(QMainWindow):
             return
         origin_data = deepcopy(self.operators)
         try:
-            with open(fullname,'r') as f:
+            with open(fullname,'r',encoding='utf-8') as f:
                 json_data = f.read()
                 dict_data = loads(json_data)
                 self.operators = dict_data
@@ -667,10 +685,10 @@ class Ui_MainWindow(QMainWindow):
                 self.unsave_changed = False
                 self.maketitle()
                 return
-        # 出错时尝试使用utf-8编码打开文件
+        # 出错时尝试不使用utf-8编码打开文件
         except:
             try:
-                with open(fullname,'r',encoding='utf-8') as f:
+                with open(fullname,'r') as f:
                     json_data = f.read()
                     dict_data = loads(json_data)
                     self.operators = dict_data
@@ -1306,7 +1324,7 @@ class Ui_MainWindow(QMainWindow):
         self.Comment_Line.clear()
 
     def ope_addcarddesp(self):
-        '''添加��片描述'''
+        '''添加卡片描述'''
         comment = self.Comment_Line.text()
         if len(comment) == 0 or len(self.targets) == 0:
             return
@@ -1429,7 +1447,7 @@ class Ui_MainWindow(QMainWindow):
                     return False
             return True
         # 遍历搜索符合条件的卡片
-        for cardname in self.card_datas.keys():
+        for cardname in self.card_names:
             if text == cardname:
                 hit.append(cardname)
             elif check_legal(cardname, included, excluded):
