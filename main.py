@@ -1,24 +1,47 @@
 #encoding:utf-8
-import sys
-from json import loads, dumps
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QAction, QMenuBar
-from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QTextBrowser, QPushButton, QLineEdit, QComboBox, QMainWindow
-from PyQt5.QtCore import QRect, QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator, QColor
-from functools import partial
-from copy import deepcopy
 import os
-import re
-import calculator, about
+import sys
+import webbrowser
+from copy import deepcopy
+from functools import partial
+from json import dumps, loads
+from re import sub
 from sqlite3 import connect
+from threading import Thread
+
+from PyQt5.QtCore import QRect, QRegExp, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QRegExpValidator, QFont
+from PyQt5.QtWidgets import (QAction, QApplication, QComboBox, QFileDialog,
+                             QLabel, QLineEdit, QListWidget, QMainWindow,
+                             QMenuBar, QMessageBox, QPushButton, QTextBrowser,
+                             QWidget)
+
+import about
+import calculator
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(168,168,0), 0x40: QColor(108,34,108), 0x80: QColor(16,128,235), 0x2000: QColor(168,168,168), 0x800000: QColor(0,0,0), 0x4000: QColor(98,98,98), 0x4000000: QColor(3,62,116), 0xffffffff: QColor(178,68,0)}
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 130
+version = 134
+
+class Update_Thread(Thread):
+    def __init__(self, window):
+        self.window = window
+        super().__init__()
+    def run(self):
+        try:
+            url = "https://raw.githubusercontent.com/Wind2009-Louse/DuelEditor/master/version.json"
+            json_result = loads(about.requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
+            if json_result["version"] > version:
+                self.window.update_signal.emit(json_result["name"])
+        except Exception as e:
+            print(e)
 
 class Ui_MainWindow(QMainWindow):
+    update_signal = pyqtSignal(str)
+
     def placeframe(self):
         menu_height = self.menuBar().height()
         width = self.width()
@@ -164,7 +187,8 @@ class Ui_MainWindow(QMainWindow):
         height_4_1 = height - 410
         xline_4_1 = 1000 * width / self.origin_width
         self.label_cardsearch.setGeometry(QRect(xline_4_1, menu_height, width_4_1, 20))
-        self.NewCard_line.setGeometry(QRect(xline_4_1, menu_height + 20, width_4_1, 21))
+        self.NewCard_line.setGeometry(QRect(xline_4_1, menu_height + 20, width_4_1-42, 21))
+        self.NewCard_button.setGeometry(QRect(xline_4_1+width_4_1-40, menu_height + 20, 40, 21))
         self.Newcard_List.setGeometry(QRect(xline_4_1, menu_height + 50, width_4_1, height_4_1))
         self.CreateCard_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+55, width_4_1, 28))
         self.NewCard_Rename_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+85, width_4_1, 28))
@@ -263,6 +287,7 @@ class Ui_MainWindow(QMainWindow):
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setPlaceholderText("输入卡片名称")
+        self.NewCard_button = QPushButton(self.centralwidget)
         self.Newcard_List = QListWidget(self.centralwidget)
         self.CreateCard_Button = QPushButton(self.centralwidget)
         self.NewCard_Rename_Button = QPushButton(self.centralwidget)
@@ -342,11 +367,16 @@ class Ui_MainWindow(QMainWindow):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
-        idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "<font color='#height_1_1 - 22516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
+        cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
+
+        search_type = {0x1: 1, 0x2: 2, 0x4:3}
+        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
+            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
         self.init_frame()
 
         # bar init
@@ -375,9 +405,10 @@ class Ui_MainWindow(QMainWindow):
         bar.addAction(self.quit_bar)
 
         # 读取卡片数据库
-        self.card_names = []
         self.card_datas = {}
         self.monster_datas = {}
+        self.card_colors = {}
+        card_sorted = {}
         try:
             if not os.path.exists("cards.cdb"):
                 raise
@@ -386,12 +417,24 @@ class Ui_MainWindow(QMainWindow):
             sel = cur.execute("select * from texts;")
             cur_2 = sql_conn.cursor()
             for row in sel:
-                self.card_names.append(row[1])
                 if row[1] not in self.card_datas.keys():
                     carddata_search = cur_2.execute("select * from datas where id=%d;"%row[0])
                     searched = False
+                    card_sorted_index = [0,2,0,0,0]
                     for carddata in carddata_search:
                         searched = True
+                        # 卡片类型（排序）
+                        for c_type in search_type.keys():
+                            if carddata[4] & c_type != 0:
+                                card_sorted_index[0] = search_type[c_type]
+                        for c_subtype in search_subtype.keys():
+                            if carddata[4] & c_subtype != 0:
+                                card_sorted_index[1] = search_subtype[c_subtype]
+                        # 卡片颜色
+                        self.card_colors[row[1]] = 0xffffffff
+                        for color_set in cardcolors_list:
+                            if carddata[4] & color_set != 0:
+                                self.card_colors[row[1]] = color_set
                         # 生成描述
                         desp = ""
                         # 种类
@@ -405,8 +448,10 @@ class Ui_MainWindow(QMainWindow):
                             # 等阶/Link
                             if carddata[4] & 0x4000000 != 0:
                                 desp += " Link-%d"%carddata[7]
+                                card_sorted_index[2] = 13 - carddata[7]
                             else:
                                 desp += " %d★"%(carddata[7]&0xffff)
+                                card_sorted_index[2] = 13 - carddata[7]&0xffff
                             # 属性/种族
                             attr_str = ""
                             for attr in cardattrs.keys():
@@ -427,6 +472,8 @@ class Ui_MainWindow(QMainWindow):
                                 desp += " ?"
                             else:
                                 desp += " %d"%carddata[5]
+                            card_sorted_index[3] = -max(carddata[5], 0)
+                            card_sorted_index[4] = -carddata[6]
                             if carddata[4] & 0x4000000 == 0:
                                 monster_ad[1] = carddata[6]
                                 if carddata[6] < 0:
@@ -441,15 +488,18 @@ class Ui_MainWindow(QMainWindow):
                             self.monster_datas[row[1]] = monster_ad
                         # 效果换行
                         eff_desp = row[2]
-                        eff_desp = re.sub(r"\r\n",r"<br>",eff_desp)
+                        eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
-                    if not searched:
-                        continue
+                    if searched:
+                        card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
+        
+        self.card_names = list(self.card_datas.keys())
+        self.card_names.sort(key=lambda x: (card_sorted[x]))
         
         # sub windows
         self.calculate_window = calculator.Calculator()
@@ -489,6 +539,7 @@ class Ui_MainWindow(QMainWindow):
         # 添加/删除卡片部分
         self.NewCard_line.textChanged.connect(self.search_card)
         self.NewCard_line.returnPressed.connect(self.create_card)
+        self.NewCard_button.clicked.connect(self.create_card)
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
         self.Newcard_List.clicked.connect(self.show_carddesp)
         self.Newcard_List.itemSelectionChanged.connect(self.show_carddesp)
@@ -512,6 +563,10 @@ class Ui_MainWindow(QMainWindow):
             self.idx_represent_field[field_id].itemSelectionChanged.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].clicked.connect(partial(self.select_field, field_id))
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
+
+        self.update_signal.connect(self.update_hint)
+        update = Update_Thread(self)
+        update.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -592,6 +647,7 @@ class Ui_MainWindow(QMainWindow):
         self.CgeLP_Button.setText("变成基本分")
         self.HalLP_Button.setText("基本分减半")
         self.NewCard_Rename_Button.setText("重命名选定卡")
+        self.NewCard_button.setText("添加")
         self.Operator_search_button.setText("↓")
 
     def maketitle(self):
@@ -630,7 +686,7 @@ class Ui_MainWindow(QMainWindow):
             return
         origin_data = deepcopy(self.operators)
         try:
-            with open(fullname,'r') as f:
+            with open(fullname,'r',encoding='utf-8') as f:
                 json_data = f.read()
                 dict_data = loads(json_data)
                 self.operators = dict_data
@@ -641,10 +697,10 @@ class Ui_MainWindow(QMainWindow):
                 self.unsave_changed = False
                 self.maketitle()
                 return
-        # 出错时尝试使用utf-8编码打开文件
+        # 出错时尝试不使用utf-8编码打开文件
         except:
             try:
-                with open(fullname,'r',encoding='utf-8') as f:
+                with open(fullname,'r') as f:
                     json_data = f.read()
                     dict_data = loads(json_data)
                     self.operators = dict_data
@@ -883,6 +939,7 @@ class Ui_MainWindow(QMainWindow):
         target_idx = target_idx[0].row()
         del self.targets[target_idx]
         # 刷新
+        self.clear_unuse_cards()
         self.label_target_list.setText("操作对象(%d)"%len(self.targets))
         self.Target_detail.clear()
         self.update_targetlist()
@@ -1381,23 +1438,51 @@ class Ui_MainWindow(QMainWindow):
         hit = []
         hit_in_name = []
         hit_in_effect = []
+        # 多条件搜索
+        included = []
+        excluded = []
+        split_text = text.split(" ")
+        for sub_text in split_text:
+            if len(sub_text) == 0:
+                continue
+            if sub_text[0] == "-":
+                excluded.append(sub_text[1:])
+            else:
+                included.append(sub_text)
+        if len(included)+len(excluded)==0:
+            return
+        def check_legal(text, included, excluded):
+            for i in included:
+                if i not in text:
+                    return False
+            for e in excluded:
+                if e in text:
+                    return False
+            return True
         # 遍历搜索符合条件的卡片
-        for cardname in self.card_datas.keys():
+        for cardname in self.card_names:
             if text == cardname:
                 hit.append(cardname)
-            elif text in cardname:
+            elif check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif text in self.card_datas[cardname]:
+            elif check_legal(self.card_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
+        main_font = QFont()
+        main_font.setBold(True)
+        relevant_font = QFont()
+        relevant_font.setItalic(True)
         for name in hit:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(QColor('green'))
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(main_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_name:
             self.Newcard_List.addItem(name)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_effect:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(QColor('grey'))
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(relevant_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
     
     def search_operation_cycle(self):
         self.search_operation(True)
@@ -1473,6 +1558,22 @@ class Ui_MainWindow(QMainWindow):
     def open_about(self):
         '''打开关于窗口'''
         self.about_window.show()
+
+    def update_hint(self, name):
+        reply = QMessageBox.question(self, "检查更新", "检查到最新版本：%s，是否前往下载？"%name, QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases")
+
+    def clear_unuse_cards(self):
+        all_cards = set(self.operators["cards"].keys())
+        all_cards -= set(self.targets)
+        for ope in self.operators["operations"]:
+            if ope["type"][0:2] != "LP":
+                all_cards = all_cards - set(ope["args"])
+        for c in all_cards:
+            self.operators["cards"].pop(c,"fail")
+        while(self.operators["cardindex"] > 0 and str(self.operators["cardindex"]-1) not in self.operators["cards"]):
+            self.operators["cardindex"] -= 1
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

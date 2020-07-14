@@ -1,9 +1,12 @@
 #encoding:utf-8
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QLineEdit, QListWidget, QTextBrowser, QLabel
-from PyQt5.QtCore import QRegExp, QRect
-from PyQt5.QtGui import QRegExpValidator, QColor
 import sys
+
+from PyQt5 import QtCore
+from PyQt5.QtCore import QRect, QRegExp
+from PyQt5.QtGui import QColor, QRegExpValidator
+from PyQt5.QtWidgets import (QApplication, QLabel, QLineEdit, QListWidget,
+                             QTextBrowser, QWidget)
+
 
 class Calculator(QWidget):
     def __init__(self):
