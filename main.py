@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 140
+version = 141
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -368,7 +368,7 @@ class Ui_MainWindow(QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
 
-        cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
@@ -406,6 +406,7 @@ class Ui_MainWindow(QMainWindow):
 
         # 读取卡片数据库
         self.card_datas = {}
+        self.raw_datas = {}
         self.monster_datas = {}
         self.card_colors = {}
         card_sorted = {}
@@ -435,6 +436,7 @@ class Ui_MainWindow(QMainWindow):
                         for color_set in cardcolors_list:
                             if carddata[4] & color_set != 0:
                                 self.card_colors[row[1]] = color_set
+                                break
                         # 生成描述
                         desp = ""
                         # 种类
@@ -491,6 +493,9 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
+                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",desp)
+                        raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
+                        self.raw_datas[row[1]] = raw_desp
                     if searched:
                         card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
@@ -636,7 +641,7 @@ class Ui_MainWindow(QMainWindow):
         self.EraseCard_Button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
-        self.label_cardsearch.setText("卡片搜索")
+        self.label_cardsearch.setText("卡片搜索(0)")
         self.DeleteOpe_Button.setText("删除操作")
         self.CopyOpe_Button.setText("复制操作")
         self.MoveOpe_Button.setText("粘贴操作")
@@ -958,6 +963,7 @@ class Ui_MainWindow(QMainWindow):
         self.unsave_changed = True
         self.maketitle()
         del self.operators["operations"][idx]
+        self.clear_unuse_cards()
         self.make_fields(idx)
         self.update_operationlist()
         if len(self.operators["operations"]) > 0 and idx == 0:
@@ -1465,7 +1471,7 @@ class Ui_MainWindow(QMainWindow):
                 hit.append(cardname)
             elif check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif check_legal(self.card_datas[cardname], included, excluded):
+            elif check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
         main_font = QFont()
@@ -1483,6 +1489,7 @@ class Ui_MainWindow(QMainWindow):
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(relevant_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+        self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
         self.search_operation(True)
