@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 141
+version = 142
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -394,9 +394,16 @@ class Ui_MainWindow(QMainWindow):
         self.save_bar.setShortcut("Ctrl+S")
         self.save_bar.triggered.connect(self.savefile)
         bar.addAction(self.save_bar)
+
+        self.menu_bar_list = bar.addMenu("功能")
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
-        bar.addAction(self.calculator_bar)
+        self.menu_bar_list.addAction(self.calculator_bar)
+        self.blur_search_bar = QAction("搜索效果文字",self,checkable=True)
+        self.blur_search_bar.setChecked(True)
+        self.blur_search_bar.triggered.connect(self.search_card)
+        self.menu_bar_list.addAction(self.blur_search_bar)
+
         self.about_bar = QAction("关于", self)
         self.about_bar.triggered.connect(self.open_about)
         bar.addAction(self.about_bar)
@@ -537,6 +544,7 @@ class Ui_MainWindow(QMainWindow):
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
+        self.Target_list.clicked.connect(self.target_index_changed)
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
@@ -1108,6 +1116,15 @@ class Ui_MainWindow(QMainWindow):
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
 
+        card_name = self.operators["cards"][card_id]["Name"]
+        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
+            search_list = [card_name, card_name[:-1]]
+            for name in search_list:
+                if name in self.card_datas:
+                    text = "[%s]<br>%s"%(name, self.card_datas[name])
+                    self.Target_detail.setHtml(text)
+                    return
+
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
         self.SelectedOpe_list.clearSelection()
@@ -1471,7 +1488,7 @@ class Ui_MainWindow(QMainWindow):
                 hit.append(cardname)
             elif check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif check_legal(self.raw_datas[cardname], included, excluded):
+            elif self.blur_search_bar.isChecked() and check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
         main_font = QFont()
