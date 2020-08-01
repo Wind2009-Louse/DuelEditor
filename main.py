@@ -14,7 +14,7 @@ from PyQt5.QtGui import QColor, QRegExpValidator, QFont
 from PyQt5.QtWidgets import (QAction, QApplication, QComboBox, QFileDialog,
                              QLabel, QLineEdit, QListWidget, QMainWindow,
                              QMenuBar, QMessageBox, QPushButton, QTextBrowser,
-                             QWidget)
+                             QWidget, QAbstractItemView)
 
 import about
 import calculator
@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 140
+version = 150
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -204,7 +204,8 @@ class Ui_MainWindow(QMainWindow):
 
         # operation list
         width_5_1 = 181 * width / self.origin_width
-        height_5_1 = height - 200
+        height_5_1 = 374 * height / self.origin_height
+        height_5_2 = height - height_5_1 - 145
         xline_5_1 = 1190 * width / self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
@@ -212,9 +213,9 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_search_button.setGeometry(QRect(xline_5_1 + width_5_1 - 21, menu_height + 20, 21, 21))
         self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 50, width_5_1, height_5_1 - 20))
         self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+35, width_5_1, 28))
-        self.SelectedOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, 55))
-        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+130, width_5_1, 28))
-        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+160, width_5_1, 28))
+        self.CopyingOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, height_5_2))
+        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+75, width_5_1, 28))
+        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+105, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
@@ -309,11 +310,13 @@ class Ui_MainWindow(QMainWindow):
         self.HalLP_Button = QPushButton(self.centralwidget)
 
         self.Operator_list = QListWidget(self.centralwidget)
+        self.Operator_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.Operator_search = QLineEdit(self.centralwidget)
         self.Operator_search.setPlaceholderText("输入操作内容搜索")
         self.Operator_search_button = QPushButton(self.centralwidget)
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
-        self.SelectedOpe_list = QListWidget(self.centralwidget)
+        self.CopyingOpe_list = QListWidget(self.centralwidget)
+        self.CopyingOpe_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.CopyOpe_Button = QPushButton(self.centralwidget)
         self.MoveOpe_Button = QPushButton(self.centralwidget)
 
@@ -368,7 +371,7 @@ class Ui_MainWindow(QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
 
-        cardtypes = {0x1: "怪兽", 0x2: "<font color='#008972'>魔法</font>", 0x4: "<font color='#B12B7A'>陷阱</font>", 0x10: "通常", 0x20: "<font color='#BA6337'>效果</font>", 0x40: "<font color='#803D90'>融合</font>", 0x80: "<font color='#5F7EBB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "同调", 0x4000: "衍生物", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#0874AC'>连接</font>"}
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
@@ -394,9 +397,16 @@ class Ui_MainWindow(QMainWindow):
         self.save_bar.setShortcut("Ctrl+S")
         self.save_bar.triggered.connect(self.savefile)
         bar.addAction(self.save_bar)
+
+        self.menu_bar_list = bar.addMenu("功能")
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
-        bar.addAction(self.calculator_bar)
+        self.menu_bar_list.addAction(self.calculator_bar)
+        self.blur_search_bar = QAction("搜索效果文字",self,checkable=True)
+        self.blur_search_bar.setChecked(True)
+        self.blur_search_bar.triggered.connect(self.search_card)
+        self.menu_bar_list.addAction(self.blur_search_bar)
+
         self.about_bar = QAction("关于", self)
         self.about_bar.triggered.connect(self.open_about)
         bar.addAction(self.about_bar)
@@ -406,6 +416,7 @@ class Ui_MainWindow(QMainWindow):
 
         # 读取卡片数据库
         self.card_datas = {}
+        self.raw_datas = {}
         self.monster_datas = {}
         self.card_colors = {}
         card_sorted = {}
@@ -435,6 +446,7 @@ class Ui_MainWindow(QMainWindow):
                         for color_set in cardcolors_list:
                             if carddata[4] & color_set != 0:
                                 self.card_colors[row[1]] = color_set
+                                break
                         # 生成描述
                         desp = ""
                         # 种类
@@ -491,6 +503,9 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
                         self.card_datas[row[1]] = desp
+                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",desp)
+                        raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
+                        self.raw_datas[row[1]] = raw_desp
                     if searched:
                         card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
@@ -519,7 +534,7 @@ class Ui_MainWindow(QMainWindow):
         self.newfile()
 
         # 操作部分
-        self.copying_operation = {}
+        self.copying_operation = []
         self.Operator_search.textChanged.connect(self.search_operation)
         self.Operator_search.returnPressed.connect(self.search_operation_cycle)
         self.Operator_search_button.clicked.connect(self.search_operation_cycle)
@@ -527,11 +542,13 @@ class Ui_MainWindow(QMainWindow):
         self.DeleteOpe_Button.clicked.connect(self.remove_operator)
         self.Operator_list.doubleClicked.connect(self.copy_ope)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
-        self.SelectedOpe_list.itemSelectionChanged.connect(self.select_copying)
+        self.CopyingOpe_list.itemSelectionChanged.connect(self.select_copying)
+        self.CopyingOpe_list.doubleClicked.connect(self.remove_from_copying)
         self.MoveOpe_Button.clicked.connect(self.paste_operator)
 
         # 对象部分
         self.Delete_target.clicked.connect(self.remove_from_targets)
+        self.Target_list.clicked.connect(self.target_index_changed)
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.MoveCard_Button.clicked.connect(self.ope_movecards)
@@ -577,6 +594,8 @@ class Ui_MainWindow(QMainWindow):
             # Delete键删除操作
             elif self.Operator_list.hasFocus():
                 self.remove_operator()
+            elif self.CopyingOpe_list.hasFocus():
+                self.remove_from_copying()
         # 回车键默认减少LP
         if self.LP_line.hasFocus() and event.key() == Qt.Key_Return:
             self.ope_LPDec()
@@ -636,7 +655,7 @@ class Ui_MainWindow(QMainWindow):
         self.EraseCard_Button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
-        self.label_cardsearch.setText("卡片搜索")
+        self.label_cardsearch.setText("卡片搜索(0)")
         self.DeleteOpe_Button.setText("删除操作")
         self.CopyOpe_Button.setText("复制操作")
         self.MoveOpe_Button.setText("粘贴操作")
@@ -663,7 +682,7 @@ class Ui_MainWindow(QMainWindow):
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:deepcopy(init_field)}
         self.targets = []
-        self.copying_operation = {}
+        self.copying_operation = []
         self.filename = "Untitle.json"
         self.last_text = ""
         self.showing_card_id = None
@@ -789,7 +808,7 @@ class Ui_MainWindow(QMainWindow):
 
     def get_last_location(self, card_id, ope_id):
         '''获取指定卡片在上一个操作中的位置'''
-        if ope_id == 0:
+        if ope_id <= 0:
             return "未知"
         field = self.fields[ope_id-1]
         if card_id in field["locations"]:
@@ -803,22 +822,20 @@ class Ui_MainWindow(QMainWindow):
         场地格式：
 
         locations(dict), desp(dict), LP(list), fields(list of list)'''
-        ope_id = self.Operator_list.selectedIndexes()
-        if len(ope_id) == 0:
+        ope_id = self.get_current_operation_index()
+        if ope_id < 0:
             ope_id = 0
-        else:
-            ope_id = ope_id[0].row()
         return self.fields[ope_id]
 
     def insert_operation(self, operation):
         '''插入操作。操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         # 判断是插入或新增
-        ope_id = self.Operator_list.selectedIndexes()
-        if len(ope_id) == 0:
+        ope_id = self.get_current_operation_index()
+        if ope_id < 0:
             self.operators["operations"].append(operation)
             ope_id = 0
         else:
-            ope_id = ope_id[0].row()+1
+            ope_id += 1
             self.operators["operations"].insert(ope_id, operation)
         self.make_fields(ope_id)
         self.update_operationlist()
@@ -863,10 +880,9 @@ class Ui_MainWindow(QMainWindow):
         # 获取操作
         self.showing_card_id = None
         if idx is None:
-            idx = self.Operator_list.selectedIndexes()
-            if len(idx) < 1:
+            idx = self.get_current_operation_index()
+            if idx < 0:
                 return
-            idx = idx[0].row()
         operation = self.operators["operations"][idx]
 
         result = ""
@@ -947,17 +963,20 @@ class Ui_MainWindow(QMainWindow):
     def remove_operator(self):
         '''移除操作'''
         # 从操作列表中获得当前选定的操作
-        idx = self.Operator_list.selectedIndexes()
-        if len(idx) < 1:
+        selected = self.Operator_list.selectedIndexes()
+        if len(selected) <= 0:
             return
         # 确认提示
-        reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.information(self, 'Confirm', "确认要从操作列表中删除选定操作吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
-        idx = idx[0].row()
+        idx_list = [item.row() for item in selected]
+        idx_list.sort(reverse=True)
         self.unsave_changed = True
         self.maketitle()
-        del self.operators["operations"][idx]
+        for idx in idx_list:
+            del self.operators["operations"][idx]
+        self.clear_unuse_cards()
         self.make_fields(idx)
         self.update_operationlist()
         if len(self.operators["operations"]) > 0 and idx == 0:
@@ -968,109 +987,55 @@ class Ui_MainWindow(QMainWindow):
 
     def paste_operator(self):
         '''粘贴操作'''
-        if self.copying_operation == {}:
+        idx_list = self.CopyingOpe_list.selectedIndexes()
+        if len(idx_list) <= 0:
             return
-        self.insert_operation(self.copying_operation)
-        self.copying_operation = {}
+        for idx in idx_list:
+            operation = self.copying_operation[idx.row()]
+            self.insert_operation(operation)
+        self.remove_from_copying(False)
         self.update_copying()
 
     def copy_ope(self):
         '''复制操作'''
-        idx = self.Operator_list.selectedIndexes()
-        if len(idx) < 1:
+        # 多项复制
+        idx_list = self.Operator_list.selectedIndexes()
+        if len(idx_list) < 1:
             return
-        idx = idx[0].row()
-        ope = deepcopy(self.operators["operations"][idx])
-        self.copying_operation = ope
+        for item in idx_list:
+            idx = item.row()
+            ope = deepcopy(self.operators["operations"][idx])
+            self.copying_operation.append(ope)
         self.update_copying()
     
     def update_copying(self):
-        '''描绘复制中的操作'''
-        self.SelectedOpe_list.clear()
-        operation = self.copying_operation
+        '''描绘复制列表中的操作'''
+        self.CopyingOpe_list.clear()
+        operation_list = self.copying_operation
         # 判断当前是否有复制中的操作
-        if self.copying_operation == {}:
+        if len(self.copying_operation) <= 0:
             self.MoveOpe_Button.setEnabled(False)
-            self.SelectedOpe_list.addItem("无操作")
-            self.SelectedOpe_list.setEnabled(False)
+            self.CopyingOpe_list.addItem("无操作")
+            self.CopyingOpe_list.setEnabled(False)
             return
         self.MoveOpe_Button.setEnabled(True)
-        self.SelectedOpe_list.setEnabled(True)
-
-        # 根据类型描绘操作
-        if operation["type"] == "move":
-            card_idx = operation["args"][0]
-            card_name = self.operators["cards"][card_idx]["Name"]
-            if len(operation["args"])>1:
-                card_name += "等"
-            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
-            self.SelectedOpe_list.addItem(result)
-        elif operation["type"] == "carddesp":
-            card_idx = operation["args"][0]
-            card_name = self.operators["cards"][card_idx]["Name"]
-            if len(operation["args"])>1:
-                card_name += "等"
-            result = "%s %s"%(card_name, operation["desp"])
-            self.SelectedOpe_list.addItem(result)
-        elif operation["type"][0:2] == "LP":
-            if operation['args'][0]==0:
-                target = "己方"
-            else:
-                target = "对方"
-            actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
-            subope = operation["type"][2:]
-            action = actions[subope]
-            point = ""
-            if action != "减半":
-                point = "%d"%operation['args'][1]
-            result = "%sLP%s%s"%(target,action,point)
-            self.SelectedOpe_list.addItem(result)
-        elif operation["type"] == "comment":
-            self.SelectedOpe_list.addItem(operation["desp"])
-            # 注释高亮
-            self.SelectedOpe_list.item(0).setForeground(QColor('green'))
-        elif operation["type"] == "erase":
-            card_idx = operation["args"][0]
-            card_name = self.operators["cards"][card_idx]["Name"]
-            if len(operation["args"])>1:
-                card_name += "等"
-            result = "%s 被移除"%(card_name)
-            self.SelectedOpe_list.addItem(result)
-
-    def select_copying(self):
-        '''选择复制中的操作时，显示内容'''
-        if self.copying_operation == {}:
-            return
-        operation = self.copying_operation
-        if operation != {}:
-            result = ""
+        self.CopyingOpe_list.setEnabled(True)
+        for operation in operation_list:
+            # 根据类型描绘操作
             if operation["type"] == "move":
-                card_name = ""
-                first_card = True
-                for card_idx in operation["args"]:
-                    if not first_card:
-                        card_name += "、\n"
-                    first_card = False
-                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
                 result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+                self.CopyingOpe_list.addItem(result)
             elif operation["type"] == "carddesp":
-                card_name = ""
-                first_card = True
-                for card_idx in operation["args"]:
-                    if not first_card:
-                        card_name += "、\n"
-                    first_card = False
-                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
                 result = "%s %s"%(card_name, operation["desp"])
-            elif operation["type"] == "erase":
-                card_name = ""
-                first_card = True
-                for card_idx in operation["args"]:
-                    if not first_card:
-                        card_name += "、\n"
-                    first_card = False
-                    card_name += "%s"%(self.operators["cards"][card_idx]["Name"])
-                result = "%s 被移除"%(card_name)
+                self.CopyingOpe_list.addItem(result)
             elif operation["type"][0:2] == "LP":
                 if operation['args'][0]==0:
                     target = "己方"
@@ -1083,9 +1048,86 @@ class Ui_MainWindow(QMainWindow):
                 if action != "减半":
                     point = "%d"%operation['args'][1]
                 result = "%sLP%s%s"%(target,action,point)
+                self.CopyingOpe_list.addItem(result)
             elif operation["type"] == "comment":
-                result = operation["desp"]
-            self.Target_detail.setText(result)
+                self.CopyingOpe_list.addItem(operation["desp"])
+                # 注释高亮
+                self.CopyingOpe_list.item(self.CopyingOpe_list.count()-1).setForeground(QColor('green'))
+            elif operation["type"] == "erase":
+                card_idx = operation["args"][0]
+                card_name = self.operators["cards"][card_idx]["Name"]
+                if len(operation["args"])>1:
+                    card_name += "等"
+                result = "%s 被移除"%(card_name)
+                self.CopyingOpe_list.addItem(result)
+
+    def select_copying(self):
+        '''选择复制中的操作时，显示内容'''
+        idx_item = self.CopyingOpe_list.currentIndex().row()
+        if idx_item == -1 or idx_item >= len(self.copying_operation):
+            return
+        operation = self.copying_operation[idx_item]
+        if operation == {}:
+            return
+        result = ""
+        if operation["type"] == "move":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、\n"
+                first_card = False
+                card_name += "[%s]"%(self.operators["cards"][card_idx]["Name"])
+            result = "%s 移到%s"%(card_name, idx_represent_str[operation["dest"]])
+        elif operation["type"] == "carddesp":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、\n"
+                first_card = False
+                card_name += "[%s]"%(self.operators["cards"][card_idx]["Name"])
+            result = "%s %s"%(card_name, operation["desp"])
+        elif operation["type"] == "erase":
+            card_name = ""
+            first_card = True
+            for card_idx in operation["args"]:
+                if not first_card:
+                    card_name += "、\n"
+                first_card = False
+                card_name += "[%s]"%(self.operators["cards"][card_idx]["Name"])
+            result = "%s 被移除"%(card_name)
+        elif operation["type"][0:2] == "LP":
+            if operation['args'][0]==0:
+                target = "己方"
+            else:
+                target = "对方"
+            actions = {"Add":"增加","Dec":"降低","Cge":"变成","Hal":"减半"}
+            subope = operation["type"][2:]
+            action = actions[subope]
+            point = ""
+            if action != "减半":
+                point = "%d"%operation['args'][1]
+            result = "%sLP%s%s"%(target,action,point)
+        elif operation["type"] == "comment":
+            result = operation["desp"]
+        self.Target_detail.setText(result)
+
+    def remove_from_copying(self, asking=True):
+        idx_list = self.CopyingOpe_list.selectedIndexes()
+        if len(idx_list) <= 0:
+            return
+        if asking:
+            # 确认提示
+            reply = QMessageBox.information(self, 'Confirm', "确认要从复制列表中删除选定操作吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+        idx_list = [item.row() for item in idx_list]
+        idx_list.sort(reverse=True)
+        self.CopyingOpe_list.setCurrentRow(0)
+        for idx in idx_list:
+            del self.copying_operation[idx]
+        self.update_copying()
 
     def target_index_changed(self):
         '''对象列表发生变更时触发\n\n通常需要更新卡片描述'''
@@ -1102,21 +1144,33 @@ class Ui_MainWindow(QMainWindow):
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
 
+        card_name = self.operators["cards"][card_id]["Name"]
+        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
+            search_list = [card_name, card_name[:-1]]
+            for name in search_list:
+                if name in self.card_datas:
+                    text = "[%s]<br>%s"%(name, self.card_datas[name])
+                    self.Target_detail.setHtml(text)
+                    return
+
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
-        self.SelectedOpe_list.clearSelection()
+        self.CopyingOpe_list.clearSelection()
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
         self.update_operation_label()
+    
+    def get_current_operation_index(self):
+        '''获取当前选中的操作的index值。若选择非法，则返回-1'''
+        index = self.Operator_list.currentIndex().row()
+        if index >= len(self.operators["operations"]):
+            return -1
+        return index
 
     def update_targetlist(self):
         '''更新对象列表'''
-        ope_id = self.Operator_list.selectedIndexes()
-        if len(ope_id) == 0:
-            ope_id = 0
-        else:
-            ope_id = ope_id[0].row()
+        ope_id = self.get_current_operation_index()
         
         # 按钮禁用/恢复
         if len(self.targets) == 0:
@@ -1193,11 +1247,7 @@ class Ui_MainWindow(QMainWindow):
     def update_operation_label(self):
         '''刷新显示的操作列表信息'''
         ope_count = len(self.operators["operations"])
-        ope_index_list = self.Operator_list.selectedIndexes()
-        if len(ope_index_list) == 0:
-            ope_index = 0
-        else:
-            ope_index = ope_index_list[0].row()+1
+        ope_index = self.get_current_operation_index()+1
         self.label_operation_list.setText("操作列表(%d/%d)"%(ope_index, ope_count))
 
     def refresh_field(self):
@@ -1206,11 +1256,10 @@ class Ui_MainWindow(QMainWindow):
             cardlist.clear()
         
         # 获取最后一步操作
-        idx = self.Operator_list.selectedIndexes()
-        if len(idx) < 1:
+        idx = self.get_current_operation_index()
+        if idx < 0:
             operation = {"type":"None", "args":[]}
         else:
-            idx = idx[0].row()
             operation = deepcopy(self.operators["operations"][idx])
         
         # 获取当前场地
@@ -1341,11 +1390,9 @@ class Ui_MainWindow(QMainWindow):
         comment = self.Comment_Line.text()
         if len(comment) == 0 or len(self.targets) == 0:
             return
-        ope_id = self.Operator_list.selectedIndexes()
-        if len(ope_id) == 0:
+        ope_id = self.get_current_operation_index()
+        if ope_id < 0:
             ope_id = 0
-        else:
-            ope_id = ope_id[0].row()
 
         # 判断卡片是否在场上，若不在场上则不能添加注释
         for card_id in self.targets:
@@ -1465,7 +1512,7 @@ class Ui_MainWindow(QMainWindow):
                 hit.append(cardname)
             elif check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif check_legal(self.card_datas[cardname], included, excluded):
+            elif self.blur_search_bar.isChecked() and check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
         main_font = QFont()
@@ -1483,6 +1530,7 @@ class Ui_MainWindow(QMainWindow):
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(relevant_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+        self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
         self.search_operation(True)
@@ -1492,10 +1540,9 @@ class Ui_MainWindow(QMainWindow):
         if text == "":
             return
         
-        current_index = self.Operator_list.selectedIndexes()
-        if len(current_index) < 1:
+        current_index = self.get_current_operation_index()
+        if current_index < 0:
             return
-        current_index = current_index[0].row()
         if not cycle:
             current_index = 0
 
@@ -1535,10 +1582,9 @@ class Ui_MainWindow(QMainWindow):
             return
 
         # 修改卡片信息
-        ope_idx = self.Operator_list.selectedIndexes()
-        if len(ope_idx) < 1:
+        ope_idx = self.get_current_operation_index()
+        if ope_idx < 0:
             return
-        ope_idx = ope_idx[0].row()
 
         # 刷新
         self.operators["cards"][self.showing_card_id]["Name"] = text
