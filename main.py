@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 143
+version = 144
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -316,6 +316,7 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_search_button = QPushButton(self.centralwidget)
         self.DeleteOpe_Button = QPushButton(self.centralwidget)
         self.CopyingOpe_list = QListWidget(self.centralwidget)
+        self.CopyingOpe_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.CopyOpe_Button = QPushButton(self.centralwidget)
         self.MoveOpe_Button = QPushButton(self.centralwidget)
 
@@ -542,6 +543,7 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_list.doubleClicked.connect(self.copy_ope)
         self.CopyOpe_Button.clicked.connect(self.copy_ope)
         self.CopyingOpe_list.itemSelectionChanged.connect(self.select_copying)
+        self.CopyingOpe_list.doubleClicked.connect(self.remove_from_copying)
         self.MoveOpe_Button.clicked.connect(self.paste_operator)
 
         # 对象部分
@@ -592,6 +594,8 @@ class Ui_MainWindow(QMainWindow):
             # Delete键删除操作
             elif self.Operator_list.hasFocus():
                 self.remove_operator()
+            elif self.CopyingOpe_list.hasFocus():
+                self.remove_from_copying()
         # 回车键默认减少LP
         if self.LP_line.hasFocus() and event.key() == Qt.Key_Return:
             self.ope_LPDec()
@@ -963,7 +967,7 @@ class Ui_MainWindow(QMainWindow):
         if len(selected) <= 0:
             return
         # 确认提示
-        reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.information(self, 'Confirm', "确认要从操作列表中删除选定操作吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
         idx_list = [item.row() for item in selected]
@@ -983,11 +987,13 @@ class Ui_MainWindow(QMainWindow):
 
     def paste_operator(self):
         '''粘贴操作'''
-        if len(self.copying_operation) <= 0:
+        idx_list = self.CopyingOpe_list.selectedIndexes()
+        if len(idx_list) <= 0:
             return
-        for operation in self.copying_operation:
+        for idx in idx_list:
+            operation = self.copying_operation[idx.row()]
             self.insert_operation(operation)
-        self.copying_operation.clear()
+        self.remove_from_copying(False)
         self.update_copying()
 
     def copy_ope(self):
@@ -996,7 +1002,6 @@ class Ui_MainWindow(QMainWindow):
         idx_list = self.Operator_list.selectedIndexes()
         if len(idx_list) < 1:
             return
-        self.copying_operation.clear()
         for item in idx_list:
             idx = item.row()
             ope = deepcopy(self.operators["operations"][idx])
@@ -1004,7 +1009,7 @@ class Ui_MainWindow(QMainWindow):
         self.update_copying()
     
     def update_copying(self):
-        '''描绘复制中的操作'''
+        '''描绘复制列表中的操作'''
         self.CopyingOpe_list.clear()
         operation_list = self.copying_operation
         # 判断当前是否有复制中的操作
@@ -1015,7 +1020,6 @@ class Ui_MainWindow(QMainWindow):
             return
         self.MoveOpe_Button.setEnabled(True)
         self.CopyingOpe_list.setEnabled(True)
-
         for operation in operation_list:
             # 根据类型描绘操作
             if operation["type"] == "move":
@@ -1059,10 +1063,10 @@ class Ui_MainWindow(QMainWindow):
 
     def select_copying(self):
         '''选择复制中的操作时，显示内容'''
-        idx_list = self.CopyingOpe_list.selectedIndexes()
-        if len(idx_list) <= 0:
+        idx_item = self.CopyingOpe_list.currentIndex().row()
+        if idx_item == -1 or idx_item >= len(self.copying_operation):
             return
-        operation = self.copying_operation[idx_list[0].row()]
+        operation = self.copying_operation[idx_item]
         if operation == {}:
             return
         result = ""
@@ -1108,6 +1112,22 @@ class Ui_MainWindow(QMainWindow):
         elif operation["type"] == "comment":
             result = operation["desp"]
         self.Target_detail.setText(result)
+
+    def remove_from_copying(self, asking=True):
+        idx_list = self.CopyingOpe_list.selectedIndexes()
+        if len(idx_list) <= 0:
+            return
+        if asking:
+            # 确认提示
+            reply = QMessageBox.information(self, 'Confirm', "确认要从复制列表中删除选定操作吗？该操作不可逆。", QMessageBox.Yes | QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+        idx_list = [item.row() for item in idx_list]
+        idx_list.sort(reverse=True)
+        self.CopyingOpe_list.setCurrentRow(0)
+        for idx in idx_list:
+            del self.copying_operation[idx]
+        self.update_copying()
 
     def target_index_changed(self):
         '''对象列表发生变更时触发\n\n通常需要更新卡片描述'''
