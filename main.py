@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 150
+version = 151
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -39,8 +39,49 @@ class Update_Thread(Thread):
         except Exception as e:
             print(e)
 
+class Download_Thread(Thread):
+    def __init__(self, window, version_name=None):
+        self.window = window
+        self.version_name = version_name
+        super().__init__()
+    def run(self):
+        if self.version_name == None:
+            return
+        url = ""
+        filename = ""
+        if os.name == "nt":
+            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.exe"%self.version_name
+            filename = "DuelEditor %s.exe"%self.version_name
+        elif os.name == "posix":
+            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.out"%self.version_name
+            filename = "DuelEditor %s.out"%self.version_name
+        else:
+            self.window.download_signal.emit("下载失败，找不到对应系统的版本！")
+            return
+
+        try:
+            with about.requests.get(url, stream=True) as req:
+                length = float(req.headers['Content-length'])
+                count = 0
+                with open(filename, 'wb') as f:
+                    for chunk in req.iter_content(chunk_size=1024):
+                        if chunk:
+                            f.write(chunk)
+                            count += len(chunk)
+                            self.window.process_signal.emit("%.2f%%"%(count * 100 / length))
+            self.window.process_signal.emit("")
+            self.window.download_signal.emit("下载成功！")
+        except Exception as e:
+            print(e)
+            self.window.process_signal.emit("")
+            self.window.download_signal.emit("下载失败！")
+        finally:
+            self.version_name = None
+
 class Ui_MainWindow(QMainWindow):
     update_signal = pyqtSignal(str)
+    download_signal = pyqtSignal(str)
+    process_signal = pyqtSignal(str)
 
     def placeframe(self):
         menu_height = self.menuBar().height()
@@ -519,7 +560,7 @@ class Ui_MainWindow(QMainWindow):
         # sub windows
         self.calculate_window = calculator.Calculator()
         self.calculate_window.setdatas(self.monster_datas)
-        self.about_window = about.UI_About(version)
+        self.about_window = about.UI_About(version, self)
 
         # 初始化
         self.idx_represent_field = [
@@ -582,8 +623,17 @@ class Ui_MainWindow(QMainWindow):
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
         self.update_signal.connect(self.update_hint)
-        update = Update_Thread(self)
-        update.start()
+        self.download_signal.connect(self.download_hint)
+        self.process_signal.connect(self.process_hint)
+        self.update_thread = Update_Thread(self)
+        self.update_thread.setDaemon(True)
+        self.download_thread = Download_Thread(self)
+        self.download_thread.setDaemon(True)
+        self.update_check()
+    
+    def update_check(self):
+        if not self.update_thread.is_alive():
+            self.update_thread.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -669,9 +719,12 @@ class Ui_MainWindow(QMainWindow):
         self.NewCard_button.setText("添加")
         self.Operator_search_button.setText("↓")
 
-    def maketitle(self):
+    def maketitle(self, process=""):
         '''根据当前正在打开的文件修改窗口标题'''
-        title_name = "DuelEditor - %s"%self.filename
+        if process is not None and process != "":
+            title_name = "DuelEditor(%s) - %s"%(process, self.filename)
+        else:
+            title_name = "DuelEditor - %s"%self.filename
         if self.unsave_changed:
             title_name = "*" + title_name
         self.setWindowTitle(title_name)
@@ -1533,9 +1586,11 @@ class Ui_MainWindow(QMainWindow):
         self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
+        '''根据给定内容搜索操作。'''
         self.search_operation(True)
 
     def search_operation(self, cycle=False):
+        '''根据给定内容搜索操作。'''
         text = self.Operator_search.text()
         if text == "":
             return
@@ -1554,6 +1609,7 @@ class Ui_MainWindow(QMainWindow):
             index_pointer = (index_pointer + 1) % self.Operator_list.count()
 
     def show_carddesp(self):
+        '''显示卡片的注释'''
         idx = self.Newcard_List.selectedIndexes()
         if len(idx) < 1:
             return
@@ -1606,11 +1662,29 @@ class Ui_MainWindow(QMainWindow):
         self.about_window.show()
 
     def update_hint(self, name):
-        reply = QMessageBox.question(self, "检查更新", "检查到最新版本：%s，是否前往下载？"%name, QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases")
+        '''检查到更新的版本时弹出窗口'''
+        box = QMessageBox(QMessageBox.Question, "检查更新", "检查到最新版本：%s，是否下载？"%name)
+        direct_download = box.addButton("直接下载", QMessageBox.YesRole)
+        page_download = box.addButton("打开页面", QMessageBox.YesRole)
+        cancel_download = box.addButton("取消", QMessageBox.NoRole)
+        box.exec_()
+        if box.clickedButton() == direct_download:
+            if not self.download_thread.is_alive():
+                self.download_thread.version_name = name
+                self.download_thread.start()
+        elif box.clickedButton() == page_download:
+            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases/tag/%s"%name)
+    
+    def process_hint(self, pcs):
+        '''从下载线程返回的进程提示'''
+        self.maketitle(pcs)
+
+    def download_hint(self, name):
+        '''从下载线程返回的结果提示'''
+        QMessageBox.about(self, "提示", name)
 
     def clear_unuse_cards(self):
+        '''清除没有在操作中使用过的卡片，节省空间'''
         all_cards = set(self.operators["cards"].keys())
         all_cards -= set(self.targets)
         for ope in self.operators["operations"]:
