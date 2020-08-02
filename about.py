@@ -51,6 +51,10 @@ class UI_About(QWidget):
         except Exception as e:
             print(e)
             self.label_3.setText("检查更新失败")
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

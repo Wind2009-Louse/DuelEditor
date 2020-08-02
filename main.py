@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 152
+version = 153
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -82,6 +82,13 @@ class Ui_MainWindow(QMainWindow):
     update_signal = pyqtSignal(str)
     download_signal = pyqtSignal(str)
     process_signal = pyqtSignal(str)
+    bold_font = QFont()
+    bold_font.setBold(True)
+    italic_font = QFont()
+    italic_font.setItalic(True)
+    bold_italic_font = QFont()
+    bold_italic_font.setBold(True)
+    bold_italic_font.setItalic(True)
 
     def placeframe(self):
         menu_height = self.menuBar().height()
@@ -447,6 +454,10 @@ class Ui_MainWindow(QMainWindow):
         self.blur_search_bar.setChecked(True)
         self.blur_search_bar.triggered.connect(self.search_card)
         self.menu_bar_list.addAction(self.blur_search_bar)
+        self.coloring_field_card = QAction("按照卡片种类显示颜色",self,checkable=True)
+        self.coloring_field_card.setChecked(False)
+        self.coloring_field_card.triggered.connect(self.refresh_field)
+        self.menu_bar_list.addAction(self.coloring_field_card)
 
         self.about_bar = QAction("关于", self)
         self.about_bar.triggered.connect(self.open_about)
@@ -553,6 +564,7 @@ class Ui_MainWindow(QMainWindow):
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
+            self.coloring_field_card.setEnabled(False)
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
@@ -722,7 +734,7 @@ class Ui_MainWindow(QMainWindow):
     def maketitle(self, process=""):
         '''根据当前正在打开的文件修改窗口标题'''
         if process is not None and process != "":
-            title_name = "DuelEditor(%s) - %s"%(process, self.filename)
+            title_name = "(%s)DuelEditor - %s"%(process, self.filename)
         else:
             title_name = "DuelEditor - %s"%self.filename
         if self.unsave_changed:
@@ -1348,16 +1360,28 @@ class Ui_MainWindow(QMainWindow):
                 # 获取卡片名字
                 card_name = self.operators["cards"][card_id]["Name"]
                 show_list.addItem(card_name)
-                # 若为最后操作对象之一，绿色高亮
-                if card_id in operation["args"]:
-                    show_list.item(show_list.count()-1).setForeground(QColor('green'))
-                else:
-                    show_list.item(show_list.count()-1).setForeground(QColor('black'))
-                # 若符合搜索对象，红色高亮
-                if len(searching_name) > 0 and searching_name in card_name:
-                    show_list.item(show_list.count()-1).setForeground(QColor('red'))
+                # 若为最后操作对象之一，使用粗体
+                bl_font = card_id in operation["args"]
+                self.bold_font.setCapitalization
+                # 若为搜索对象，使用斜体
+                it_font = len(searching_name) > 0 and searching_name in card_name
+                if it_font:
                     if frame in searched_frames:
                         label_colors[searched_frames.index(frame)] = "QLabel{color:rgb(255,0,102,255)}"
+                    if bl_font:
+                        show_list.item(show_list.count()-1).setFont(self.bold_italic_font)
+                    else:
+                        show_list.item(show_list.count()-1).setFont(self.italic_font)
+                elif bl_font:
+                    show_list.item(show_list.count()-1).setFont(self.bold_font)
+
+                # 根据卡片种类进行上色
+                if self.coloring_field_card.isChecked():
+                    possible_name = [card_name, card_name[:-1]]
+                    for name in possible_name:
+                        if name in self.card_colors:
+                            show_list.item(show_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+                            break
         
         # 数量标注
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
@@ -1561,20 +1585,16 @@ class Ui_MainWindow(QMainWindow):
             elif self.blur_search_bar.isChecked() and self.text_check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
-        main_font = QFont()
-        main_font.setBold(True)
-        relevant_font = QFont()
-        relevant_font.setItalic(True)
         for name in hit:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(main_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.bold_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_name:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_effect:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(relevant_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.italic_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
