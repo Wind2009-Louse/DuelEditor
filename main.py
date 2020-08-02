@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 151
+version = 152
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -543,8 +543,8 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = desp
-                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",desp)
+                        self.card_datas[row[1]] = "[%s]<br>%s"%(row[1], desp)
+                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
                     if searched:
@@ -913,7 +913,7 @@ class Ui_MainWindow(QMainWindow):
             search_list = [card_name, card_name[:-1]]
             for name in search_list:
                 if name in self.card_datas:
-                    text = "[%s]<br>%s"%(name, self.card_datas[name])
+                    text = self.card_datas[name]
                     self.Target_detail.setHtml(text)
                     return
 
@@ -1196,15 +1196,6 @@ class Ui_MainWindow(QMainWindow):
                 lst.clearSelection()
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
-
-        card_name = self.operators["cards"][card_id]["Name"]
-        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
-            search_list = [card_name, card_name[:-1]]
-            for name in search_list:
-                if name in self.card_datas:
-                    text = "[%s]<br>%s"%(name, self.card_datas[name])
-                    self.Target_detail.setHtml(text)
-                    return
 
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
@@ -1519,6 +1510,16 @@ class Ui_MainWindow(QMainWindow):
             self.label_target_list.setText("操作对象(%d)"%len(self.targets))
             self.update_targetlist()
 
+    def text_check_legal(self, text, included, excluded):
+        '''根据include group和exclude group，判断文字是否符合条件'''
+        for i in included:
+            if i not in text:
+                return False
+        for e in excluded:
+            if e in text:
+                return False
+        return True
+
     def search_card(self):
         '''根据输入框的名字，在下拉框查找卡片'''
         # 名字修改过则进行高亮刷新
@@ -1551,21 +1552,13 @@ class Ui_MainWindow(QMainWindow):
                 included.append(sub_text)
         if len(included)+len(excluded)==0:
             return
-        def check_legal(text, included, excluded):
-            for i in included:
-                if i not in text:
-                    return False
-            for e in excluded:
-                if e in text:
-                    return False
-            return True
         # 遍历搜索符合条件的卡片
         for cardname in self.card_names:
             if text == cardname:
                 hit.append(cardname)
-            elif check_legal(cardname, included, excluded):
+            elif self.text_check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif self.blur_search_bar.isChecked() and check_legal(self.raw_datas[cardname], included, excluded):
+            elif self.blur_search_bar.isChecked() and self.text_check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
         main_font = QFont()
@@ -1615,7 +1608,7 @@ class Ui_MainWindow(QMainWindow):
             return
         cardname = self.Newcard_List.item(idx[0].row()).text()
         if cardname in self.card_datas:
-            text = "[%s]<br>%s"%(cardname, self.card_datas[cardname])
+            text = self.card_datas[cardname]
             self.Target_detail.setHtml(text)
 
     def fix_cardname(self,qindex):
