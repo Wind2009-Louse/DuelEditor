@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 153
+version = 154
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -82,6 +82,7 @@ class Ui_MainWindow(QMainWindow):
     update_signal = pyqtSignal(str)
     download_signal = pyqtSignal(str)
     process_signal = pyqtSignal(str)
+    normal_font = QFont()
     bold_font = QFont()
     bold_font.setBold(True)
     italic_font = QFont()
@@ -281,7 +282,6 @@ class Ui_MainWindow(QMainWindow):
             self.resize(self.mini_width, self.mini_height + self.menuBar().height())
         else:
             self.resize(self.origin_width, self.origin_height + self.menuBar().height())
-        
 
         '''初始化label'''
         self.label_target_list = QLabel(self.centralwidget)
@@ -744,6 +744,7 @@ class Ui_MainWindow(QMainWindow):
     def newfile(self):
         if self.unsave_confirm():
             return
+        self.lastest_field_id = -1
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:deepcopy(init_field)}
         self.targets = []
@@ -824,18 +825,23 @@ class Ui_MainWindow(QMainWindow):
             self.unsave_changed = False
             self.maketitle()
 
-    def make_fields(self, begin_at=0):
+    def make_fields(self, begin_at=0, end_at=None):
         '''根据操作生成各操作的场地
         
-        若begin_at为0，则从初始场地开始生成，否则从第begin_at个动作后开始生成场地'''
+        若begin_at不大于0，则从初始场地开始生成，否则从第begin_at个动作后开始生成场地'''
         # 获取场地
-        if begin_at == 0:
+        if begin_at <= 0:
+            begin_at = 0
             self.fields.clear()
             lastest_field = deepcopy(init_field)
         else:
             lastest_field = deepcopy(self.fields[begin_at-1])
         # 遍历操作
-        for idx in range(begin_at, len(self.operators["operations"])):
+        if end_at is None:
+            end_at = len(self.operators["operations"])
+        else:
+            end_at = min(len(self.operators["operations"]), end_at+1)
+        for idx in range(begin_at, end_at):
             '''type(str), args(list of int), dest(int), desp(str)'''
             operation = self.operators["operations"][idx]
             if operation["type"] == "move":
@@ -902,7 +908,9 @@ class Ui_MainWindow(QMainWindow):
         else:
             ope_id += 1
             self.operators["operations"].insert(ope_id, operation)
-        self.make_fields(ope_id)
+        # self.make_fields(ope_id)
+        self.make_fields(self.lastest_field_id, ope_id)
+        self.lastest_field_id = ope_id
         self.update_operationlist()
         self.Operator_list.setCurrentRow(ope_id)
         self.show_opeinfo()
@@ -1042,7 +1050,8 @@ class Ui_MainWindow(QMainWindow):
         for idx in idx_list:
             del self.operators["operations"][idx]
         self.clear_unuse_cards()
-        self.make_fields(idx)
+        # self.make_fields(idx)
+        self.lastest_field_id = idx - 1
         self.update_operationlist()
         if len(self.operators["operations"]) > 0 and idx == 0:
             self.Operator_list.setCurrentRow(0)
@@ -1052,6 +1061,7 @@ class Ui_MainWindow(QMainWindow):
 
     def paste_operator(self):
         '''粘贴操作'''
+        # TODO: enhance effciency
         idx_list = self.CopyingOpe_list.selectedIndexes()
         if len(idx_list) <= 0:
             return
@@ -1211,7 +1221,6 @@ class Ui_MainWindow(QMainWindow):
 
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
-        self.CopyingOpe_list.clearSelection()
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
@@ -1249,9 +1258,7 @@ class Ui_MainWindow(QMainWindow):
                 self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
     
     def update_operationlist(self):
-        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)
-        
-        因为需要读取场地来判断LP是否归零，因此需要在调用make_fields()后再调用该函数'''
+        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         self.Operator_list.clear()
         for ope_idx in range(len(self.operators["operations"])):
             operation = self.operators["operations"][ope_idx]
@@ -1283,10 +1290,11 @@ class Ui_MainWindow(QMainWindow):
                 result = "%sLP%s%s"%(target,action,point)
                 self.Operator_list.addItem(result)
                 # 判断是否导致基本分归零
-                field = self.fields[ope_idx]
-                if field["LP"][0] <= 0 or field["LP"][1] <= 0:
-                    # 归零高亮
-                    self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('red'))
+                if ope_idx <= self.lastest_field_id:
+                    field = self.fields[ope_idx]
+                    if field["LP"][0] <= 0 or field["LP"][1] <= 0:
+                        # 归零高亮
+                        self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('red'))
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
                 # 注释高亮
@@ -1298,6 +1306,9 @@ class Ui_MainWindow(QMainWindow):
                     card_name += "等"
                 result = "%s 被移除"%(card_name)
                 self.Operator_list.addItem(result)
+            if ope_idx > self.lastest_field_id:
+                pass
+                # self.Operator_list.item(self.Operator_list.count()-1).setFont(self.italic_font)
         self.update_operation_label()
 
     def update_operation_label(self):
@@ -1313,6 +1324,17 @@ class Ui_MainWindow(QMainWindow):
         
         # 获取最后一步操作
         idx = self.get_current_operation_index()
+        if idx < 0 or self.lastest_field_id < idx:
+            self.make_fields(self.lastest_field_id, idx)
+            for operation_idx in range(self.lastest_field_id, min(self.Operator_list.count(), idx+1)):
+                item = self.Operator_list.item(operation_idx)
+                if item is not None:
+                    item.setFont(self.normal_font)
+                    field = self.fields[operation_idx]
+                    if field["LP"][0] <= 0 or field["LP"][1] <= 0:
+                        # 归零高亮
+                        item.setForeground(QColor('red'))
+            self.lastest_field_id = idx
         if idx < 0:
             operation = {"type":"None", "args":[]}
         else:
@@ -1362,7 +1384,6 @@ class Ui_MainWindow(QMainWindow):
                 show_list.addItem(card_name)
                 # 若为最后操作对象之一，使用粗体
                 bl_font = card_id in operation["args"]
-                self.bold_font.setCapitalization
                 # 若为搜索对象，使用斜体
                 it_font = len(searching_name) > 0 and searching_name in card_name
                 if it_font:
@@ -1660,6 +1681,7 @@ class Ui_MainWindow(QMainWindow):
         self.unsave_changed = True
         self.maketitle()
         self.update_operationlist()
+        self.update_copying()
         self.Operator_list.setCurrentRow(ope_idx)
         self.refresh_field()
         self.update_targetlist()
@@ -1702,7 +1724,10 @@ class Ui_MainWindow(QMainWindow):
         all_cards -= set(self.targets)
         for ope in self.operators["operations"]:
             if ope["type"][0:2] != "LP":
-                all_cards = all_cards - set(ope["args"])
+                all_cards -= set(ope["args"])
+        for ope_copying in self.copying_operation:
+            if ope_copying["type"][0:2] != "LP":
+                all_cards -= set(ope_copying["args"])
         for c in all_cards:
             self.operators["cards"].pop(c,"fail")
         while(self.operators["cardindex"] > 0 and str(self.operators["cardindex"]-1) not in self.operators["cards"]):
