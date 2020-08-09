@@ -4,4 +4,5 @@ dist/
 main.spec
 *.cdb
 *.json
+*.jsn
 !version.json

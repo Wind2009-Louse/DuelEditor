@@ -466,6 +466,8 @@ class Ui_MainWindow(QMainWindow):
         self.quit_bar.triggered.connect(self.close)
         bar.addAction(self.quit_bar)
 
+        self.read_config()
+
         # 读取卡片数据库
         self.card_datas = {}
         self.raw_datas = {}
@@ -677,6 +679,7 @@ class Ui_MainWindow(QMainWindow):
         else:
             self.calculate_window.close()
             self.about_window.close()
+            self.save_config()
             event.accept()
 
     def comment_enter(self):
@@ -898,7 +901,7 @@ class Ui_MainWindow(QMainWindow):
             ope_id = 0
         return self.fields[ope_id]
 
-    def insert_operation(self, operation):
+    def insert_operation(self, operation, update=True):
         '''插入操作。操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         # 判断是插入或新增
         ope_id = self.get_current_operation_index()
@@ -908,16 +911,17 @@ class Ui_MainWindow(QMainWindow):
         else:
             ope_id += 1
             self.operators["operations"].insert(ope_id, operation)
-        # self.make_fields(ope_id)
-        self.make_fields(self.lastest_field_id, ope_id)
-        self.lastest_field_id = ope_id
-        self.update_operationlist()
-        self.Operator_list.setCurrentRow(ope_id)
-        self.show_opeinfo()
-        self.unsave_changed = True
-        self.maketitle()
-        self.label_target_list.setText("操作对象(%d)"%len(self.targets))
-        #self.Operator_list.setFocus()
+        if update:
+            # self.make_fields(ope_id)
+            self.make_fields(self.lastest_field_id, ope_id)
+            self.lastest_field_id = ope_id
+            self.update_operationlist()
+            self.Operator_list.setCurrentRow(ope_id)
+            self.show_opeinfo()
+            self.unsave_changed = True
+            self.maketitle()
+            self.label_target_list.setText("操作对象(%d)"%len(self.targets))
+            #self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id=None):
         '''根据card_id，在信息栏显示卡片详情'''
@@ -1061,13 +1065,12 @@ class Ui_MainWindow(QMainWindow):
 
     def paste_operator(self):
         '''粘贴操作'''
-        # TODO: enhance effciency
         idx_list = self.CopyingOpe_list.selectedIndexes()
         if len(idx_list) <= 0:
             return
         for idx in idx_list:
             operation = self.copying_operation[idx.row()]
-            self.insert_operation(operation)
+            self.insert_operation(operation, idx == idx_list[len(idx_list)-1])
         self.remove_from_copying(False)
         self.update_copying()
 
@@ -1732,6 +1735,35 @@ class Ui_MainWindow(QMainWindow):
             self.operators["cards"].pop(c,"fail")
         while(self.operators["cardindex"] > 0 and str(self.operators["cardindex"]-1) not in self.operators["cards"]):
             self.operators["cardindex"] -= 1
+
+    def read_config(self):
+        '''读取可能存在的配置文件'''
+        config_data = None
+        try:
+            f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
+            config_data = loads(f.read())
+        except Exception as e:
+            return
+        enable_config = [[self.blur_search_bar, "blur_search"], [self.coloring_field_card, "coloring_field"]]
+        for cfg in enable_config:
+            try:
+                bar = cfg[0]
+                sel = config_data[cfg[1]]
+                if sel == 0:
+                    bar.setChecked(False)
+                else:
+                    bar.setChecked(True)
+            except Exception as e:
+                continue
+
+    def save_config(self):
+        '''保存配置文件'''
+        config = {"blur_search": 1 if self.blur_search_bar.isChecked() else 0,
+                "coloring_field": 1 if self.coloring_field_card.isChecked() else 0}
+        config_data = dumps(config)
+        with open("DuelEditorConfig.jsn", 'w', encoding='utf-8') as f:
+            f.write(config_data)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
