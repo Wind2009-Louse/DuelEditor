@@ -24,7 +24,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 150
+version = 160
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -39,8 +39,57 @@ class Update_Thread(Thread):
         except Exception as e:
             print(e)
 
+class Download_Thread(Thread):
+    def __init__(self, window, version_name=None):
+        self.window = window
+        self.version_name = version_name
+        super().__init__()
+    def run(self):
+        if self.version_name == None:
+            return
+        url = ""
+        filename = ""
+        if os.name == "nt":
+            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.exe"%self.version_name
+            filename = "DuelEditor %s.exe"%self.version_name
+        elif os.name == "posix":
+            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.out"%self.version_name
+            filename = "DuelEditor %s.out"%self.version_name
+        else:
+            self.window.download_signal.emit("下载失败，找不到对应系统的版本！")
+            return
+
+        try:
+            with about.requests.get(url, stream=True) as req:
+                length = float(req.headers['Content-length'])
+                count = 0
+                with open(filename, 'wb') as f:
+                    for chunk in req.iter_content(chunk_size=1024):
+                        if chunk:
+                            f.write(chunk)
+                            count += len(chunk)
+                            self.window.process_signal.emit("%.2f%%"%(count * 100 / length))
+            self.window.process_signal.emit("")
+            self.window.download_signal.emit("下载成功！")
+        except Exception as e:
+            print(e)
+            self.window.process_signal.emit("")
+            self.window.download_signal.emit("下载失败！")
+        finally:
+            self.version_name = None
+
 class Ui_MainWindow(QMainWindow):
     update_signal = pyqtSignal(str)
+    download_signal = pyqtSignal(str)
+    process_signal = pyqtSignal(str)
+    normal_font = QFont()
+    bold_font = QFont()
+    bold_font.setBold(True)
+    italic_font = QFont()
+    italic_font.setItalic(True)
+    bold_italic_font = QFont()
+    bold_italic_font.setBold(True)
+    bold_italic_font.setItalic(True)
 
     def placeframe(self):
         menu_height = self.menuBar().height()
@@ -233,7 +282,6 @@ class Ui_MainWindow(QMainWindow):
             self.resize(self.mini_width, self.mini_height + self.menuBar().height())
         else:
             self.resize(self.origin_width, self.origin_height + self.menuBar().height())
-        
 
         '''初始化label'''
         self.label_target_list = QLabel(self.centralwidget)
@@ -406,6 +454,10 @@ class Ui_MainWindow(QMainWindow):
         self.blur_search_bar.setChecked(True)
         self.blur_search_bar.triggered.connect(self.search_card)
         self.menu_bar_list.addAction(self.blur_search_bar)
+        self.coloring_field_card = QAction("按照卡片种类显示颜色",self,checkable=True)
+        self.coloring_field_card.setChecked(False)
+        self.coloring_field_card.triggered.connect(self.refresh_field)
+        self.menu_bar_list.addAction(self.coloring_field_card)
 
         self.about_bar = QAction("关于", self)
         self.about_bar.triggered.connect(self.open_about)
@@ -413,6 +465,8 @@ class Ui_MainWindow(QMainWindow):
         self.quit_bar = QAction("退出", self)
         self.quit_bar.triggered.connect(self.close)
         bar.addAction(self.quit_bar)
+
+        self.read_config()
 
         # 读取卡片数据库
         self.card_datas = {}
@@ -502,8 +556,8 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = desp
-                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",desp)
+                        self.card_datas[row[1]] = "[%s]<br>%s"%(row[1], desp)
+                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
                     if searched:
@@ -512,6 +566,7 @@ class Ui_MainWindow(QMainWindow):
         except Exception as e:
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
+            self.coloring_field_card.setEnabled(False)
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
@@ -519,7 +574,7 @@ class Ui_MainWindow(QMainWindow):
         # sub windows
         self.calculate_window = calculator.Calculator()
         self.calculate_window.setdatas(self.monster_datas)
-        self.about_window = about.UI_About(version)
+        self.about_window = about.UI_About(version, self)
 
         # 初始化
         self.idx_represent_field = [
@@ -582,8 +637,17 @@ class Ui_MainWindow(QMainWindow):
             self.idx_represent_field[field_id].doubleClicked.connect(partial(self.target_field, field_id))
 
         self.update_signal.connect(self.update_hint)
-        update = Update_Thread(self)
-        update.start()
+        self.download_signal.connect(self.download_hint)
+        self.process_signal.connect(self.process_hint)
+        self.update_thread = Update_Thread(self)
+        self.update_thread.setDaemon(True)
+        self.download_thread = Download_Thread(self)
+        self.download_thread.setDaemon(True)
+        self.update_check()
+    
+    def update_check(self):
+        if not self.update_thread.is_alive():
+            self.update_thread.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -615,6 +679,7 @@ class Ui_MainWindow(QMainWindow):
         else:
             self.calculate_window.close()
             self.about_window.close()
+            self.save_config()
             event.accept()
 
     def comment_enter(self):
@@ -669,9 +734,12 @@ class Ui_MainWindow(QMainWindow):
         self.NewCard_button.setText("添加")
         self.Operator_search_button.setText("↓")
 
-    def maketitle(self):
+    def maketitle(self, process=""):
         '''根据当前正在打开的文件修改窗口标题'''
-        title_name = "DuelEditor - %s"%self.filename
+        if process is not None and process != "":
+            title_name = "(%s)DuelEditor - %s"%(process, self.filename)
+        else:
+            title_name = "DuelEditor - %s"%self.filename
         if self.unsave_changed:
             title_name = "*" + title_name
         self.setWindowTitle(title_name)
@@ -679,6 +747,7 @@ class Ui_MainWindow(QMainWindow):
     def newfile(self):
         if self.unsave_confirm():
             return
+        self.lastest_field_id = -1
         self.operators = {"cardindex":0, "cards":{}, "operations":[]}
         self.fields = {0:deepcopy(init_field)}
         self.targets = []
@@ -759,18 +828,23 @@ class Ui_MainWindow(QMainWindow):
             self.unsave_changed = False
             self.maketitle()
 
-    def make_fields(self, begin_at=0):
+    def make_fields(self, begin_at=0, end_at=None):
         '''根据操作生成各操作的场地
         
-        若begin_at为0，则从初始场地开始生成，否则从第begin_at个动作后开始生成场地'''
+        若begin_at不大于0，则从初始场地开始生成，否则从第begin_at个动作后开始生成场地'''
         # 获取场地
-        if begin_at == 0:
+        if begin_at <= 0:
+            begin_at = 0
             self.fields.clear()
             lastest_field = deepcopy(init_field)
         else:
             lastest_field = deepcopy(self.fields[begin_at-1])
         # 遍历操作
-        for idx in range(begin_at, len(self.operators["operations"])):
+        if end_at is None:
+            end_at = len(self.operators["operations"])
+        else:
+            end_at = min(len(self.operators["operations"]), end_at+1)
+        for idx in range(begin_at, end_at):
             '''type(str), args(list of int), dest(int), desp(str)'''
             operation = self.operators["operations"][idx]
             if operation["type"] == "move":
@@ -827,7 +901,7 @@ class Ui_MainWindow(QMainWindow):
             ope_id = 0
         return self.fields[ope_id]
 
-    def insert_operation(self, operation):
+    def insert_operation(self, operation, update=True):
         '''插入操作。操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         # 判断是插入或新增
         ope_id = self.get_current_operation_index()
@@ -837,14 +911,17 @@ class Ui_MainWindow(QMainWindow):
         else:
             ope_id += 1
             self.operators["operations"].insert(ope_id, operation)
-        self.make_fields(ope_id)
-        self.update_operationlist()
-        self.Operator_list.setCurrentRow(ope_id)
-        self.show_opeinfo()
-        self.unsave_changed = True
-        self.maketitle()
-        self.label_target_list.setText("操作对象(%d)"%len(self.targets))
-        #self.Operator_list.setFocus()
+        if update:
+            # self.make_fields(ope_id)
+            self.make_fields(self.lastest_field_id, ope_id)
+            self.lastest_field_id = ope_id
+            self.update_operationlist()
+            self.Operator_list.setCurrentRow(ope_id)
+            self.show_opeinfo()
+            self.unsave_changed = True
+            self.maketitle()
+            self.label_target_list.setText("操作对象(%d)"%len(self.targets))
+            #self.Operator_list.setFocus()
 
     def show_cardinfo(self, card_id=None):
         '''根据card_id，在信息栏显示卡片详情'''
@@ -860,7 +937,7 @@ class Ui_MainWindow(QMainWindow):
             search_list = [card_name, card_name[:-1]]
             for name in search_list:
                 if name in self.card_datas:
-                    text = "[%s]<br>%s"%(name, self.card_datas[name])
+                    text = self.card_datas[name]
                     self.Target_detail.setHtml(text)
                     return
 
@@ -977,7 +1054,8 @@ class Ui_MainWindow(QMainWindow):
         for idx in idx_list:
             del self.operators["operations"][idx]
         self.clear_unuse_cards()
-        self.make_fields(idx)
+        # self.make_fields(idx)
+        self.lastest_field_id = idx - 1
         self.update_operationlist()
         if len(self.operators["operations"]) > 0 and idx == 0:
             self.Operator_list.setCurrentRow(0)
@@ -992,7 +1070,7 @@ class Ui_MainWindow(QMainWindow):
             return
         for idx in idx_list:
             operation = self.copying_operation[idx.row()]
-            self.insert_operation(operation)
+            self.insert_operation(operation, idx == idx_list[len(idx_list)-1])
         self.remove_from_copying(False)
         self.update_copying()
 
@@ -1144,18 +1222,8 @@ class Ui_MainWindow(QMainWindow):
         card_id = self.targets[idx]
         self.show_cardinfo(card_id)
 
-        card_name = self.operators["cards"][card_id]["Name"]
-        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
-            search_list = [card_name, card_name[:-1]]
-            for name in search_list:
-                if name in self.card_datas:
-                    text = "[%s]<br>%s"%(name, self.card_datas[name])
-                    self.Target_detail.setHtml(text)
-                    return
-
     def operation_index_changed(self):
         '''选择其它操作时，更新显示的场地'''
-        self.CopyingOpe_list.clearSelection()
         self.refresh_field()
         self.update_targetlist()
         self.show_opeinfo()
@@ -1193,9 +1261,7 @@ class Ui_MainWindow(QMainWindow):
                 self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
     
     def update_operationlist(self):
-        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)
-        
-        因为需要读取场地来判断LP是否归零，因此需要在调用make_fields()后再调用该函数'''
+        '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         self.Operator_list.clear()
         for ope_idx in range(len(self.operators["operations"])):
             operation = self.operators["operations"][ope_idx]
@@ -1227,10 +1293,11 @@ class Ui_MainWindow(QMainWindow):
                 result = "%sLP%s%s"%(target,action,point)
                 self.Operator_list.addItem(result)
                 # 判断是否导致基本分归零
-                field = self.fields[ope_idx]
-                if field["LP"][0] <= 0 or field["LP"][1] <= 0:
-                    # 归零高亮
-                    self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('red'))
+                if ope_idx <= self.lastest_field_id:
+                    field = self.fields[ope_idx]
+                    if field["LP"][0] <= 0 or field["LP"][1] <= 0:
+                        # 归零高亮
+                        self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('red'))
             elif operation["type"] == "comment":
                 self.Operator_list.addItem(operation["desp"])
                 # 注释高亮
@@ -1242,6 +1309,9 @@ class Ui_MainWindow(QMainWindow):
                     card_name += "等"
                 result = "%s 被移除"%(card_name)
                 self.Operator_list.addItem(result)
+            if ope_idx > self.lastest_field_id:
+                pass
+                # self.Operator_list.item(self.Operator_list.count()-1).setFont(self.italic_font)
         self.update_operation_label()
 
     def update_operation_label(self):
@@ -1257,6 +1327,17 @@ class Ui_MainWindow(QMainWindow):
         
         # 获取最后一步操作
         idx = self.get_current_operation_index()
+        if idx < 0 or self.lastest_field_id < idx:
+            self.make_fields(self.lastest_field_id, idx)
+            for operation_idx in range(self.lastest_field_id, min(self.Operator_list.count(), idx+1)):
+                item = self.Operator_list.item(operation_idx)
+                if item is not None:
+                    item.setFont(self.normal_font)
+                    field = self.fields[operation_idx]
+                    if field["LP"][0] <= 0 or field["LP"][1] <= 0:
+                        # 归零高亮
+                        item.setForeground(QColor('red'))
+            self.lastest_field_id = idx
         if idx < 0:
             operation = {"type":"None", "args":[]}
         else:
@@ -1304,16 +1385,27 @@ class Ui_MainWindow(QMainWindow):
                 # 获取卡片名字
                 card_name = self.operators["cards"][card_id]["Name"]
                 show_list.addItem(card_name)
-                # 若为最后操作对象之一，绿色高亮
-                if card_id in operation["args"]:
-                    show_list.item(show_list.count()-1).setForeground(QColor('green'))
-                else:
-                    show_list.item(show_list.count()-1).setForeground(QColor('black'))
-                # 若符合搜索对象，红色高亮
-                if len(searching_name) > 0 and searching_name in card_name:
-                    show_list.item(show_list.count()-1).setForeground(QColor('red'))
+                # 若为最后操作对象之一，使用粗体
+                bl_font = card_id in operation["args"]
+                # 若为搜索对象，使用斜体
+                it_font = len(searching_name) > 0 and searching_name in card_name
+                if it_font:
                     if frame in searched_frames:
                         label_colors[searched_frames.index(frame)] = "QLabel{color:rgb(255,0,102,255)}"
+                    if bl_font:
+                        show_list.item(show_list.count()-1).setFont(self.bold_italic_font)
+                    else:
+                        show_list.item(show_list.count()-1).setFont(self.italic_font)
+                elif bl_font:
+                    show_list.item(show_list.count()-1).setFont(self.bold_font)
+
+                # 根据卡片种类进行上色
+                if self.coloring_field_card.isChecked():
+                    possible_name = [card_name, card_name[:-1]]
+                    for name in possible_name:
+                        if name in self.card_colors:
+                            show_list.item(show_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+                            break
         
         # 数量标注
         self.label_enemy_ex.setText("对方额外(%d)"%self.Enemy_Ex.count())
@@ -1466,6 +1558,16 @@ class Ui_MainWindow(QMainWindow):
             self.label_target_list.setText("操作对象(%d)"%len(self.targets))
             self.update_targetlist()
 
+    def text_check_legal(self, text, included, excluded):
+        '''根据include group和exclude group，判断文字是否符合条件'''
+        for i in included:
+            if i not in text:
+                return False
+        for e in excluded:
+            if e in text:
+                return False
+        return True
+
     def search_card(self):
         '''根据输入框的名字，在下拉框查找卡片'''
         # 名字修改过则进行高亮刷新
@@ -1498,44 +1600,34 @@ class Ui_MainWindow(QMainWindow):
                 included.append(sub_text)
         if len(included)+len(excluded)==0:
             return
-        def check_legal(text, included, excluded):
-            for i in included:
-                if i not in text:
-                    return False
-            for e in excluded:
-                if e in text:
-                    return False
-            return True
         # 遍历搜索符合条件的卡片
         for cardname in self.card_names:
             if text == cardname:
                 hit.append(cardname)
-            elif check_legal(cardname, included, excluded):
+            elif self.text_check_legal(cardname, included, excluded):
                 hit_in_name.append(cardname)
-            elif self.blur_search_bar.isChecked() and check_legal(self.raw_datas[cardname], included, excluded):
+            elif self.blur_search_bar.isChecked() and self.text_check_legal(self.raw_datas[cardname], included, excluded):
                 hit_in_effect.append(cardname)
         # 添加到列表
-        main_font = QFont()
-        main_font.setBold(True)
-        relevant_font = QFont()
-        relevant_font.setItalic(True)
         for name in hit:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(main_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.bold_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_name:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_effect:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(relevant_font)
+            self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.italic_font)
             self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
+        '''根据给定内容搜索操作。'''
         self.search_operation(True)
 
     def search_operation(self, cycle=False):
+        '''根据给定内容搜索操作。'''
         text = self.Operator_search.text()
         if text == "":
             return
@@ -1554,12 +1646,13 @@ class Ui_MainWindow(QMainWindow):
             index_pointer = (index_pointer + 1) % self.Operator_list.count()
 
     def show_carddesp(self):
+        '''显示卡片的注释'''
         idx = self.Newcard_List.selectedIndexes()
         if len(idx) < 1:
             return
         cardname = self.Newcard_List.item(idx[0].row()).text()
         if cardname in self.card_datas:
-            text = "[%s]<br>%s"%(cardname, self.card_datas[cardname])
+            text = self.card_datas[cardname]
             self.Target_detail.setHtml(text)
 
     def fix_cardname(self,qindex):
@@ -1591,6 +1684,7 @@ class Ui_MainWindow(QMainWindow):
         self.unsave_changed = True
         self.maketitle()
         self.update_operationlist()
+        self.update_copying()
         self.Operator_list.setCurrentRow(ope_idx)
         self.refresh_field()
         self.update_targetlist()
@@ -1606,20 +1700,70 @@ class Ui_MainWindow(QMainWindow):
         self.about_window.show()
 
     def update_hint(self, name):
-        reply = QMessageBox.question(self, "检查更新", "检查到最新版本：%s，是否前往下载？"%name, QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases")
+        '''检查到更新的版本时弹出窗口'''
+        box = QMessageBox(QMessageBox.Question, "检查更新", "检查到最新版本：%s，是否下载？"%name)
+        direct_download = box.addButton("直接下载", QMessageBox.YesRole)
+        page_download = box.addButton("打开页面", QMessageBox.YesRole)
+        cancel_download = box.addButton("取消", QMessageBox.NoRole)
+        box.exec_()
+        if box.clickedButton() == direct_download:
+            if not self.download_thread.is_alive():
+                self.download_thread.version_name = name
+                self.download_thread.start()
+        elif box.clickedButton() == page_download:
+            webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases/tag/%s"%name)
+    
+    def process_hint(self, pcs):
+        '''从下载线程返回的进程提示'''
+        self.maketitle(pcs)
+
+    def download_hint(self, name):
+        '''从下载线程返回的结果提示'''
+        QMessageBox.about(self, "提示", name)
 
     def clear_unuse_cards(self):
+        '''清除没有在操作中使用过的卡片，节省空间'''
         all_cards = set(self.operators["cards"].keys())
         all_cards -= set(self.targets)
         for ope in self.operators["operations"]:
             if ope["type"][0:2] != "LP":
-                all_cards = all_cards - set(ope["args"])
+                all_cards -= set(ope["args"])
+        for ope_copying in self.copying_operation:
+            if ope_copying["type"][0:2] != "LP":
+                all_cards -= set(ope_copying["args"])
         for c in all_cards:
             self.operators["cards"].pop(c,"fail")
         while(self.operators["cardindex"] > 0 and str(self.operators["cardindex"]-1) not in self.operators["cards"]):
             self.operators["cardindex"] -= 1
+
+    def read_config(self):
+        '''读取可能存在的配置文件'''
+        config_data = None
+        try:
+            f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
+            config_data = loads(f.read())
+        except Exception as e:
+            return
+        enable_config = [[self.blur_search_bar, "blur_search"], [self.coloring_field_card, "coloring_field"]]
+        for cfg in enable_config:
+            try:
+                bar = cfg[0]
+                sel = config_data[cfg[1]]
+                if sel == 0:
+                    bar.setChecked(False)
+                else:
+                    bar.setChecked(True)
+            except Exception as e:
+                continue
+
+    def save_config(self):
+        '''保存配置文件'''
+        config = {"blur_search": 1 if self.blur_search_bar.isChecked() else 0,
+                "coloring_field": 1 if self.coloring_field_card.isChecked() else 0}
+        config_data = dumps(config)
+        with open("DuelEditorConfig.jsn", 'w', encoding='utf-8') as f:
+            f.write(config_data)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

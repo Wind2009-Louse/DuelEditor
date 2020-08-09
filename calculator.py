@@ -1,8 +1,7 @@
 #encoding:utf-8
 import sys
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QRect, QRegExp
+from PyQt5.QtCore import QRect, QRegExp, Qt
 from PyQt5.QtGui import QColor, QRegExpValidator
 from PyQt5.QtWidgets import (QApplication, QLabel, QLineEdit, QListWidget,
                              QTextBrowser, QWidget)
@@ -75,7 +74,7 @@ class Calculator(QWidget):
 
         # hide scroll bar
         for bar in [self.atk_line, self.def_line, self.add_line, self.sub_line, self.mul_line, self.div_line]:
-            bar.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            bar.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             bar.setTextColor(QColor('green'))
 
         # connect
@@ -147,6 +146,10 @@ class Calculator(QWidget):
             args = self.card_data[cardname]
             self.atk_line.setText(str(args[0]))
             self.def_line.setText(str(args[1]))
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
