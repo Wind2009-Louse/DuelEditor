@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget
 
 
 class UI_About(QWidget):
-    def __init__(self, idx=12, parent=None):
-        self.last_version_idx = idx
+    def __init__(self, ver_idx = 12, ver_name="v1.12.0", parent=None):
+        self.last_version_idx = ver_idx
         self.parent = parent
 
         super(UI_About, self).__init__()
@@ -18,8 +18,7 @@ class UI_About(QWidget):
 
         self.label = QLabel(self)
         self.label.setGeometry(QRect(10, 10, 211, 21))
-        ver_str = str(idx)
-        self.label.setText('Duel Editor v1.%s.%s'%(ver_str[0:-1], ver_str[-1]))
+        self.label.setText('Duel Editor %s'%ver_name)
         self.label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.label_2 = QLabel(self)
         self.label_2.setGeometry(QRect(10, 30, 211, 21))
@@ -38,7 +37,7 @@ class UI_About(QWidget):
         self.label_3.setText("检查更新中……")
         QApplication.processEvents()
         try:
-            url = "https://raw.githubusercontent.com/Wind2009-Louse/DuelEditor/master/version.json"
+            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json"
             json_result = json.loads(requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
             if json_result["version"] > self.last_version_idx:
                 self.label_3.setText("当前有最新版本：%s"%json_result["name"])

@@ -24,7 +24,8 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version = 160
+version_idx = 170
+version_name = "v1.17.0"
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -32,9 +33,9 @@ class Update_Thread(Thread):
         super().__init__()
     def run(self):
         try:
-            url = "https://raw.githubusercontent.com/Wind2009-Louse/DuelEditor/master/version.json"
+            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json"
             json_result = loads(about.requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
-            if json_result["version"] > version:
+            if json_result["version"] > version_idx:
                 self.window.update_signal.emit(json_result["name"])
         except Exception as e:
             print(e)
@@ -50,10 +51,10 @@ class Download_Thread(Thread):
         url = ""
         filename = ""
         if os.name == "nt":
-            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.exe"%self.version_name
+            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.exe"%self.version_name
             filename = "DuelEditor %s.exe"%self.version_name
         elif os.name == "posix":
-            url = "https://github.com/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.out"%self.version_name
+            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.out"%self.version_name
             filename = "DuelEditor %s.out"%self.version_name
         else:
             self.window.download_signal.emit("下载失败，找不到对应系统的版本！")
@@ -97,18 +98,18 @@ class Ui_MainWindow(QMainWindow):
         height = self.height() - menu_height
         # print(width, height)
 
-        width_1_1 = 191 * width / self.origin_width
-        height_1_1 = 143 * height / self.origin_height
+        width_1_1 = 191 * width // self.origin_width
+        height_1_1 = 143 * height // self.origin_height
         if height < self.origin_height:
-            height_1_1 = 143 - (self.origin_height - height) / 2
+            height_1_1 = 143 - (self.origin_height - height) // 2
         xline_1_1 = 10
-        xline_1_2 = 10 + 200 * width / self.origin_width
-        xline_1_3 = 10 + 400 * width / self.origin_width
-        xline_1_4 = 10 + 600 * width / self.origin_width
+        xline_1_2 = 10 + 200 * width // self.origin_width
+        xline_1_3 = 10 + 400 * width // self.origin_width
+        xline_1_4 = 10 + 600 * width // self.origin_width
         yline_1_1 = menu_height + 8
-        yline_1_2 = menu_height + (self.origin_height - 10) * height / self.origin_height - height_1_1
+        yline_1_2 = menu_height + (self.origin_height - 10) * height // self.origin_height - height_1_1
         if height < self.origin_height:
-            yline_1_2 = menu_height + (self.origin_height - 153) - (self.origin_height - height) / 2
+            yline_1_2 = menu_height + (self.origin_height - 153) - (self.origin_height - height) // 2
 
         # enemy/self place
         self.label_enemy_ex.setGeometry(
@@ -150,12 +151,12 @@ class Ui_MainWindow(QMainWindow):
         height_2_0 = (yline_1_2 - yline_1_1 - height_1_1 - 38) // 5
         height_2_1 = height_2_0 + 1
         xline_2_1 = 10
-        xline_2_2 = 10 + 120 * width / self.origin_width
-        xline_2_3 = 10 + 120 * width / self.origin_width + width_2_0
-        xline_2_4 = 10 + 120 * width / self.origin_width + width_2_0 * 2
-        xline_2_5 = 10 + 120 * width / self.origin_width + width_2_0 * 3
-        xline_2_6 = 10 + 120 * width / self.origin_width + width_2_0 * 4
-        xline_2_7 = 10 + 680 * width / self.origin_width
+        xline_2_2 = 10 + 120 * width // self.origin_width
+        xline_2_3 = 10 + 120 * width // self.origin_width + width_2_0
+        xline_2_4 = 10 + 120 * width // self.origin_width + width_2_0 * 2
+        xline_2_5 = 10 + 120 * width // self.origin_width + width_2_0 * 3
+        xline_2_6 = 10 + 120 * width // self.origin_width + width_2_0 * 4
+        xline_2_7 = 10 + 680 * width // self.origin_width
         yline_2_1 = yline_1_1 + height_1_1 + 30
         yline_2_2 = yline_2_1 + height_2_0
         yline_2_3 = yline_2_1 + height_2_0 * 2 # 280 * height / self.origin_height
@@ -165,7 +166,7 @@ class Ui_MainWindow(QMainWindow):
         yline_2_7 = yline_2_5 - height_2_0 - 25 # 305 * height / self.origin_height
         yline_2_8 = yline_2_5 - 45 # 335 * height / self.origin_height
         if height < self.origin_height:
-            diff = (self.origin_height - height) / 2
+            diff = (self.origin_height - height) // 2
             height_2_1 = 51
             yline_2_0 = 180 + menu_height
             yline_2_1 = yline_2_0 - diff
@@ -219,52 +220,54 @@ class Ui_MainWindow(QMainWindow):
 
         # target/desc
         magic_3_1 = 85
-        width_3_1 = 181 * width / self.origin_width
-        height_3_1 = 235 * (height - magic_3_1) / (self.origin_height - magic_3_1)
+        width_3_1 = 181 * width // self.origin_width
+        height_3_1 = 200 * (height - magic_3_1) // (self.origin_height - magic_3_1)
         height_3_2 = height - 160 - height_3_1
-        xline_3_1 = 810 * width / self.origin_width
+        xline_3_1 = 810 * width // self.origin_width
+        yline_3_1 = menu_height + height_3_1
         self.label_target_list.setGeometry(QRect(xline_3_1, menu_height, width_3_1, 20))
         self.Target_list.setGeometry(QRect(xline_3_1, menu_height + 20, width_3_1, height_3_1))
-        self.Delete_target.setGeometry(QRect(xline_3_1, menu_height + height_3_1+25, width_3_1, 28))
-        self.Dest_Box.setGeometry(QRect(xline_3_1, menu_height + height_3_1+63, width_3_1, 22))
-        self.MoveCard_Button.setGeometry(QRect(xline_3_1, menu_height + height_3_1+90, width_3_1, 28))
-        self.EraseCard_Button.setGeometry(QRect(xline_3_1, menu_height + height_3_1+120, width_3_1, 28))
-        self.Target_detail.setGeometry(QRect(xline_3_1, menu_height + height_3_1+150, width_3_1, height_3_2))
+        self.Delete_target_button.setGeometry(QRect(xline_3_1, yline_3_1+25, width_3_1, 28))
+        self.Dest_Box.setGeometry(QRect(xline_3_1, yline_3_1+63, width_3_1, 22))
+        self.Move_card_button.setGeometry(QRect(xline_3_1, yline_3_1+90, width_3_1, 28))
+        self.Erase_card_button.setGeometry(QRect(xline_3_1, yline_3_1+120, width_3_1, 28))
+        self.Target_detail_browser.setGeometry(QRect(xline_3_1, yline_3_1+150, width_3_1, height_3_2 - 32))
+        self.Target_effect_button.setGeometry(QRect(xline_3_1, yline_3_1 + 150 + height_3_2 - 30, width_3_1, 28))
 
         # search/operation buttoms
-        width_4_1 = 181 * width / self.origin_width
+        width_4_1 = 181 * width // self.origin_width
         height_4_1 = height - 410
-        xline_4_1 = 1000 * width / self.origin_width
+        xline_4_1 = 1000 * width // self.origin_width
         self.label_cardsearch.setGeometry(QRect(xline_4_1, menu_height, width_4_1, 20))
         self.NewCard_line.setGeometry(QRect(xline_4_1, menu_height + 20, width_4_1-42, 21))
         self.NewCard_button.setGeometry(QRect(xline_4_1+width_4_1-40, menu_height + 20, 40, 21))
         self.Newcard_List.setGeometry(QRect(xline_4_1, menu_height + 50, width_4_1, height_4_1))
-        self.CreateCard_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+55, width_4_1, 28))
-        self.NewCard_Rename_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+85, width_4_1, 28))
+        self.Create_card_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+55, width_4_1, 28))
+        self.Rename_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+85, width_4_1, 28))
         self.Comment_Line.setGeometry(QRect(xline_4_1, menu_height + height_4_1+123, width_4_1, 21))
-        self.CommentCard_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+150, width_4_1, 28))
-        self.Comment_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+180, width_4_1, 28))
+        self.Comment_card_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+150, width_4_1, 28))
+        self.Comment_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+180, width_4_1, 28))
         self.LPTarget_Box.setGeometry(QRect(xline_4_1, menu_height + height_4_1+220, width_4_1, 22))
         self.LP_line.setGeometry(QRect(xline_4_1, menu_height + height_4_1+250, width_4_1, 21))
-        self.AddLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+280, width_4_1, 28))
-        self.DecLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+310, width_4_1, 28))
-        self.CgeLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+340, width_4_1, 28))
-        self.HalLP_Button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+370, width_4_1, 28))
+        self.AddLP_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+280, width_4_1, 28))
+        self.DecLP_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+310, width_4_1, 28))
+        self.CgeLP_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+340, width_4_1, 28))
+        self.HalLP_button.setGeometry(QRect(xline_4_1, menu_height + height_4_1+370, width_4_1, 28))
 
         # operation list
-        width_5_1 = 181 * width / self.origin_width
-        height_5_1 = 374 * height / self.origin_height
+        width_5_1 = 181 * width // self.origin_width
+        height_5_1 = 374 * height // self.origin_height
         height_5_2 = height - height_5_1 - 145
-        xline_5_1 = 1190 * width / self.origin_width
+        xline_5_1 = 1190 * width // self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
         self.Operator_search.setGeometry(QRect(xline_5_1, menu_height + 20, width_5_1 - 23, 21))
         self.Operator_search_button.setGeometry(QRect(xline_5_1 + width_5_1 - 21, menu_height + 20, 21, 21))
         self.Operator_list.setGeometry(QRect(xline_5_1, menu_height + 50, width_5_1, height_5_1 - 20))
-        self.DeleteOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+35, width_5_1, 28))
+        self.Delete_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+35, width_5_1, 28))
         self.CopyingOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, height_5_2))
-        self.CopyOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+75, width_5_1, 28))
-        self.MoveOpe_Button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+105, width_5_1, 28))
+        self.Copy_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+75, width_5_1, 28))
+        self.Paste_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+105, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
@@ -326,24 +329,26 @@ class Ui_MainWindow(QMainWindow):
         self.label_enemy_lp.setAlignment(Qt.AlignCenter)
 
         self.Target_list = QListWidget(self.centralwidget)
-        self.Delete_target = QPushButton(self.centralwidget)
+        self.Delete_target_button = QPushButton(self.centralwidget)
         self.Dest_Box = QComboBox(self.centralwidget)
         for i in range(36):
             self.Dest_Box.addItem("")
-        self.MoveCard_Button = QPushButton(self.centralwidget)
-        self.EraseCard_Button = QPushButton(self.centralwidget)
-        self.Target_detail = QTextBrowser(self.centralwidget)
+        self.Move_card_button = QPushButton(self.centralwidget)
+        self.Erase_card_button = QPushButton(self.centralwidget)
+        self.Target_detail_browser = QTextBrowser(self.centralwidget)
+        self.Target_effect_button = QPushButton(self.centralwidget)
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setPlaceholderText("输入卡片名称")
         self.NewCard_button = QPushButton(self.centralwidget)
         self.Newcard_List = QListWidget(self.centralwidget)
-        self.CreateCard_Button = QPushButton(self.centralwidget)
-        self.NewCard_Rename_Button = QPushButton(self.centralwidget)
+        self.Create_card_button = QPushButton(self.centralwidget)
+        self.Rename_button = QPushButton(self.centralwidget)
+        self.Rename_button.setEnabled(False)
         self.Comment_Line = QLineEdit(self.centralwidget)
         self.Comment_Line.setPlaceholderText("输入注释")
-        self.CommentCard_Button = QPushButton(self.centralwidget)
-        self.Comment_Button = QPushButton(self.centralwidget)
+        self.Comment_card_button = QPushButton(self.centralwidget)
+        self.Comment_button = QPushButton(self.centralwidget)
         self.LPTarget_Box = QComboBox(self.centralwidget)
         self.LPTarget_Box.addItem("")
         self.LPTarget_Box.addItem("")
@@ -352,21 +357,21 @@ class Ui_MainWindow(QMainWindow):
         validator = QRegExpValidator(regx, self.LP_line)
         self.LP_line.setValidator(validator)
         self.LP_line.setPlaceholderText("输入基本分变动")
-        self.AddLP_Button = QPushButton(self.centralwidget)
-        self.DecLP_Button = QPushButton(self.centralwidget)
-        self.CgeLP_Button = QPushButton(self.centralwidget)
-        self.HalLP_Button = QPushButton(self.centralwidget)
+        self.AddLP_button = QPushButton(self.centralwidget)
+        self.DecLP_button = QPushButton(self.centralwidget)
+        self.CgeLP_button = QPushButton(self.centralwidget)
+        self.HalLP_button = QPushButton(self.centralwidget)
 
         self.Operator_list = QListWidget(self.centralwidget)
         self.Operator_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.Operator_search = QLineEdit(self.centralwidget)
         self.Operator_search.setPlaceholderText("输入操作内容搜索")
         self.Operator_search_button = QPushButton(self.centralwidget)
-        self.DeleteOpe_Button = QPushButton(self.centralwidget)
+        self.Delete_ope_button = QPushButton(self.centralwidget)
         self.CopyingOpe_list = QListWidget(self.centralwidget)
         self.CopyingOpe_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.CopyOpe_Button = QPushButton(self.centralwidget)
-        self.MoveOpe_Button = QPushButton(self.centralwidget)
+        self.Copy_ope_button = QPushButton(self.centralwidget)
+        self.Paste_ope_button = QPushButton(self.centralwidget)
 
         self.Self_Ex = QListWidget(self.centralwidget)
         self.Self_Hand = QListWidget(self.centralwidget)
@@ -574,7 +579,7 @@ class Ui_MainWindow(QMainWindow):
         # sub windows
         self.calculate_window = calculator.Calculator()
         self.calculate_window.setdatas(self.monster_datas)
-        self.about_window = about.UI_About(version, self)
+        self.about_window = about.UI_About(version_idx, version_name, self)
 
         # 初始化
         self.idx_represent_field = [
@@ -586,7 +591,6 @@ class Ui_MainWindow(QMainWindow):
             self.Enemy_Grave, self.Enemy_Banish, self.Enemy_Ex, self.ExM_1, self.ExM_2
         ]
         self.unsave_changed = False
-        self.newfile()
 
         # 操作部分
         self.copying_operation = []
@@ -594,19 +598,37 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_search.returnPressed.connect(self.search_operation_cycle)
         self.Operator_search_button.clicked.connect(self.search_operation_cycle)
         self.Operator_list.itemSelectionChanged.connect(self.operation_index_changed)
-        self.DeleteOpe_Button.clicked.connect(self.remove_operator)
+        self.Delete_ope_button.clicked.connect(self.remove_operator)
         self.Operator_list.doubleClicked.connect(self.copy_ope)
-        self.CopyOpe_Button.clicked.connect(self.copy_ope)
+        self.Copy_ope_button.clicked.connect(self.copy_ope)
         self.CopyingOpe_list.itemSelectionChanged.connect(self.select_copying)
         self.CopyingOpe_list.doubleClicked.connect(self.remove_from_copying)
-        self.MoveOpe_Button.clicked.connect(self.paste_operator)
+        self.Paste_ope_button.clicked.connect(self.paste_operator)
+
+        # 判断是否有最近打开的文件，若有则尝试打开
+        if self.fullfilename is not None and len(self.fullfilename) > 0:
+            temp_id = -1
+            if self.lastest_field_id is not None:
+                temp_id = self.lastest_field_id
+            fullname = self.fullfilename
+            self.newfile()
+            try:
+                self.openfile(fullname)
+                if temp_id != -1:
+                    temp_id = min(temp_id, self.Operator_list.count()-1)
+                    self.Operator_list.setCurrentRow(temp_id)
+            except Exception as e:
+                self.fullfilename = ""
+        else:
+            self.newfile()
 
         # 对象部分
-        self.Delete_target.clicked.connect(self.remove_from_targets)
+        self.Delete_target_button.clicked.connect(self.remove_from_targets)
         self.Target_list.clicked.connect(self.target_index_changed)
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
-        self.MoveCard_Button.clicked.connect(self.ope_movecards)
+        self.Target_effect_button.clicked.connect(self.show_card_effect)
+        self.Move_card_button.clicked.connect(self.ope_movecards)
 
         # 添加/删除卡片部分
         self.NewCard_line.textChanged.connect(self.search_card)
@@ -615,19 +637,19 @@ class Ui_MainWindow(QMainWindow):
         self.Newcard_List.doubleClicked.connect(self.fix_cardname)
         self.Newcard_List.clicked.connect(self.show_carddesp)
         self.Newcard_List.itemSelectionChanged.connect(self.show_carddesp)
-        self.NewCard_Rename_Button.clicked.connect(self.card_rename)
-        self.CreateCard_Button.clicked.connect(self.create_card)
-        self.EraseCard_Button.clicked.connect(self.erase_targets)
+        self.Rename_button.clicked.connect(self.card_rename)
+        self.Create_card_button.clicked.connect(self.create_card)
+        self.Erase_card_button.clicked.connect(self.erase_targets)
 
         # 基本分变更部分
-        self.AddLP_Button.clicked.connect(self.ope_LPAdd)
-        self.DecLP_Button.clicked.connect(self.ope_LPDec)
-        self.CgeLP_Button.clicked.connect(self.ope_LPCge)
-        self.HalLP_Button.clicked.connect(self.ope_LPHal)
+        self.AddLP_button.clicked.connect(self.ope_LPAdd)
+        self.DecLP_button.clicked.connect(self.ope_LPDec)
+        self.CgeLP_button.clicked.connect(self.ope_LPCge)
+        self.HalLP_button.clicked.connect(self.ope_LPHal)
 
         # 注释部分
-        self.Comment_Button.clicked.connect(self.ope_addcomment)
-        self.CommentCard_Button.clicked.connect(self.ope_addcarddesp)
+        self.Comment_button.clicked.connect(self.ope_addcomment)
+        self.Comment_card_button.clicked.connect(self.ope_addcarddesp)
         self.Comment_Line.returnPressed.connect(self.comment_enter)
 
         # 场上的卡片
@@ -696,11 +718,11 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_list.setSortingEnabled(False)
         self.label_operation_list.setText("操作列表(0/0)")
         self.label_target_list.setText("操作对象(0)")
-        self.Delete_target.setText("对象中删除")
-        self.CreateCard_Button.setText("←添加到对象")
-        self.MoveCard_Button.setText("移动对象")
-        self.CommentCard_Button.setText("对象注释")
-        self.Comment_Button.setText("操作注释")
+        self.Delete_target_button.setText("对象中删除")
+        self.Create_card_button.setText("←添加到对象")
+        self.Move_card_button.setText("移动对象")
+        self.Comment_card_button.setText("对象注释")
+        self.Comment_button.setText("操作注释")
         self.label_self_ex.setText("己方额外(0)")
         self.label_self_hand.setText("己方手卡(0)")
         self.label_self_rpen.setText("己方右灵摆")
@@ -717,21 +739,22 @@ class Ui_MainWindow(QMainWindow):
         self.label_enemy_hand.setText("对方手卡(0)")
         self.label_enemy_ex.setText("对方额外(0)")
         self.label_enemy_banish.setText("对方除外(0)")
-        self.EraseCard_Button.setText("移除对象")
+        self.Erase_card_button.setText("移除对象")
         for idx in range(len(idx_represent_str)):
             self.Dest_Box.setItemText(idx, idx_represent_str[idx])
         self.label_cardsearch.setText("卡片搜索(0)")
-        self.DeleteOpe_Button.setText("删除操作")
-        self.CopyOpe_Button.setText("复制操作")
-        self.MoveOpe_Button.setText("粘贴操作")
+        self.Delete_ope_button.setText("删除操作")
+        self.Copy_ope_button.setText("复制操作")
+        self.Paste_ope_button.setText("粘贴操作")
         self.LPTarget_Box.setItemText(0, "己方")
         self.LPTarget_Box.setItemText(1, "对方")
-        self.AddLP_Button.setText("增加基本分")
-        self.DecLP_Button.setText("减少基本分")
-        self.CgeLP_Button.setText("变成基本分")
-        self.HalLP_Button.setText("基本分减半")
-        self.NewCard_Rename_Button.setText("重命名选定卡")
+        self.AddLP_button.setText("增加基本分")
+        self.DecLP_button.setText("减少基本分")
+        self.CgeLP_button.setText("变成基本分")
+        self.HalLP_button.setText("基本分减半")
+        self.Rename_button.setText("未选定卡")
         self.NewCard_button.setText("添加")
+        self.Target_effect_button.setText("查看效果")
         self.Operator_search_button.setText("↓")
 
     def maketitle(self, process=""):
@@ -753,11 +776,13 @@ class Ui_MainWindow(QMainWindow):
         self.targets = []
         self.copying_operation = []
         self.filename = "Untitle.json"
+        self.fullfilename = ""
         self.last_text = ""
         self.showing_card_id = None
         self.unsave_changed = False
 
         self.maketitle()
+        self.update_rename_buttom()
         self.update_operationlist()
         self.update_copying()
         self.refresh_field()
@@ -765,11 +790,13 @@ class Ui_MainWindow(QMainWindow):
         self.show_cardinfo()
         self.search_card()
 
-    def openfile(self):
+    def openfile(self, fullname=None):
         '''打开文件'''
+        show_error = (fullname == None)
         if self.unsave_confirm():
             return
-        fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
+        if not isinstance(fullname, str):
+            fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
         if len(fullname) == 0:
             return
         origin_data = deepcopy(self.operators)
@@ -782,11 +809,12 @@ class Ui_MainWindow(QMainWindow):
                 self.update_operationlist()
                 self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
                 self.filename = os.path.split(fullname)[-1]
+                self.fullfilename = fullname
                 self.unsave_changed = False
                 self.maketitle()
                 return
         # 出错时尝试不使用utf-8编码打开文件
-        except:
+        except Exception as e:
             try:
                 with open(fullname,'r') as f:
                     json_data = f.read()
@@ -796,6 +824,7 @@ class Ui_MainWindow(QMainWindow):
                     self.update_operationlist()
                     self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
                     self.filename = os.path.split(fullname)[-1]
+                    self.fullfilename = fullname
                     self.unsave_changed = False
                     self.maketitle()
                     return
@@ -803,7 +832,8 @@ class Ui_MainWindow(QMainWindow):
                 pass
         self.operators = origin_data
         self.make_fields()
-        QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
+        if show_error:
+            QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
     def unsave_confirm(self):
         '''如果取消动作，则返回True，否则返回False'''
@@ -817,10 +847,11 @@ class Ui_MainWindow(QMainWindow):
     
     def savefile(self):
         '''保存文件'''
-        fullname = str(QFileDialog.getSaveFileName(self,'保存为', self.filename,"*.json")[0])
+        fullname = str(QFileDialog.getSaveFileName(self,'保存为', self.fullfilename,"*.json")[0])
         if len(fullname) == 0:
             return
         self.filename = os.path.split(fullname)[-1]
+        self.fullfilename = fullname
         json_data = dumps(self.operators,indent=2,ensure_ascii=False)
         with open(fullname,'w',encoding='utf-8') as f:
             f.write(json_data)
@@ -905,6 +936,7 @@ class Ui_MainWindow(QMainWindow):
         '''插入操作。操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
         # 判断是插入或新增
         ope_id = self.get_current_operation_index()
+        self.lastest_field_id = ope_id
         if ope_id < 0:
             self.operators["operations"].append(operation)
             ope_id = 0
@@ -927,21 +959,18 @@ class Ui_MainWindow(QMainWindow):
         '''根据card_id，在信息栏显示卡片详情'''
         # 清空
         if card_id is None:
-            self.Target_detail.setText("")
+            self.Target_detail_browser.setText("")
             return
         if card_id not in self.operators["cards"]:
             return
         card_name = self.operators["cards"][card_id]["Name"]
 
-        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
-            search_list = [card_name, card_name[:-1]]
-            for name in search_list:
-                if name in self.card_datas:
-                    text = self.card_datas[name]
-                    self.Target_detail.setHtml(text)
-                    return
-
         self.showing_card_id = card_id
+        self.update_rename_buttom()
+        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
+            if self.show_card_effect():
+                return
+
         field = self.get_current_field()
         card_locat = "未知"
         card_desp = "无"
@@ -950,12 +979,30 @@ class Ui_MainWindow(QMainWindow):
         if card_id in field["desp"]:
             card_desp = field["desp"][card_id]
         result = "[%s]\n位置：%s\n备注：%s"%(card_name, card_locat, card_desp)
-        self.Target_detail.setText(result)
+        self.Target_detail_browser.setText(result)
+    
+    def show_card_effect(self):
+        '''显示卡片的效果'''
+        if self.showing_card_id is None:
+            return False
+        if self.showing_card_id not in self.operators["cards"]:
+            return False
+        card_name = self.operators["cards"][self.showing_card_id]["Name"]
+
+        search_list = [card_name, card_name[:-1]]
+        for name in search_list:
+            if name in self.card_datas:
+                text = self.card_datas[name]
+                self.Target_detail_browser.setHtml(text)
+                return True
+        
+        return False
     
     def show_opeinfo(self, idx=None):
         '''显示指定操作详情\n\nidx为空时，显示选定操作的详情'''
         # 获取操作
         self.showing_card_id = None
+        self.update_rename_buttom()
         if idx is None:
             idx = self.get_current_operation_index()
             if idx < 0:
@@ -1007,7 +1054,7 @@ class Ui_MainWindow(QMainWindow):
             result = "%sLP%s%s"%(target,action,point)
         elif operation["type"] == "comment":
             result = operation["desp"]
-        self.Target_detail.setText(result)
+        self.Target_detail_browser.setText(result)
 
     def create_card(self):
         '''新增卡片'''
@@ -1034,8 +1081,10 @@ class Ui_MainWindow(QMainWindow):
         # 刷新
         self.clear_unuse_cards()
         self.label_target_list.setText("操作对象(%d)"%len(self.targets))
-        self.Target_detail.clear()
+        self.Target_detail_browser.clear()
         self.update_targetlist()
+        self.showing_card_id = None
+        self.update_rename_buttom()
 
     def remove_operator(self):
         '''移除操作'''
@@ -1092,11 +1141,11 @@ class Ui_MainWindow(QMainWindow):
         operation_list = self.copying_operation
         # 判断当前是否有复制中的操作
         if len(self.copying_operation) <= 0:
-            self.MoveOpe_Button.setEnabled(False)
+            self.Paste_ope_button.setEnabled(False)
             self.CopyingOpe_list.addItem("无操作")
             self.CopyingOpe_list.setEnabled(False)
             return
-        self.MoveOpe_Button.setEnabled(True)
+        self.Paste_ope_button.setEnabled(True)
         self.CopyingOpe_list.setEnabled(True)
         for operation in operation_list:
             # 根据类型描绘操作
@@ -1189,7 +1238,7 @@ class Ui_MainWindow(QMainWindow):
             result = "%sLP%s%s"%(target,action,point)
         elif operation["type"] == "comment":
             result = operation["desp"]
-        self.Target_detail.setText(result)
+        self.Target_detail_browser.setText(result)
 
     def remove_from_copying(self, asking=True):
         idx_list = self.CopyingOpe_list.selectedIndexes()
@@ -1242,13 +1291,13 @@ class Ui_MainWindow(QMainWindow):
         
         # 按钮禁用/恢复
         if len(self.targets) == 0:
-            self.MoveCard_Button.setEnabled(False)
-            self.EraseCard_Button.setEnabled(False)
-            self.CommentCard_Button.setEnabled(False)
+            self.Move_card_button.setEnabled(False)
+            self.Erase_card_button.setEnabled(False)
+            self.Comment_card_button.setEnabled(False)
         else:
-            self.MoveCard_Button.setEnabled(True)
-            self.EraseCard_Button.setEnabled(True)
-            self.CommentCard_Button.setEnabled(True)
+            self.Move_card_button.setEnabled(True)
+            self.Erase_card_button.setEnabled(True)
+            self.Comment_card_button.setEnabled(True)
 
         self.Target_list.clear()
         searching_name = self.NewCard_line.text()
@@ -1256,9 +1305,14 @@ class Ui_MainWindow(QMainWindow):
             target_name = self.operators["cards"][target]["Name"]
             target_field = self.get_last_location(target, ope_id+1)
             self.Target_list.addItem("[%s]%s"%(target_field, target_name))
-            # 如果和搜索栏内容匹配则变色
+            possible_name = [target_name, target_name[:-1]]
+            for name in possible_name:
+                if name in self.card_colors:
+                    self.Target_list.item(self.Target_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+
+            # 如果和搜索栏内容匹配则变为斜体
             if len(searching_name) > 0 and searching_name in target_name:
-                self.Target_list.item(self.Target_list.count()-1).setForeground(QColor('red'))
+                self.Target_list.item(self.Target_list.count()-1).setFont(self.italic_font)
     
     def update_operationlist(self):
         '''操作格式：\n\ntype(str), args(list of int), dest(int), desp(str)'''
@@ -1365,14 +1419,14 @@ class Ui_MainWindow(QMainWindow):
         searching_name = self.NewCard_line.text()
 
         # 描绘框内
-        label_colors = ["QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}",
-                        "QLabel{color:rgb(0,0,0,255)}"]
+        label_colors = ["QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}",
+                        "QLabel{color:rgb(0,0,0)}"]
         searched_frames = [self.Enemy_Ex, self.Enemy_Hand, self.Enemy_Grave, self.Enemy_Banish,
                 self.Self_Ex, self.Self_Hand, self.Self_Grave, self.Self_Banish]
         labels = [self.label_enemy_ex, self.label_enemy_hand, self.label_enemy_grave, self.label_enemy_banish,
@@ -1462,7 +1516,7 @@ class Ui_MainWindow(QMainWindow):
         '''移动卡片'''
         if len(self.targets) == 0:
             return
-        self.Target_detail.setText("")
+        self.Target_detail_browser.setText("")
         ope = {"type":"move", "args":self.targets.copy(), "dest": self.Dest_Box.currentIndex(), "desp":""}
         self.targets.clear()
         self.Target_list.clear()
@@ -1505,7 +1559,7 @@ class Ui_MainWindow(QMainWindow):
         reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？\n被删除的卡片在之后的操作中不会再出现。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
-        self.Target_detail.setText("")
+        self.Target_detail_browser.setText("")
         ope = {"type":"erase", "args":self.targets.copy(), "dest": 0, "desp":""}
         self.targets.clear()
         self.Target_list.clear()
@@ -1653,7 +1707,7 @@ class Ui_MainWindow(QMainWindow):
         cardname = self.Newcard_List.item(idx[0].row()).text()
         if cardname in self.card_datas:
             text = self.card_datas[cardname]
-            self.Target_detail.setHtml(text)
+            self.Target_detail_browser.setHtml(text)
 
     def fix_cardname(self,qindex):
         '''补全卡名'''
@@ -1661,6 +1715,18 @@ class Ui_MainWindow(QMainWindow):
         if index < 0:
             return
         self.NewCard_line.setText(self.Newcard_List.item(index).text())
+
+    def update_rename_buttom(self):
+        '''更新重命名按钮'''
+        if self.showing_card_id is None:
+            self.Rename_button.setEnabled(False)
+            self.Target_effect_button.setEnabled(False)
+            self.Rename_button.setText("未选定卡")
+        else:
+            self.Rename_button.setEnabled(True)
+            self.Target_effect_button.setEnabled(True)
+            cardname = self.operators["cards"][self.showing_card_id]["Name"]
+            self.Rename_button.setText("重命名[%s]"%cardname)
 
     def card_rename(self):
         '''卡片重命名'''
@@ -1681,6 +1747,7 @@ class Ui_MainWindow(QMainWindow):
 
         # 刷新
         self.operators["cards"][self.showing_card_id]["Name"] = text
+        self.update_rename_buttom()
         self.unsave_changed = True
         self.maketitle()
         self.update_operationlist()
@@ -1688,7 +1755,6 @@ class Ui_MainWindow(QMainWindow):
         self.Operator_list.setCurrentRow(ope_idx)
         self.refresh_field()
         self.update_targetlist()
-        self.show_cardinfo(self.showing_card_id)
         self.search_card()
     
     def open_calculator(self):
@@ -1739,6 +1805,8 @@ class Ui_MainWindow(QMainWindow):
     def read_config(self):
         '''读取可能存在的配置文件'''
         config_data = None
+        self.fullfilename = ""
+        self.lastest_field_id = -1
         try:
             f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
             config_data = loads(f.read())
@@ -1755,11 +1823,32 @@ class Ui_MainWindow(QMainWindow):
                     bar.setChecked(True)
             except Exception as e:
                 continue
+        
+        try:
+            self.fullfilename = config_data["last_file"]
+        except:
+            self.fullfilename = ""
+        
+        try:
+            width = max(config_data["width"], self.mini_width)
+            height = max(config_data["height"], self.mini_height)
+            self.resize(width, height)
+        except:
+            pass
+
+        try:
+            self.lastest_field_id = config_data["last_operation"]
+        except:
+            pass
 
     def save_config(self):
         '''保存配置文件'''
         config = {"blur_search": 1 if self.blur_search_bar.isChecked() else 0,
-                "coloring_field": 1 if self.coloring_field_card.isChecked() else 0}
+                "coloring_field": 1 if self.coloring_field_card.isChecked() else 0,
+                "last_file": self.fullfilename,
+                "width": self.width(),
+                "height": self.height(),
+                "last_operation": self.get_current_operation_index()}
         config_data = dumps(config)
         with open("DuelEditorConfig.jsn", 'w', encoding='utf-8') as f:
             f.write(config_data)
