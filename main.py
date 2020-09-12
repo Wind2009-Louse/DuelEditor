@@ -256,8 +256,8 @@ class Ui_MainWindow(QMainWindow):
 
         # operation list
         width_5_1 = 181 * width // self.origin_width
-        height_5_1 = 374 * height // self.origin_height
-        height_5_2 = height - height_5_1 - 145
+        height_5_1 = 350 * height // self.origin_height
+        height_5_2 = height - height_5_1 - 175
         xline_5_1 = 1190 * width // self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
@@ -268,6 +268,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, height_5_2))
         self.Copy_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+75, width_5_1, 28))
         self.Paste_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+105, width_5_1, 28))
+        self.Delete_copy_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+135, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
@@ -372,6 +373,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.Copy_ope_button = QPushButton(self.centralwidget)
         self.Paste_ope_button = QPushButton(self.centralwidget)
+        self.Delete_copy_button = QPushButton(self.centralwidget)
 
         self.Self_Ex = QListWidget(self.centralwidget)
         self.Self_Hand = QListWidget(self.centralwidget)
@@ -604,6 +606,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.itemSelectionChanged.connect(self.select_copying)
         self.CopyingOpe_list.doubleClicked.connect(self.remove_from_copying)
         self.Paste_ope_button.clicked.connect(self.paste_operator)
+        self.Delete_copy_button.clicked.connect(self.remove_from_copying)
 
         # 判断是否有最近打开的文件，若有则尝试打开
         if self.fullfilename is not None and len(self.fullfilename) > 0:
@@ -746,6 +749,7 @@ class Ui_MainWindow(QMainWindow):
         self.Delete_ope_button.setText("删除操作")
         self.Copy_ope_button.setText("复制操作")
         self.Paste_ope_button.setText("粘贴操作")
+        self.Delete_copy_button.setText("删除操作")
         self.LPTarget_Box.setItemText(0, "己方")
         self.LPTarget_Box.setItemText(1, "对方")
         self.AddLP_button.setText("增加基本分")
