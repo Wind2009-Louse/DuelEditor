@@ -18,14 +18,15 @@ from PyQt5.QtWidgets import (QAction, QApplication, QComboBox, QFileDialog,
 
 import about
 import calculator
+import pic_window
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
 cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(168,168,0), 0x40: QColor(108,34,108), 0x80: QColor(16,128,235), 0x2000: QColor(168,168,168), 0x800000: QColor(0,0,0), 0x4000: QColor(98,98,98), 0x4000000: QColor(3,62,116), 0xffffffff: QColor(178,68,0)}
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 170
-version_name = "v1.17.0"
+version_idx = 180
+version_name = "v1.18.0"
 
 class Update_Thread(Thread):
     def __init__(self, window):
@@ -83,6 +84,7 @@ class Ui_MainWindow(QMainWindow):
     update_signal = pyqtSignal(str)
     download_signal = pyqtSignal(str)
     process_signal = pyqtSignal(str)
+    clear_img_signal = pyqtSignal(str)
     normal_font = QFont()
     bold_font = QFont()
     bold_font.setBold(True)
@@ -232,7 +234,8 @@ class Ui_MainWindow(QMainWindow):
         self.Move_card_button.setGeometry(QRect(xline_3_1, yline_3_1+90, width_3_1, 28))
         self.Erase_card_button.setGeometry(QRect(xline_3_1, yline_3_1+120, width_3_1, 28))
         self.Target_detail_browser.setGeometry(QRect(xline_3_1, yline_3_1+150, width_3_1, height_3_2 - 32))
-        self.Target_effect_button.setGeometry(QRect(xline_3_1, yline_3_1 + 150 + height_3_2 - 30, width_3_1, 28))
+        self.Target_effect_button.setGeometry(QRect(xline_3_1, yline_3_1 + 150 + height_3_2 - 30, (width_3_1 - 4) // 2, 28))
+        self.Target_img_button.setGeometry(QRect(xline_3_1 + width_3_1 // 2 + 2, yline_3_1 + 150 + height_3_2 - 30, (width_3_1 - 4) // 2, 28))
 
         # search/operation buttoms
         width_4_1 = 181 * width // self.origin_width
@@ -256,8 +259,8 @@ class Ui_MainWindow(QMainWindow):
 
         # operation list
         width_5_1 = 181 * width // self.origin_width
-        height_5_1 = 374 * height // self.origin_height
-        height_5_2 = height - height_5_1 - 145
+        height_5_1 = 350 * height // self.origin_height
+        height_5_2 = height - height_5_1 - 175
         xline_5_1 = 1190 * width // self.origin_width
 
         self.label_operation_list.setGeometry(QRect(xline_5_1, menu_height, width_5_1, 16))
@@ -268,6 +271,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.setGeometry(QRect(xline_5_1, menu_height + height_5_1+70, width_5_1, height_5_2))
         self.Copy_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+75, width_5_1, 28))
         self.Paste_ope_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+105, width_5_1, 28))
+        self.Delete_copy_button.setGeometry(QRect(xline_5_1, menu_height + height_5_1+height_5_2+135, width_5_1, 28))
 
     def init_frame(self):
         '''初始化UI'''
@@ -336,7 +340,10 @@ class Ui_MainWindow(QMainWindow):
         self.Move_card_button = QPushButton(self.centralwidget)
         self.Erase_card_button = QPushButton(self.centralwidget)
         self.Target_detail_browser = QTextBrowser(self.centralwidget)
+        self.Target_detail_browser.setOpenExternalLinks(True)
+        self.Target_detail_browser.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.Target_effect_button = QPushButton(self.centralwidget)
+        self.Target_img_button = QPushButton(self.centralwidget)
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setPlaceholderText("输入卡片名称")
@@ -372,6 +379,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.Copy_ope_button = QPushButton(self.centralwidget)
         self.Paste_ope_button = QPushButton(self.centralwidget)
+        self.Delete_copy_button = QPushButton(self.centralwidget)
 
         self.Self_Ex = QListWidget(self.centralwidget)
         self.Self_Hand = QListWidget(self.centralwidget)
@@ -472,16 +480,18 @@ class Ui_MainWindow(QMainWindow):
         bar.addAction(self.quit_bar)
 
         self.read_config()
+        self.img_window_list = []
 
         # 读取卡片数据库
         self.card_datas = {}
         self.raw_datas = {}
         self.monster_datas = {}
         self.card_colors = {}
+        self.id_map_by_name = {}
         card_sorted = {}
         try:
             if not os.path.exists("cards.cdb"):
-                raise
+                raise Exception()
             sql_conn = connect('cards.cdb')
             cur = sql_conn.cursor()
             sel = cur.execute("select * from texts;")
@@ -561,10 +571,11 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[%s]<br>%s"%(row[1], desp)
+                        self.card_datas[row[1]] = "[<a href=\"https://www.ourocg.cn/search/%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
                         raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
+                        self.id_map_by_name[row[1]] = row[0]
                     if searched:
                         card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
@@ -604,6 +615,7 @@ class Ui_MainWindow(QMainWindow):
         self.CopyingOpe_list.itemSelectionChanged.connect(self.select_copying)
         self.CopyingOpe_list.doubleClicked.connect(self.remove_from_copying)
         self.Paste_ope_button.clicked.connect(self.paste_operator)
+        self.Delete_copy_button.clicked.connect(self.remove_from_copying)
 
         # 判断是否有最近打开的文件，若有则尝试打开
         if self.fullfilename is not None and len(self.fullfilename) > 0:
@@ -628,6 +640,7 @@ class Ui_MainWindow(QMainWindow):
         self.Target_list.itemSelectionChanged.connect(self.target_index_changed)
         self.Target_list.doubleClicked.connect(self.remove_from_targets)
         self.Target_effect_button.clicked.connect(self.show_card_effect)
+        self.Target_img_button.clicked.connect(self.view_pic)
         self.Move_card_button.clicked.connect(self.ope_movecards)
 
         # 添加/删除卡片部分
@@ -661,6 +674,7 @@ class Ui_MainWindow(QMainWindow):
         self.update_signal.connect(self.update_hint)
         self.download_signal.connect(self.download_hint)
         self.process_signal.connect(self.process_hint)
+        self.clear_img_signal.connect(self.img_cache_clear)
         self.update_thread = Update_Thread(self)
         self.update_thread.setDaemon(True)
         self.download_thread = Download_Thread(self)
@@ -683,7 +697,7 @@ class Ui_MainWindow(QMainWindow):
             elif self.CopyingOpe_list.hasFocus():
                 self.remove_from_copying()
         # 回车键默认减少LP
-        if self.LP_line.hasFocus() and event.key() == Qt.Key_Return:
+        if self.LP_line.hasFocus() and (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter):
             self.ope_LPDec()
         # 其它事件
         QWidget.keyPressEvent(self, event)
@@ -746,6 +760,7 @@ class Ui_MainWindow(QMainWindow):
         self.Delete_ope_button.setText("删除操作")
         self.Copy_ope_button.setText("复制操作")
         self.Paste_ope_button.setText("粘贴操作")
+        self.Delete_copy_button.setText("删除操作")
         self.LPTarget_Box.setItemText(0, "己方")
         self.LPTarget_Box.setItemText(1, "对方")
         self.AddLP_button.setText("增加基本分")
@@ -754,7 +769,8 @@ class Ui_MainWindow(QMainWindow):
         self.HalLP_button.setText("基本分减半")
         self.Rename_button.setText("未选定卡")
         self.NewCard_button.setText("添加")
-        self.Target_effect_button.setText("查看效果")
+        self.Target_effect_button.setText("效果")
+        self.Target_img_button.setText("卡图")
         self.Operator_search_button.setText("↓")
 
     def maketitle(self, process=""):
@@ -959,6 +975,7 @@ class Ui_MainWindow(QMainWindow):
         '''根据card_id，在信息栏显示卡片详情'''
         # 清空
         if card_id is None:
+            self.Target_detail_browser.document().clear()
             self.Target_detail_browser.setText("")
             return
         if card_id not in self.operators["cards"]:
@@ -979,6 +996,7 @@ class Ui_MainWindow(QMainWindow):
         if card_id in field["desp"]:
             card_desp = field["desp"][card_id]
         result = "[%s]\n位置：%s\n备注：%s"%(card_name, card_locat, card_desp)
+        self.Target_detail_browser.document().clear()
         self.Target_detail_browser.setText(result)
     
     def show_card_effect(self):
@@ -1054,6 +1072,7 @@ class Ui_MainWindow(QMainWindow):
             result = "%sLP%s%s"%(target,action,point)
         elif operation["type"] == "comment":
             result = operation["desp"]
+        self.Target_detail_browser.document().clear()
         self.Target_detail_browser.setText(result)
 
     def create_card(self):
@@ -1238,6 +1257,7 @@ class Ui_MainWindow(QMainWindow):
             result = "%sLP%s%s"%(target,action,point)
         elif operation["type"] == "comment":
             result = operation["desp"]
+        self.Target_detail_browser.document().clear()
         self.Target_detail_browser.setText(result)
 
     def remove_from_copying(self, asking=True):
@@ -1516,6 +1536,7 @@ class Ui_MainWindow(QMainWindow):
         '''移动卡片'''
         if len(self.targets) == 0:
             return
+        self.Target_detail_browser.document().clear()
         self.Target_detail_browser.setText("")
         ope = {"type":"move", "args":self.targets.copy(), "dest": self.Dest_Box.currentIndex(), "desp":""}
         self.targets.clear()
@@ -1559,6 +1580,7 @@ class Ui_MainWindow(QMainWindow):
         reply = QMessageBox.information(self, 'Confirm', "确认要删除吗？\n被删除的卡片在之后的操作中不会再出现。", QMessageBox.Yes | QMessageBox.No)
         if reply != QMessageBox.Yes:
             return
+        self.Target_detail_browser.document().clear()
         self.Target_detail_browser.setText("")
         ope = {"type":"erase", "args":self.targets.copy(), "dest": 0, "desp":""}
         self.targets.clear()
@@ -1721,10 +1743,16 @@ class Ui_MainWindow(QMainWindow):
         if self.showing_card_id is None:
             self.Rename_button.setEnabled(False)
             self.Target_effect_button.setEnabled(False)
+            idx = self.Newcard_List.selectedIndexes()
+            if len(idx) < 1:
+                self.Target_img_button.setEnabled(False)
+            else:
+                self.Target_img_button.setEnabled(True)
             self.Rename_button.setText("未选定卡")
         else:
             self.Rename_button.setEnabled(True)
             self.Target_effect_button.setEnabled(True)
+            self.Target_img_button.setEnabled(True)
             cardname = self.operators["cards"][self.showing_card_id]["Name"]
             self.Rename_button.setText("重命名[%s]"%cardname)
 
@@ -1853,6 +1881,41 @@ class Ui_MainWindow(QMainWindow):
         with open("DuelEditorConfig.jsn", 'w', encoding='utf-8') as f:
             f.write(config_data)
 
+    def view_pic(self):
+        card_name = ""
+        if self.showing_card_id is not None and self.showing_card_id in self.operators["cards"]:
+            card_name = self.operators["cards"][self.showing_card_id]["Name"]
+        else:
+            idx = self.Newcard_List.selectedIndexes()
+            if len(idx) < 1:
+                return
+            card_name = self.Newcard_List.item(idx[0].row()).text()        
+
+        if len(card_name) == 0:
+            return
+        search_list = [card_name, card_name[:-1]]
+        for name in search_list:
+            if name in self.id_map_by_name:
+                card_id = self.id_map_by_name[name]
+                png_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%card_id)
+                jpg_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%card_id)
+                if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
+                    pic_window_ref = pic_window.UI_PIC(self, card_id, name)
+                    pic_window_ref.show()
+                    self.img_window_list.append(pic_window_ref)
+                    return
+        
+        QMessageBox.warning(self, "提示", "找不到图片！", QMessageBox.Yes)
+
+    def img_cache_clear(self, signal=None):
+        new_list = []
+        for window in self.img_window_list:
+            if window is None:
+                continue
+            if window.isHidden():
+                continue
+            new_list.append(window)
+        self.img_window_list = new_list
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
