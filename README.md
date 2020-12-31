@@ -1,6 +1,6 @@
 # DuelEditor
 
-[![Build Status](https://travis-ci.org/Wind2009-Louse/DuelEditor.svg?branch=master)](https://travis-ci.org/Wind2009-Louse/DuelEditor)
+[![Build Status](https://travis-ci.com/Wind2009-Louse/DuelEditor.svg?branch=master)](https://travis-ci.com/Wind2009-Louse/DuelEditor)
 
 决构工具
 
