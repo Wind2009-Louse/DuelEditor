@@ -24,14 +24,21 @@ class UI_PIC(QWidget):
         png = QPixmap(file_name)
         width = png.width()
         height = png.height()
-        self.setFixedSize(width, height)
+        png = png.scaled(width, height)
+        self.old_width = width
+        self.old_height = height
         self.label = QLabel(self)
         self.label.setPixmap(png)
+        self.label.setScaledContents(True)
+        self.resize(width, height)
     
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
     
+    def resizeEvent(self, event):
+        self.label.resize(self.width(), self.height())
+
     def closeEvent(self, event):
         if self.parent is not None:
             self.parent.clear_img_signal.emit("close")
