@@ -344,6 +344,7 @@ class Ui_MainWindow(QMainWindow):
         self.Target_detail_browser.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.Target_effect_button = QPushButton(self.centralwidget)
         self.Target_img_button = QPushButton(self.centralwidget)
+        self.Target_img_button.setFocusPolicy(Qt.NoFocus)
 
         self.NewCard_line = QLineEdit(self.centralwidget)
         self.NewCard_line.setPlaceholderText("输入卡片名称")
@@ -352,6 +353,7 @@ class Ui_MainWindow(QMainWindow):
         self.Create_card_button = QPushButton(self.centralwidget)
         self.Rename_button = QPushButton(self.centralwidget)
         self.Rename_button.setEnabled(False)
+        self.Rename_button.setFocusPolicy(Qt.NoFocus)
         self.Comment_Line = QLineEdit(self.centralwidget)
         self.Comment_Line.setPlaceholderText("输入注释")
         self.Comment_card_button = QPushButton(self.centralwidget)
@@ -1730,6 +1732,7 @@ class Ui_MainWindow(QMainWindow):
         if cardname in self.card_datas:
             text = self.card_datas[cardname]
             self.Target_detail_browser.setHtml(text)
+        self.update_img_buttom()
 
     def fix_cardname(self,qindex):
         '''补全卡名'''
@@ -1743,24 +1746,35 @@ class Ui_MainWindow(QMainWindow):
         if self.showing_card_id is None:
             self.Rename_button.setEnabled(False)
             self.Target_effect_button.setEnabled(False)
-            idx = self.Newcard_List.selectedIndexes()
-            if len(idx) < 1:
-                self.Target_img_button.setEnabled(False)
-            else:
-                self.Target_img_button.setEnabled(True)
             self.Rename_button.setText("未选定卡")
         else:
             self.Rename_button.setEnabled(True)
             self.Target_effect_button.setEnabled(True)
-            self.Target_img_button.setEnabled(True)
             cardname = self.operators["cards"][self.showing_card_id]["Name"]
             self.Rename_button.setText("重命名[%s]"%cardname)
+        self.update_img_buttom()
+    
+    def update_img_buttom(self):
+        if self.Newcard_List.hasFocus():
+            idx = self.Newcard_List.selectedIndexes()
+            if len(idx) < 1:
+                return
+            self.Target_img_button.setEnabled(True)
+        elif self.showing_card_id is not None:
+            self.Target_img_button.setEnabled(True)
+        else:
+            self.Target_img_button.setEnabled(False)
 
     def card_rename(self):
         '''卡片重命名'''
         if self.showing_card_id is None:
             return
         text = self.NewCard_line.text()
+        if self.Newcard_List.hasFocus():
+            idx = self.Newcard_List.selectedIndexes()
+            if len(idx) < 1:
+                return
+            text = self.Newcard_List.item(idx[0].row()).text()
         if len(text) == 0:
             return
         # 提示
@@ -1883,29 +1897,39 @@ class Ui_MainWindow(QMainWindow):
 
     def view_pic(self):
         card_name = ""
-        if self.showing_card_id is not None and self.showing_card_id in self.operators["cards"]:
-            card_name = self.operators["cards"][self.showing_card_id]["Name"]
-        else:
+        if self.Newcard_List.hasFocus():
             idx = self.Newcard_List.selectedIndexes()
             if len(idx) < 1:
                 return
-            card_name = self.Newcard_List.item(idx[0].row()).text()        
+            card_name = self.Newcard_List.item(idx[0].row()).text()
+        if card_name == "" and self.showing_card_id is not None and self.showing_card_id in self.operators["cards"]:
+            card_name = self.operators["cards"][self.showing_card_id]["Name"]
 
         if len(card_name) == 0:
             return
         search_list = [card_name, card_name[:-1]]
+        show_card_key = 0
+        show_card_name = ""
         for name in search_list:
             if name in self.id_map_by_name:
-                card_id = self.id_map_by_name[name]
-                png_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%card_id)
-                jpg_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%card_id)
+                show_card_key = self.id_map_by_name[name]
+                show_card_name = name
+                png_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%show_card_key)
+                jpg_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%show_card_key)
                 if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
-                    pic_window_ref = pic_window.UI_PIC(self, card_id, name)
+                    pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
                     pic_window_ref.show()
                     self.img_window_list.append(pic_window_ref)
                     return
-        
-        QMessageBox.warning(self, "提示", "找不到图片！", QMessageBox.Yes)
+
+        if show_card_key == 0:
+            QMessageBox.warning(self, "提示", "该卡片没有图片！", QMessageBox.Yes)
+        else:
+            reply = QMessageBox.warning(self, '提示', "找不到[%s]的卡图，是否下载？"%show_card_name, QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
+                pic_window_ref.show()
+                self.img_window_list.append(pic_window_ref)
 
     def img_cache_clear(self, signal=None):
         new_list = []
