@@ -21,6 +21,7 @@ import calculator
 import pic_window
 
 idx_represent_str = ["己方手卡", "己方魔陷_1", "己方魔陷_2", "己方魔陷_3", "己方魔陷_4", "己方魔陷_5", "己方场地", "己方灵摆_1", "己方灵摆_2", "己方怪兽_1", "己方怪兽_2", "己方怪兽_3", "己方怪兽_4", "己方怪兽_5", "己方墓地", "己方除外", "己方额外", "对方手卡", "对方魔陷_1", "对方魔陷_2", "对方魔陷_3", "对方魔陷_4", "对方魔陷_5", "对方场地", "对方灵摆_1", "对方灵摆_2", "对方怪兽_1", "对方怪兽_2", "对方怪兽_3", "对方怪兽_4", "对方怪兽_5", "对方墓地", "对方除外", "对方额外", "额外怪兽区_1", "额外怪兽区_2"]
+idx_represent_controller = {"己方": 1, "对方": -1, "额外怪兽区": 0}
 cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(168,168,0), 0x40: QColor(108,34,108), 0x80: QColor(16,128,235), 0x2000: QColor(168,168,168), 0x800000: QColor(0,0,0), 0x4000: QColor(98,98,98), 0x4000000: QColor(3,62,116), 0xffffffff: QColor(178,68,0)}
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
@@ -437,6 +438,7 @@ class Ui_MainWindow(QMainWindow):
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
 
@@ -465,6 +467,9 @@ class Ui_MainWindow(QMainWindow):
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
         self.menu_bar_list.addAction(self.calculator_bar)
+        self.export_deck_bar = QAction("导出卡组",self)
+        self.export_deck_bar.triggered.connect(self.export_deck)
+        self.menu_bar_list.addAction(self.export_deck_bar)
         self.blur_search_bar = QAction("搜索效果文字",self,checkable=True)
         self.blur_search_bar.setChecked(True)
         self.blur_search_bar.triggered.connect(self.search_card)
@@ -490,6 +495,7 @@ class Ui_MainWindow(QMainWindow):
         self.monster_datas = {}
         self.card_colors = {}
         self.id_map_by_name = {}
+        self.ex_card_id_set = set()
         card_sorted = {}
         try:
             if not os.path.exists("cards.cdb"):
@@ -523,6 +529,8 @@ class Ui_MainWindow(QMainWindow):
                         # 种类
                         for types in cardtypes.keys():
                             if carddata[4] & types != 0:
+                                if types in excardtypes.keys():
+                                    self.ex_card_id_set.add(row[0])
                                 if desp != "":
                                     desp += "/"
                                 desp += cardtypes[types]
@@ -582,6 +590,7 @@ class Ui_MainWindow(QMainWindow):
                         card_sorted[row[1]] = card_sorted_index
             sql_conn.close()
         except Exception as e:
+            print(e)
             self.Newcard_List.addItem("无数据库")
             self.Newcard_List.setEnabled(False)
             self.coloring_field_card.setEnabled(False)
@@ -887,7 +896,7 @@ class Ui_MainWindow(QMainWindow):
             self.fields.clear()
             lastest_field = deepcopy(init_field)
         else:
-            lastest_field = deepcopy(self.fields[begin_at-1])
+            lastest_field = deepcopy(self.fields[min(begin_at-1, len(self.fields) - 1)])
         # 遍历操作
         if end_at is None:
             end_at = len(self.operators["operations"])
@@ -1930,6 +1939,93 @@ class Ui_MainWindow(QMainWindow):
                 pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
                 pic_window_ref.show()
                 self.img_window_list.append(pic_window_ref)
+
+    def export_deck(self):
+        '''导出卡组'''
+        # 判断是否有deck文件夹
+        open_dir = os.path.abspath('.')
+        deck_dir = os.path.join(os.path.abspath('.'), "deck")
+        if os.path.exists(deck_dir):
+            open_dir = deck_dir
+        
+        # 获取
+        self_filename = str(QFileDialog.getSaveFileName(self,'己方卡组', os.path.join(open_dir, "self.ydk"),"*.ydk")[0])
+        if len(self_filename) == 0:
+            return
+        open_dir = os.path.dirname(self_filename)
+        enemy_filename = str(QFileDialog.getSaveFileName(self,'对方卡组', os.path.join(open_dir, "opposite.ydk"),"*.ydk")[0])
+        if len(enemy_filename) == 0:
+            return
+        
+        # 开始导出(0=main, 1=ex)
+        self_deck_list = [[], []]
+        enemy_deck_list = [[], []]
+        checked_set = set()
+        undefined_name = []
+
+        try:
+            operation_list = self.operators["operations"]
+            last_controller = -2
+            for ope_idx in range(len(operation_list)):
+                ope = operation_list[ope_idx]
+                if ope["type"] != "move":
+                    continue
+                for card_idx in ope["args"]:
+                    if card_idx in checked_set:
+                        continue
+                    last_place = self.get_last_location(card_idx, ope_idx)
+                    if last_place != "未知":
+                        continue
+                    card_name = self.operators["cards"][card_idx]["Name"]
+                    card_pic_id = self.get_id_by_name(card_name)
+                    if card_pic_id == -1:
+                        card_pic_id = 48588176
+                        undefined_name.append(card_name)
+                    checked_set.add(card_idx)
+                    ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
+                    goal_str = idx_represent_str[ope["dest"]]
+                    controller = -2
+                    for check_str in idx_represent_controller.keys():
+                        if check_str in goal_str:
+                            controller = idx_represent_controller[check_str]
+                            break
+                    if controller == 0:
+                        controller = last_controller
+                    if controller in [-2, 0]:
+                        print("[%s]找不到所在地[%s]的控制者。"%(card_name, goal_str))
+                    if controller == 1:
+                        self_deck_list[ex_idx].append(str(card_pic_id))
+                    if controller == -1:
+                        enemy_deck_list[ex_idx].append(str(card_pic_id))
+                    last_controller = controller
+        except Exception as e:
+            print(e)
+            QMessageBox.warning(self, "提示", "生成卡组失败：%s"%str(e), QMessageBox.Yes)
+            return
+        if self.generate_deck(self_deck_list, self_filename, "己方卡组") and self.generate_deck(enemy_deck_list, enemy_filename, "对方卡组"):
+            result_str = "导出成功！"
+            if len(undefined_name) > 0:
+                result_str += "\n以下卡片无法被识别，已被设为默认卡片：\n" + "\n".join(undefined_name)
+            QMessageBox.warning(self, "提示", result_str, QMessageBox.Yes)
+
+    def get_id_by_name(self, card_name):
+        '''根据卡片名称，获取卡片ID。查询不到的情况下，返回-1。'''
+        search_list = [card_name, card_name[:-1]]
+        for name in search_list:
+            if name in self.id_map_by_name:
+                return self.id_map_by_name[name]
+        return -1
+    
+    def generate_deck(self, deck_list, file_name, fail_by):
+        '''根据export_deck生成的卡组数据，生成卡组'''
+        deck_str = "\n".join(("#created by DuelEditor\n#main", "\n".join(deck_list[0]), "#extra", "\n".join(deck_list[1])))
+        try:
+            with open(file_name,'w',encoding='utf-8') as f:
+                f.write(deck_str)
+            return True
+        except Exception as e:
+            QMessageBox.warning(self, "提示", "保存%s失败：%s"%(fail_by, str(e)), QMessageBox.Yes)
+            return False
 
     def img_cache_clear(self, signal=None):
         new_list = []
