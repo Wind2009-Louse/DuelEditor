@@ -771,7 +771,7 @@ class Ui_MainWindow(QMainWindow):
         self.Delete_ope_button.setText("删除操作")
         self.Copy_ope_button.setText("复制操作")
         self.Paste_ope_button.setText("粘贴操作")
-        self.Delete_copy_button.setText("删除操作")
+        self.Delete_copy_button.setText("从剪切板删除")
         self.LPTarget_Box.setItemText(0, "己方")
         self.LPTarget_Box.setItemText(1, "对方")
         self.AddLP_button.setText("增加基本分")
@@ -1144,11 +1144,18 @@ class Ui_MainWindow(QMainWindow):
 
     def paste_operator(self):
         '''粘贴操作'''
-        idx_list = self.CopyingOpe_list.selectedIndexes()
+        sel_idx_list = self.CopyingOpe_list.selectedIndexes()
+        idx_list = []
+        for sel_idx in sel_idx_list:
+            idx_list.append(sel_idx.row())
         if len(idx_list) <= 0:
-            return
+            if len(self.copying_operation) == 1:
+                idx_list.append(0)
+            else:
+                return
+        idx_list.reverse()
         for idx in idx_list:
-            operation = self.copying_operation[idx.row()]
+            operation = self.copying_operation[idx]
             self.insert_operation(operation, idx == idx_list[len(idx_list)-1])
         self.remove_from_copying(False)
         self.update_copying()
@@ -1273,7 +1280,8 @@ class Ui_MainWindow(QMainWindow):
 
     def remove_from_copying(self, asking=True):
         idx_list = self.CopyingOpe_list.selectedIndexes()
-        if len(idx_list) <= 0:
+        copying_size = len(self.copying_operation)
+        if len(idx_list) <= 0 and copying_size != 1:
             return
         if asking:
             # 确认提示
@@ -1282,6 +1290,8 @@ class Ui_MainWindow(QMainWindow):
                 return
         idx_list = [item.row() for item in idx_list]
         idx_list.sort(reverse=True)
+        if len(idx_list) == 0 and copying_size == 1:
+            idx_list.append(0)
         self.CopyingOpe_list.setCurrentRow(0)
         for idx in idx_list:
             del self.copying_operation[idx]
@@ -1936,7 +1946,7 @@ class Ui_MainWindow(QMainWindow):
         else:
             reply = QMessageBox.warning(self, '提示', "找不到[%s]的卡图，是否下载？"%show_card_name, QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
-                pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
+                pic_window_ref = pic_window.UI_PIC(self, show_card_key, show_card_name)
                 pic_window_ref.show()
                 self.img_window_list.append(pic_window_ref)
 
@@ -1960,7 +1970,6 @@ class Ui_MainWindow(QMainWindow):
         # 开始导出(0=main, 1=ex)
         self_deck_list = [[], []]
         enemy_deck_list = [[], []]
-        checked_set = set()
         undefined_name = []
 
         try:
@@ -1971,8 +1980,6 @@ class Ui_MainWindow(QMainWindow):
                 if ope["type"] != "move":
                     continue
                 for card_idx in ope["args"]:
-                    if card_idx in checked_set:
-                        continue
                     last_place = self.get_last_location(card_idx, ope_idx)
                     if last_place != "未知":
                         continue
@@ -1981,7 +1988,6 @@ class Ui_MainWindow(QMainWindow):
                     if card_pic_id == -1:
                         card_pic_id = 48588176
                         undefined_name.append(card_name)
-                    checked_set.add(card_idx)
                     ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
                     goal_str = idx_represent_str[ope["dest"]]
                     controller = -2
