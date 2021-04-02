@@ -534,6 +534,8 @@ class Ui_MainWindow(QMainWindow):
                                 if desp != "":
                                     desp += "/"
                                 desp += cardtypes[types]
+                        if carddata[4] in [0x2, 0x4]:
+                            desp += "/通常"
                         # 怪兽信息
                         if carddata[4] & 0x1 != 0:
                             # 等阶/Link
@@ -1350,6 +1352,7 @@ class Ui_MainWindow(QMainWindow):
             for name in possible_name:
                 if name in self.card_colors:
                     self.Target_list.item(self.Target_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+                    break
 
             # 如果和搜索栏内容匹配则变为斜体
             if len(searching_name) > 0 and searching_name in target_name:
@@ -1791,9 +1794,8 @@ class Ui_MainWindow(QMainWindow):
         text = self.NewCard_line.text()
         if self.Newcard_List.hasFocus():
             idx = self.Newcard_List.selectedIndexes()
-            if len(idx) < 1:
-                return
-            text = self.Newcard_List.item(idx[0].row()).text()
+            if len(idx) > 0:
+                text = self.Newcard_List.item(idx[0].row()).text()
         if len(text) == 0:
             return
         # 提示
@@ -1831,7 +1833,7 @@ class Ui_MainWindow(QMainWindow):
         box = QMessageBox(QMessageBox.Question, "检查更新", "检查到最新版本：%s，是否下载？"%name)
         direct_download = box.addButton("直接下载", QMessageBox.YesRole)
         page_download = box.addButton("打开页面", QMessageBox.YesRole)
-        cancel_download = box.addButton("取消", QMessageBox.NoRole)
+        box.addButton("取消", QMessageBox.NoRole)
         box.exec_()
         if box.clickedButton() == direct_download:
             if not self.download_thread.is_alive():
