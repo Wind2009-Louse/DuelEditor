@@ -1,6 +1,7 @@
 __pycache__/
 build/
 dist/
+pics/
 main.spec
 *.cdb
 *.json
