@@ -583,7 +583,7 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[<a href=\"https://www.ourocg.cn/search/%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
+                        self.card_datas[row[1]] = "[<a href=\"https://ygo233.com/card?search=%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
                         raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
