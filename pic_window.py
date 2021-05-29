@@ -83,14 +83,18 @@ class Download_Thread(Thread):
         filename = os.path.join("pics", "%d.jpg"%self.pic_id)
         try:
             with requests.get(url, stream=True) as req:
-                length = float(req.headers['Content-length'])
-                count = 0
-                with open(filename, 'wb') as f:
-                    for chunk in req.iter_content(chunk_size=1024):
-                        if chunk:
-                            f.write(chunk)
-                            count += len(chunk)
-                            self.window.label.setText("下载中（%.2f%%）"%(count * 100 / length))
+                if 'Content-length' in req.headers:
+                    length = float(req.headers['Content-length'])
+                    count = 0
+                    with open(filename, 'wb') as f:
+                        for chunk in req.iter_content(chunk_size=1024):
+                            if chunk:
+                                f.write(chunk)
+                                count += len(chunk)
+                                self.window.label.setText("下载中（%.2f%%）"%(count * 100 / length))
+                else:
+                    with open(filename, 'wb') as f:
+                        f.write(req.content)
             self.window.download_signal.emit(True)
         except Exception as e:
             print(e)
@@ -102,7 +106,7 @@ class Download_Thread(Thread):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    m_window = UI_PIC()
+    m_window = UI_PIC(None,  80254726, "80254726")
 
     m_window.show()
     sys.exit(app.exec_())
