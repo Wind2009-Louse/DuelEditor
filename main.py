@@ -26,25 +26,46 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 190
-version_name = "v1.19.0"
+version_idx = 200
+version_name = "v1.20.0"
+
+default_mirror = "Github"
+mirror_setting = {
+    "Github":{
+        "version": "https://github.com/Wind2009-Louse/DuelEditor/raw/master/version.json",
+        "release": "https://github.com/Wind2009-Louse/DuelEditor/releases/download/"
+    },
+    "wuyanzheshui":{
+        "version": "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json",
+        "release": "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/releases/download/"
+    },
+    "cnpmjs": {
+        "version": "https://github.com.cnpmjs.org/Wind2009-Louse/DuelEditor/raw/master/version.json",
+        "release": "https://github.com.cnpmjs.org/Wind2009-Louse/DuelEditor/releases/download/"
+    },
+    "fastGit": {
+        "version": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/raw/master/version.json",
+        "release": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/releases/download/"
+    },
+}
 
 class Update_Thread(Thread):
-    def __init__(self, window):
+    def __init__(self, window, url):
         self.window = window
+        self.url = url
         super().__init__()
     def run(self):
         try:
-            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json"
-            json_result = loads(about.requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
+            json_result = loads(about.requests.get(self.url, timeout=5).content.decode("utf-8", errors="ignore"))
             if json_result["version"] > version_idx:
                 self.window.update_signal.emit(json_result["name"])
         except Exception as e:
             print(e)
 
 class Download_Thread(Thread):
-    def __init__(self, window, version_name=None):
+    def __init__(self, window, release_url, version_name=None):
         self.window = window
+        self.url = release_url
         self.version_name = version_name
         super().__init__()
     def run(self):
@@ -53,10 +74,10 @@ class Download_Thread(Thread):
         url = ""
         filename = ""
         if os.name == "nt":
-            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.exe"%self.version_name
+            url = "%s%s/DuelEditor.exe"%(self.url, self.version_name)
             filename = "DuelEditor %s.exe"%self.version_name
         elif os.name == "posix":
-            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/releases/download/%s/DuelEditor.out"%self.version_name
+            url = "%s%s/DuelEditor.out"%(self.url, self.version_name)
             filename = "DuelEditor %s.out"%self.version_name
         else:
             self.window.download_signal.emit("下载失败，找不到对应系统的版本！")
@@ -463,6 +484,8 @@ class Ui_MainWindow(QMainWindow):
         self.save_bar.triggered.connect(self.savefile)
         bar.addAction(self.save_bar)
 
+        self.mirror_bar_init(bar)
+
         self.menu_bar_list = bar.addMenu("功能")
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
@@ -583,7 +606,7 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[<a href=\"https://www.ourocg.cn/search/%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
+                        self.card_datas[row[1]] = "[<a href=\"https://ygocdb.com/?search=%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
                         raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
@@ -603,7 +626,7 @@ class Ui_MainWindow(QMainWindow):
         # sub windows
         self.calculate_window = calculator.Calculator()
         self.calculate_window.setdatas(self.monster_datas)
-        self.about_window = about.UI_About(version_idx, version_name, self)
+        self.about_window = about.UI_About(version_idx, version_name, self.version_url, self)
 
         # 初始化
         self.idx_represent_field = [
@@ -688,9 +711,9 @@ class Ui_MainWindow(QMainWindow):
         self.download_signal.connect(self.download_hint)
         self.process_signal.connect(self.process_hint)
         self.clear_img_signal.connect(self.img_cache_clear)
-        self.update_thread = Update_Thread(self)
+        self.update_thread = Update_Thread(self, self.version_url)
         self.update_thread.setDaemon(True)
-        self.download_thread = Download_Thread(self)
+        self.download_thread = Download_Thread(self, self.release_url)
         self.download_thread.setDaemon(True)
         self.update_check()
     
@@ -1903,6 +1926,14 @@ class Ui_MainWindow(QMainWindow):
             self.lastest_field_id = config_data["last_operation"]
         except:
             pass
+        
+        try:
+            self.version_url = config_data["version_url"]
+            self.release_url = config_data["release_url"]
+        except:
+            self.version_url = mirror_setting[default_mirror]["version"]
+            self.release_url = mirror_setting[default_mirror]["release"]
+        self.mirror_bar_update()
 
     def save_config(self):
         '''保存配置文件'''
@@ -1911,7 +1942,9 @@ class Ui_MainWindow(QMainWindow):
                 "last_file": self.fullfilename,
                 "width": self.width(),
                 "height": self.height(),
-                "last_operation": self.get_current_operation_index()}
+                "last_operation": self.get_current_operation_index(),
+                "version_url": self.version_url,
+                "release_url": self.release_url}
         config_data = dumps(config)
         with open("DuelEditorConfig.jsn", 'w', encoding='utf-8') as f:
             f.write(config_data)
@@ -2045,9 +2078,53 @@ class Ui_MainWindow(QMainWindow):
             new_list.append(window)
         self.img_window_list = new_list
 
+    def mirror_bar_init(self, bar):
+        self.mirror_bar_list = bar.addMenu("镜像")
+
+        self.mirror_action_dict = {}
+        for m_name in mirror_setting.keys():
+            act = QAction(m_name, self, checkable=True)
+            self.mirror_bar_list.addAction(act)
+            self.mirror_action_dict[m_name] = act
+        act = QAction("自定义", self, checkable=True)
+        act.setEnabled(False)
+        self.mirror_bar_list.addAction(act)
+        self.mirror_action_dict["自定义"] = act
+        self.mirror_bar_list.triggered[QAction].connect(self.mirror_bar_update)
+
+    def mirror_bar_update(self, qaction=None):
+        global mirror_setting
+        if qaction is not None:
+            sel = qaction.text()
+            if sel in mirror_setting:
+                m = mirror_setting[sel]
+                self.version_url = m["version"]
+                self.release_url = m["release"]
+                self.about_window.url = m["version"]
+        identi = None
+        identi_checked = True
+        for act_item in self.mirror_action_dict.items():
+            act_name = act_item[0]
+            act = act_item[1]
+            if act_name == "自定义":
+                identi = act
+                continue
+            else:
+                m = mirror_setting[act_name]
+                if self.version_url == m["version"] and self.release_url == m["release"]:
+                    identi_checked = False
+                    act.setChecked(True)
+                else:
+                    act.setChecked(False)
+                
+        if identi is not None:
+            identi.setChecked(identi_checked)
+            
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     m_window = Ui_MainWindow()
 
     m_window.show()
     sys.exit(app.exec_())
+
