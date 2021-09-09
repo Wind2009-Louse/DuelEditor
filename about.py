@@ -8,9 +8,10 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget
 
 
 class UI_About(QWidget):
-    def __init__(self, ver_idx = 12, ver_name="v1.12.0", parent=None):
+    def __init__(self, ver_idx = 20, ver_name="v1.20.0", url="https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json", parent=None):
         self.last_version_idx = ver_idx
         self.parent = parent
+        self.url = url
 
         super(UI_About, self).__init__()
         self.setWindowTitle("About")
@@ -37,8 +38,7 @@ class UI_About(QWidget):
         self.label_3.setText("检查更新中……")
         QApplication.processEvents()
         try:
-            url = "https://github.wuyanzheshui.workers.dev/Wind2009-Louse/DuelEditor/raw/master/version.json"
-            json_result = json.loads(requests.get(url, timeout=5).content.decode("utf-8", errors="ignore"))
+            json_result = json.loads(requests.get(self.url, timeout=5).content.decode("utf-8", errors="ignore"))
             if json_result["version"] > self.last_version_idx:
                 self.label_3.setText("当前有最新版本：%s"%json_result["name"])
                 if self.parent != None:
