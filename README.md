@@ -1,6 +1,6 @@
 # DuelEditor
 
-[![Build Status](https://github.com/Wind2009-Louse/DuelEditor/actions/workflows/main.yml/badge.svg?branch=master)](https://travis-ci.com/Wind2009-Louse/DuelEditor)
+![Build Status](https://github.com/Wind2009-Louse/DuelEditor/actions/workflows/main.yml/badge.svg)
 
 决构工具
 
