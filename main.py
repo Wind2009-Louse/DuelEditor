@@ -26,7 +26,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 205
+version_idx = 200
 version_name = "v1.20.5"
 
 default_mirror = "Github"
@@ -47,6 +47,10 @@ mirror_setting = {
         "version": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/raw/master/version.json",
         "release": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/releases/download/"
     },
+    "ghproxy": {
+        "version": "https://cdn.jsdelivr.net/gh/Wind2009-Louse/DuelEditor@master/version.json",
+        "release": "https://mirror.ghproxy.com/https://github.com/Wind2009-Louse/DuelEditor/releases/download/"
+    }
 }
 
 class Update_Thread(Thread):
@@ -84,9 +88,10 @@ class Download_Thread(Thread):
             return
 
         try:
+            length = 0
+            count = 0
             with about.requests.get(url, stream=True) as req:
                 length = float(req.headers['Content-length'])
-                count = 0
                 with open(filename, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=1024):
                         if chunk:
@@ -94,7 +99,11 @@ class Download_Thread(Thread):
                             count += len(chunk)
                             self.window.process_signal.emit("%.2f%%"%(count * 100 / length))
             self.window.process_signal.emit("")
-            self.window.download_signal.emit("下载成功！")
+            if count < length:
+                self.window.download_signal.emit("下载失败，请重试！")
+                os.remove(filename)
+            else:
+                self.window.download_signal.emit("下载成功！")
         except Exception as e:
             print(e)
             self.window.process_signal.emit("")
@@ -711,15 +720,12 @@ class Ui_MainWindow(QMainWindow):
         self.download_signal.connect(self.download_hint)
         self.process_signal.connect(self.process_hint)
         self.clear_img_signal.connect(self.img_cache_clear)
-        self.update_thread = Update_Thread(self, self.version_url)
-        self.update_thread.setDaemon(True)
-        self.download_thread = Download_Thread(self, self.release_url)
-        self.download_thread.setDaemon(True)
         self.update_check()
     
     def update_check(self):
-        if not self.update_thread.is_alive():
-            self.update_thread.start()
+        self.update_thread = Update_Thread(self, self.version_url)
+        self.update_thread.setDaemon(True)
+        self.update_thread.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -1859,9 +1865,10 @@ class Ui_MainWindow(QMainWindow):
         box.addButton("取消", QMessageBox.NoRole)
         box.exec_()
         if box.clickedButton() == direct_download:
-            if not self.download_thread.is_alive():
-                self.download_thread.version_name = name
-                self.download_thread.start()
+            self.download_thread = Download_Thread(self, self.release_url)
+            self.download_thread.setDaemon(True)
+            self.download_thread.version_name = name
+            self.download_thread.start()
         elif box.clickedButton() == page_download:
             webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases/tag/%s"%name)
     
