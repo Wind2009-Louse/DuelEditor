@@ -26,8 +26,8 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 200
-version_name = "v1.20.0"
+version_idx = 205
+version_name = "v1.20.5"
 
 default_mirror = "Github"
 mirror_setting = {
@@ -1897,7 +1897,7 @@ class Ui_MainWindow(QMainWindow):
             f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
             config_data = loads(f.read())
         except Exception as e:
-            return
+            pass
         enable_config = [[self.blur_search_bar, "blur_search"], [self.coloring_field_card, "coloring_field"]]
         for cfg in enable_config:
             try:
@@ -2079,7 +2079,7 @@ class Ui_MainWindow(QMainWindow):
         self.img_window_list = new_list
 
     def mirror_bar_init(self, bar):
-        self.mirror_bar_list = bar.addMenu("镜像")
+        self.mirror_bar_list = bar.addMenu("镜像源")
 
         self.mirror_action_dict = {}
         for m_name in mirror_setting.keys():
