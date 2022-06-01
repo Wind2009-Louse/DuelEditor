@@ -26,7 +26,7 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 200
+version_idx = 205
 version_name = "v1.20.5"
 
 default_mirror = "Github"
@@ -508,7 +508,7 @@ class Ui_MainWindow(QMainWindow):
         self.menu_bar_list.addAction(self.blur_search_bar)
         self.coloring_field_card = QAction("按照卡片种类显示颜色",self,checkable=True)
         self.coloring_field_card.setChecked(False)
-        self.coloring_field_card.triggered.connect(self.refresh_field)
+        self.coloring_field_card.triggered.connect(self.refresh_color)
         self.menu_bar_list.addAction(self.coloring_field_card)
 
         self.about_bar = QAction("关于", self)
@@ -615,7 +615,7 @@ class Ui_MainWindow(QMainWindow):
                         eff_desp = row[2]
                         eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                         desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[<a href=\"https://ygocdb.com/?search=%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
+                        self.card_datas[row[1]] = "[<a href=\"https://ygocdb.com/card/%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
                         raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
                         raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
                         self.raw_datas[row[1]] = raw_desp
@@ -854,7 +854,7 @@ class Ui_MainWindow(QMainWindow):
         if self.unsave_confirm():
             return
         if not isinstance(fullname, str):
-            fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
+            fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件', self.fullfilename, filter="*.json")[0])
         if len(fullname) == 0:
             return
         origin_data = deepcopy(self.operators)
@@ -1379,7 +1379,7 @@ class Ui_MainWindow(QMainWindow):
             self.Target_list.addItem("[%s]%s"%(target_field, target_name))
             possible_name = [target_name, target_name[:-1]]
             for name in possible_name:
-                if name in self.card_colors:
+                if self.coloring_field_card.isChecked() and name in self.card_colors:
                     self.Target_list.item(self.Target_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
                     break
 
@@ -1406,6 +1406,8 @@ class Ui_MainWindow(QMainWindow):
                     card_name += "等"
                 result = "%s %s"%(card_name, operation["desp"])
                 self.Operator_list.addItem(result)
+                # 卡片修改标记
+                self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('darkblue'))
             elif operation["type"][0:2] == "LP":
                 if operation['args'][0]==0:
                     target = "己方"
@@ -1419,6 +1421,8 @@ class Ui_MainWindow(QMainWindow):
                     point = "%d"%operation['args'][1]
                 result = "%sLP%s%s"%(target,action,point)
                 self.Operator_list.addItem(result)
+                # LP修改标记
+                self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('darkgrey'))
                 # 判断是否导致基本分归零
                 if ope_idx <= self.lastest_field_id:
                     field = self.fields[ope_idx]
@@ -1446,6 +1450,11 @@ class Ui_MainWindow(QMainWindow):
         ope_count = len(self.operators["operations"])
         ope_index = self.get_current_operation_index()+1
         self.label_operation_list.setText("操作列表(%d/%d)"%(ope_index, ope_count))
+
+    def refresh_color(self):
+        self.refresh_field()
+        self.update_targetlist()
+        self.search_card()
 
     def refresh_field(self):
         '''刷新场地'''
@@ -1741,14 +1750,17 @@ class Ui_MainWindow(QMainWindow):
         for name in hit:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.bold_font)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_name:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_effect:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.italic_font)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
