@@ -486,8 +486,10 @@ class Ui_MainWindow(QMainWindow):
         bar.addAction(self.new_bar)
         self.open_bar = QAction("打开(&O)",self)
         self.open_bar.setShortcut("Ctrl+O")
-        self.open_bar.triggered.connect(self.openfile)
+        self.open_bar.triggered.connect(self.save_and_open_file)
         bar.addAction(self.open_bar)
+        self.recent_bar_list = bar.addMenu("打开…")
+        self.recent_bar_list.triggered[QAction].connect(self.open_recent_file)
         self.save_bar = QAction("保存(&S)",self)
         self.save_bar.setShortcut("Ctrl+S")
         self.save_bar.triggered.connect(self.savefile)
@@ -664,16 +666,11 @@ class Ui_MainWindow(QMainWindow):
 
         # 判断是否有最近打开的文件，若有则尝试打开
         if self.fullfilename is not None and len(self.fullfilename) > 0:
-            temp_id = -1
-            if self.lastest_field_id is not None:
-                temp_id = self.lastest_field_id
             fullname = self.fullfilename
+            temp_id = self.lastest_field_id
             self.newfile()
             try:
-                self.openfile(fullname)
-                if temp_id != -1:
-                    temp_id = min(temp_id, self.Operator_list.count()-1)
-                    self.Operator_list.setCurrentRow(temp_id)
+                self.openfile(fullname, temp_id)
             except Exception as e:
                 self.fullfilename = ""
         else:
@@ -848,7 +845,7 @@ class Ui_MainWindow(QMainWindow):
         self.show_cardinfo()
         self.search_card()
 
-    def openfile(self, fullname=None):
+    def openfile(self, fullname=None, idx=None):
         '''打开文件'''
         show_error = (fullname == None)
         if self.unsave_confirm():
@@ -857,6 +854,8 @@ class Ui_MainWindow(QMainWindow):
             fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件', self.fullfilename, filter="*.json")[0])
         if len(fullname) == 0:
             return
+        if idx is None:
+            idx = self.get_recent_index(fullname)
         origin_data = deepcopy(self.operators)
         try:
             with open(fullname,'r',encoding='utf-8') as f:
@@ -865,11 +864,15 @@ class Ui_MainWindow(QMainWindow):
                 self.operators = dict_data
                 self.make_fields()
                 self.update_operationlist()
-                self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                ope_idx = len(self.operators["operations"])-1
+                if idx is not None:
+                    ope_idx = min(idx, ope_idx)
+                self.Operator_list.setCurrentRow(ope_idx)
                 self.filename = os.path.split(fullname)[-1]
                 self.fullfilename = fullname
                 self.unsave_changed = False
                 self.maketitle()
+                self.update_recent(fullname, self.get_current_operation_index())
                 return
         # 出错时尝试不使用utf-8编码打开文件
         except Exception as e:
@@ -880,16 +883,21 @@ class Ui_MainWindow(QMainWindow):
                     self.operators = dict_data
                     self.make_fields()
                     self.update_operationlist()
-                    self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                    ope_idx = len(self.operators["operations"])-1
+                    if idx is not None:
+                        ope_idx = min(idx, ope_idx)
+                    self.Operator_list.setCurrentRow(ope_idx)
                     self.filename = os.path.split(fullname)[-1]
                     self.fullfilename = fullname
                     self.unsave_changed = False
                     self.maketitle()
+                    self.update_recent(fullname, self.get_current_operation_index())
                     return
             except:
                 pass
         self.operators = origin_data
         self.make_fields()
+        self.update_recent(fullname, -2)
         if show_error:
             QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
@@ -897,11 +905,11 @@ class Ui_MainWindow(QMainWindow):
         '''如果取消动作，则返回True，否则返回False'''
         if self.unsave_changed:
             reply = QMessageBox.warning(self, '保存', "是否保存当前文件'%s'？"%self.filename, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
-                return True
             if reply == QMessageBox.Yes:
                 self.savefile()
-        return False
+            elif reply == QMessageBox.No:
+                self.unsave_changed = False
+        return self.unsave_changed
     
     def savefile(self):
         '''保存文件'''
@@ -1912,6 +1920,7 @@ class Ui_MainWindow(QMainWindow):
         config_data = None
         self.fullfilename = ""
         self.lastest_field_id = -1
+        self.recent_file_list = []
         try:
             f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
             config_data = loads(f.read())
@@ -1933,16 +1942,24 @@ class Ui_MainWindow(QMainWindow):
             self.fullfilename = config_data["last_file"]
         except:
             self.fullfilename = ""
+        try:
+            self.lastest_field_id = config_data["last_operation"]
+        except:
+            pass
+        # 1.21 最近文件列表
+        try:
+            self.recent_file_list = config_data["recent"]
+            if len(self.recent_file_list) > 0:
+                most_recent = self.recent_file_list[0]
+                self.fullfilename = most_recent["name"]
+                self.lastest_field_id = most_recent["idx"]
+        except:
+            pass
         
         try:
             width = max(config_data["width"], self.mini_width)
             height = max(config_data["height"], self.mini_height)
             self.resize(width, height)
-        except:
-            pass
-
-        try:
-            self.lastest_field_id = config_data["last_operation"]
         except:
             pass
         
@@ -1955,13 +1972,13 @@ class Ui_MainWindow(QMainWindow):
         self.mirror_bar_update()
 
     def save_config(self):
+        self.update_recent(self.fullfilename, self.get_current_operation_index())
         '''保存配置文件'''
         config = {"blur_search": 1 if self.blur_search_bar.isChecked() else 0,
                 "coloring_field": 1 if self.coloring_field_card.isChecked() else 0,
-                "last_file": self.fullfilename,
+                "recent": self.recent_file_list,
                 "width": self.width(),
                 "height": self.height(),
-                "last_operation": self.get_current_operation_index(),
                 "version_url": self.version_url,
                 "release_url": self.release_url}
         config_data = dumps(config)
@@ -2139,6 +2156,72 @@ class Ui_MainWindow(QMainWindow):
         if identi is not None:
             identi.setChecked(identi_checked)
             
+    def get_recent_index(self, filename):
+        '''
+        获取指定文件的最新记录
+        '''
+        for his in self.recent_file_list:
+            if filename == his["name"]:
+                return his["idx"]
+        return None
+
+    def update_recent(self, filename, idx):
+        '''
+        更新最近文件列表
+        idx<-1时为删除
+        '''
+
+        # 更新最近记录
+        if filename is None or len(filename) <= 0:
+            return
+        if self.recent_file_list is None:
+            self.recent_file_list = []
+        try:
+            target = None
+            for his_idx in range(0, len(self.recent_file_list)) :
+                his = self.recent_file_list[his_idx]
+                if filename == his["name"]:
+                    target = his
+                    target["idx"] = idx
+                    del self.recent_file_list[his_idx]
+                    break
+            if idx >= -1:
+                if target is None:
+                    target = {"name": filename, "idx": idx}
+                if len(self.recent_file_list) >= 10:
+                    self.recent_file_list = self.recent_file_list[0:9]
+                self.recent_file_list.insert(0, target)
+        except Exception as e:
+            print(e)
+
+        # 更新bar
+        try:
+            self.recent_bar_list.clear()
+            if len(self.recent_file_list) == 0:
+                act = QAction("(无)", self)
+                act.setEnabled(False)
+                self.recent_bar_list.addAction(act)
+            else:
+                for his in self.recent_file_list:
+                    act = QAction(his["name"], self)
+                    self.recent_bar_list.addAction(act)
+        except Exception as e:
+            print(e)
+    
+    def save_and_open_file(self, filename=None):
+        '''
+        菜单栏用，先保存当前配置，然后调用打开
+        '''
+        self.save_config()
+        self.openfile(filename)
+
+    def open_recent_file(self, act=None):
+        '''
+        打开最近文件时调用
+        '''
+        if act is None:
+            return
+        self.save_and_open_file(act.text())
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
