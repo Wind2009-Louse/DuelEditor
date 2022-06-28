@@ -924,6 +924,7 @@ class Ui_MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
             self.unsave_changed = False
             self.maketitle()
+        self.update_recent(fullname, self.get_current_operation_index())
 
     def make_fields(self, begin_at=0, end_at=None):
         '''根据操作生成各操作的场地
