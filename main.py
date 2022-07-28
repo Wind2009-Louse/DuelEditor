@@ -2240,8 +2240,10 @@ class Ui_MainWindow(QMainWindow):
                     eff_desp = sub(r"\r\n",r"<br>",eff_desp)
                     desp += "<br>%s"%eff_desp
                     self.card_datas[carddata[11]] = "[<a href=\"https://ygocdb.com/card/%d\">%s</a>]<br>%s"%(carddata[0], carddata[11], desp)
-                    raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[carddata[11]])
+                    raw_desp = "%d%s<br>%s"%(carddata[0], carddata[11], desp)
+                    raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",raw_desp)
                     raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
+                    raw_desp = sub(r"<br>",r"",raw_desp)
                     self.raw_datas[carddata[11]] = raw_desp
                     self.id_map_by_name[carddata[11]] = carddata[0]
         except Exception as e:
@@ -2251,6 +2253,9 @@ class Ui_MainWindow(QMainWindow):
                 sql_conn.close()
 
     def read_cdbs_from_dir(self, dir_name, card_sorted):
+        '''
+        从文件夹中读取cdb
+        '''
         full_dirname = os.path.join(os.getcwd(), dir_name)
         if os.access(full_dirname, os.F_OK):
             for root, dirs, files in os.walk(full_dirname):
@@ -2266,6 +2271,9 @@ class Ui_MainWindow(QMainWindow):
                         print(e)
 
     def read_cdbs_from_zip(self, zip_filename, card_sorted):
+        '''
+        从压缩包中读取cdb
+        '''
         if zipfile.is_zipfile(zip_filename):
             with zipfile.ZipFile(zip_filename, mode='r') as zipf:
                 tmp_path = mkdtemp()
