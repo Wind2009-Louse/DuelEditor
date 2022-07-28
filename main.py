@@ -2,12 +2,15 @@
 import os
 import sys
 import webbrowser
+import zipfile
 from copy import deepcopy
 from functools import partial
 from json import dumps, loads
 from re import sub
 from sqlite3 import connect
 from threading import Thread
+from tempfile import mkdtemp
+from shutil import rmtree
 
 from PyQt5.QtCore import QRect, QRegExp, Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QRegExpValidator, QFont
@@ -26,8 +29,8 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 205
-version_name = "v1.20.5"
+version_idx = 210
+version_name = "v1.21.0"
 
 default_mirror = "Github"
 mirror_setting = {
@@ -47,6 +50,10 @@ mirror_setting = {
         "version": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/raw/master/version.json",
         "release": "https://hub.fastgit.org/Wind2009-Louse/DuelEditor/releases/download/"
     },
+    "ghproxy": {
+        "version": "https://cdn.jsdelivr.net/gh/Wind2009-Louse/DuelEditor@master/version.json",
+        "release": "https://mirror.ghproxy.com/https://github.com/Wind2009-Louse/DuelEditor/releases/download/"
+    }
 }
 
 class Update_Thread(Thread):
@@ -84,9 +91,10 @@ class Download_Thread(Thread):
             return
 
         try:
+            length = 0
+            count = 0
             with about.requests.get(url, stream=True) as req:
                 length = float(req.headers['Content-length'])
-                count = 0
                 with open(filename, 'wb') as f:
                     for chunk in req.iter_content(chunk_size=1024):
                         if chunk:
@@ -94,7 +102,11 @@ class Download_Thread(Thread):
                             count += len(chunk)
                             self.window.process_signal.emit("%.2f%%"%(count * 100 / length))
             self.window.process_signal.emit("")
-            self.window.download_signal.emit("下载成功！")
+            if count < length:
+                self.window.download_signal.emit("下载失败，请重试！")
+                os.remove(filename)
+            else:
+                self.window.download_signal.emit("下载成功！")
         except Exception as e:
             print(e)
             self.window.process_signal.emit("")
@@ -455,17 +467,6 @@ class Ui_MainWindow(QMainWindow):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
-
-        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
-        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
-        excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
-        linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
-        cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
-
-        search_type = {0x1: 1, 0x2: 2, 0x4:3}
-        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
-            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
         self.init_frame()
 
         # bar init
@@ -477,8 +478,10 @@ class Ui_MainWindow(QMainWindow):
         bar.addAction(self.new_bar)
         self.open_bar = QAction("打开(&O)",self)
         self.open_bar.setShortcut("Ctrl+O")
-        self.open_bar.triggered.connect(self.openfile)
+        self.open_bar.triggered.connect(self.save_and_open_file)
         bar.addAction(self.open_bar)
+        self.recent_bar_list = bar.addMenu("打开…")
+        self.recent_bar_list.triggered[QAction].connect(self.open_recent_file)
         self.save_bar = QAction("保存(&S)",self)
         self.save_bar.setShortcut("Ctrl+S")
         self.save_bar.triggered.connect(self.savefile)
@@ -486,7 +489,7 @@ class Ui_MainWindow(QMainWindow):
 
         self.mirror_bar_init(bar)
 
-        self.menu_bar_list = bar.addMenu("功能")
+        self.menu_bar_list = bar.addMenu("功能…")
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
         self.menu_bar_list.addAction(self.calculator_bar)
@@ -499,7 +502,7 @@ class Ui_MainWindow(QMainWindow):
         self.menu_bar_list.addAction(self.blur_search_bar)
         self.coloring_field_card = QAction("按照卡片种类显示颜色",self,checkable=True)
         self.coloring_field_card.setChecked(False)
-        self.coloring_field_card.triggered.connect(self.refresh_field)
+        self.coloring_field_card.triggered.connect(self.refresh_color)
         self.menu_bar_list.addAction(self.coloring_field_card)
 
         self.about_bar = QAction("关于", self)
@@ -520,108 +523,21 @@ class Ui_MainWindow(QMainWindow):
         self.id_map_by_name = {}
         self.ex_card_id_set = set()
         card_sorted = {}
-        try:
-            if not os.path.exists("cards.cdb"):
-                raise Exception()
-            sql_conn = connect('cards.cdb')
-            cur = sql_conn.cursor()
-            sel = cur.execute("select * from texts;")
-            cur_2 = sql_conn.cursor()
-            for row in sel:
-                if row[1] not in self.card_datas.keys():
-                    carddata_search = cur_2.execute("select * from datas where id=%d;"%row[0])
-                    searched = False
-                    card_sorted_index = [0,2,0,0,0]
-                    for carddata in carddata_search:
-                        searched = True
-                        # 卡片类型（排序）
-                        for c_type in search_type.keys():
-                            if carddata[4] & c_type != 0:
-                                card_sorted_index[0] = search_type[c_type]
-                        for c_subtype in search_subtype.keys():
-                            if carddata[4] & c_subtype != 0:
-                                card_sorted_index[1] = search_subtype[c_subtype]
-                        # 卡片颜色
-                        self.card_colors[row[1]] = 0xffffffff
-                        for color_set in cardcolors_list:
-                            if carddata[4] & color_set != 0:
-                                self.card_colors[row[1]] = color_set
-                                break
-                        # 生成描述
-                        desp = ""
-                        # 种类
-                        for types in cardtypes.keys():
-                            if carddata[4] & types != 0:
-                                if types in excardtypes.keys():
-                                    self.ex_card_id_set.add(row[0])
-                                if desp != "":
-                                    desp += "/"
-                                desp += cardtypes[types]
-                        if carddata[4] in [0x2, 0x4]:
-                            desp += "/通常"
-                        # 怪兽信息
-                        if carddata[4] & 0x1 != 0:
-                            # 等阶/Link
-                            if carddata[4] & 0x4000000 != 0:
-                                desp += " Link-%d"%carddata[7]
-                                card_sorted_index[2] = 13 - carddata[7]
-                            else:
-                                desp += " %d★"%(carddata[7]&0xffff)
-                                card_sorted_index[2] = 13 - carddata[7]&0xffff
-                            # 属性/种族
-                            attr_str = ""
-                            for attr in cardattrs.keys():
-                                if carddata[9] & attr != 0:
-                                    if attr_str != "":
-                                        attr_str += "&"
-                                    attr_str += cardattrs[attr]
-                            race_str = ""
-                            for race in cardraces.keys():
-                                if carddata[8] & race != 0:
-                                    if race_str != "":
-                                        race_str += "&"
-                                    race_str += cardraces[race]
-                            desp += " %s/%s"%(attr_str, race_str)
-                            # ATK/DEF
-                            monster_ad = [carddata[5],0]
-                            if carddata[5] < 0:
-                                desp += " ?"
-                            else:
-                                desp += " %d"%carddata[5]
-                            card_sorted_index[3] = -max(carddata[5], 0)
-                            card_sorted_index[4] = -carddata[6]
-                            if carddata[4] & 0x4000000 == 0:
-                                monster_ad[1] = carddata[6]
-                                if carddata[6] < 0:
-                                    desp += "/?"
-                                else:
-                                    desp += "/%d"%carddata[6]
-                            else:
-                                desp += " "
-                                for marker in linkmarkers.keys():
-                                    if carddata[6] & marker != 0:
-                                        desp += linkmarkers[marker]
-                            self.monster_datas[row[1]] = monster_ad
-                        # 效果换行
-                        eff_desp = row[2]
-                        eff_desp = sub(r"\r\n",r"<br>",eff_desp)
-                        desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[<a href=\"https://ygocdb.com/?search=%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
-                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
-                        raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
-                        self.raw_datas[row[1]] = raw_desp
-                        self.id_map_by_name[row[1]] = row[0]
-                    if searched:
-                        card_sorted[row[1]] = card_sorted_index
-            sql_conn.close()
-        except Exception as e:
-            print(e)
-            self.Newcard_List.addItem("无数据库")
-            self.Newcard_List.setEnabled(False)
-            self.coloring_field_card.setEnabled(False)
+
+        # 读取Pro1默认cdb
+        if os.path.exists("cards.cdb"):
+            self.read_cdb("cards.cdb", card_sorted)
+        # 读取Pro1扩展包
+        self.read_cdbs_from_dir("expansions", card_sorted)
+        # 读取Pro2的cdb目录
+        self.read_cdbs_from_dir("cdb", card_sorted)
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
+        if len(self.card_names) <= 0:
+            self.Newcard_List.addItem("无数据库")
+            self.Newcard_List.setEnabled(False)
+            self.coloring_field_card.setEnabled(False)
         
         # sub windows
         self.calculate_window = calculator.Calculator()
@@ -655,16 +571,11 @@ class Ui_MainWindow(QMainWindow):
 
         # 判断是否有最近打开的文件，若有则尝试打开
         if self.fullfilename is not None and len(self.fullfilename) > 0:
-            temp_id = -1
-            if self.lastest_field_id is not None:
-                temp_id = self.lastest_field_id
             fullname = self.fullfilename
+            temp_id = self.lastest_field_id
             self.newfile()
             try:
-                self.openfile(fullname)
-                if temp_id != -1:
-                    temp_id = min(temp_id, self.Operator_list.count()-1)
-                    self.Operator_list.setCurrentRow(temp_id)
+                self.openfile(fullname, temp_id)
             except Exception as e:
                 self.fullfilename = ""
         else:
@@ -711,15 +622,12 @@ class Ui_MainWindow(QMainWindow):
         self.download_signal.connect(self.download_hint)
         self.process_signal.connect(self.process_hint)
         self.clear_img_signal.connect(self.img_cache_clear)
-        self.update_thread = Update_Thread(self, self.version_url)
-        self.update_thread.setDaemon(True)
-        self.download_thread = Download_Thread(self, self.release_url)
-        self.download_thread.setDaemon(True)
         self.update_check()
     
     def update_check(self):
-        if not self.update_thread.is_alive():
-            self.update_thread.start()
+        self.update_thread = Update_Thread(self, self.version_url)
+        self.update_thread.setDaemon(True)
+        self.update_thread.start()
 
     def keyPressEvent(self, event):
         '''键盘事件响应'''
@@ -842,15 +750,17 @@ class Ui_MainWindow(QMainWindow):
         self.show_cardinfo()
         self.search_card()
 
-    def openfile(self, fullname=None):
+    def openfile(self, fullname=None, idx=None):
         '''打开文件'''
         show_error = (fullname == None)
         if self.unsave_confirm():
             return
         if not isinstance(fullname, str):
-            fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件',filter="*.json")[0])
+            fullname = str(QFileDialog.getOpenFileName(self, '选择打开的文件', self.fullfilename, filter="*.json")[0])
         if len(fullname) == 0:
             return
+        if idx is None:
+            idx = self.get_recent_index(fullname)
         origin_data = deepcopy(self.operators)
         try:
             with open(fullname,'r',encoding='utf-8') as f:
@@ -859,11 +769,15 @@ class Ui_MainWindow(QMainWindow):
                 self.operators = dict_data
                 self.make_fields()
                 self.update_operationlist()
-                self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                ope_idx = len(self.operators["operations"])-1
+                if idx is not None:
+                    ope_idx = min(idx, ope_idx)
+                self.Operator_list.setCurrentRow(ope_idx)
                 self.filename = os.path.split(fullname)[-1]
                 self.fullfilename = fullname
                 self.unsave_changed = False
                 self.maketitle()
+                self.update_recent(fullname, self.get_current_operation_index())
                 return
         # 出错时尝试不使用utf-8编码打开文件
         except Exception as e:
@@ -874,16 +788,21 @@ class Ui_MainWindow(QMainWindow):
                     self.operators = dict_data
                     self.make_fields()
                     self.update_operationlist()
-                    self.Operator_list.setCurrentRow(len(self.operators["operations"])-1)
+                    ope_idx = len(self.operators["operations"])-1
+                    if idx is not None:
+                        ope_idx = min(idx, ope_idx)
+                    self.Operator_list.setCurrentRow(ope_idx)
                     self.filename = os.path.split(fullname)[-1]
                     self.fullfilename = fullname
                     self.unsave_changed = False
                     self.maketitle()
+                    self.update_recent(fullname, self.get_current_operation_index())
                     return
             except:
                 pass
         self.operators = origin_data
         self.make_fields()
+        self.update_recent(fullname, -2)
         if show_error:
             QMessageBox.warning(self, "提示", "打开失败！", QMessageBox.Yes)
 
@@ -891,11 +810,11 @@ class Ui_MainWindow(QMainWindow):
         '''如果取消动作，则返回True，否则返回False'''
         if self.unsave_changed:
             reply = QMessageBox.warning(self, '保存', "是否保存当前文件'%s'？"%self.filename, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-            if reply == QMessageBox.Cancel:
-                return True
             if reply == QMessageBox.Yes:
                 self.savefile()
-        return False
+            elif reply == QMessageBox.No:
+                self.unsave_changed = False
+        return self.unsave_changed
     
     def savefile(self):
         '''保存文件'''
@@ -910,6 +829,7 @@ class Ui_MainWindow(QMainWindow):
             QMessageBox.warning(self, "提示", "保存成功！", QMessageBox.Yes)
             self.unsave_changed = False
             self.maketitle()
+        self.update_recent(fullname, self.get_current_operation_index())
 
     def make_fields(self, begin_at=0, end_at=None):
         '''根据操作生成各操作的场地
@@ -1373,7 +1293,7 @@ class Ui_MainWindow(QMainWindow):
             self.Target_list.addItem("[%s]%s"%(target_field, target_name))
             possible_name = [target_name, target_name[:-1]]
             for name in possible_name:
-                if name in self.card_colors:
+                if self.coloring_field_card.isChecked() and name in self.card_colors:
                     self.Target_list.item(self.Target_list.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
                     break
 
@@ -1400,6 +1320,8 @@ class Ui_MainWindow(QMainWindow):
                     card_name += "等"
                 result = "%s %s"%(card_name, operation["desp"])
                 self.Operator_list.addItem(result)
+                # 卡片修改标记
+                self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('darkblue'))
             elif operation["type"][0:2] == "LP":
                 if operation['args'][0]==0:
                     target = "己方"
@@ -1413,6 +1335,8 @@ class Ui_MainWindow(QMainWindow):
                     point = "%d"%operation['args'][1]
                 result = "%sLP%s%s"%(target,action,point)
                 self.Operator_list.addItem(result)
+                # LP修改标记
+                self.Operator_list.item(self.Operator_list.count()-1).setForeground(QColor('darkgrey'))
                 # 判断是否导致基本分归零
                 if ope_idx <= self.lastest_field_id:
                     field = self.fields[ope_idx]
@@ -1440,6 +1364,11 @@ class Ui_MainWindow(QMainWindow):
         ope_count = len(self.operators["operations"])
         ope_index = self.get_current_operation_index()+1
         self.label_operation_list.setText("操作列表(%d/%d)"%(ope_index, ope_count))
+
+    def refresh_color(self):
+        self.refresh_field()
+        self.update_targetlist()
+        self.search_card()
 
     def refresh_field(self):
         '''刷新场地'''
@@ -1735,14 +1664,17 @@ class Ui_MainWindow(QMainWindow):
         for name in hit:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.bold_font)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_name:
             self.Newcard_List.addItem(name)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         for name in hit_in_effect:
             self.Newcard_List.addItem(name)
             self.Newcard_List.item(self.Newcard_List.count()-1).setFont(self.italic_font)
-            self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
+            if self.coloring_field_card.isChecked():
+                self.Newcard_List.item(self.Newcard_List.count()-1).setForeground(cardcolors_dict[self.card_colors[name]])
         self.label_cardsearch.setText("卡片搜索(%d)"%self.Newcard_List.count())
     
     def search_operation_cycle(self):
@@ -1859,9 +1791,10 @@ class Ui_MainWindow(QMainWindow):
         box.addButton("取消", QMessageBox.NoRole)
         box.exec_()
         if box.clickedButton() == direct_download:
-            if not self.download_thread.is_alive():
-                self.download_thread.version_name = name
-                self.download_thread.start()
+            self.download_thread = Download_Thread(self, self.release_url)
+            self.download_thread.setDaemon(True)
+            self.download_thread.version_name = name
+            self.download_thread.start()
         elif box.clickedButton() == page_download:
             webbrowser.open("https://github.com/Wind2009-Louse/DuelEditor/releases/tag/%s"%name)
     
@@ -1893,6 +1826,7 @@ class Ui_MainWindow(QMainWindow):
         config_data = None
         self.fullfilename = ""
         self.lastest_field_id = -1
+        self.recent_file_list = []
         try:
             f = open("DuelEditorConfig.jsn", 'r', encoding='utf-8')
             config_data = loads(f.read())
@@ -1914,16 +1848,24 @@ class Ui_MainWindow(QMainWindow):
             self.fullfilename = config_data["last_file"]
         except:
             self.fullfilename = ""
+        try:
+            self.lastest_field_id = config_data["last_operation"]
+        except:
+            pass
+        # 1.21 最近文件列表
+        try:
+            self.recent_file_list = config_data["recent"]
+            if len(self.recent_file_list) > 0:
+                most_recent = self.recent_file_list[0]
+                self.fullfilename = most_recent["name"]
+                self.lastest_field_id = most_recent["idx"]
+        except:
+            pass
         
         try:
             width = max(config_data["width"], self.mini_width)
             height = max(config_data["height"], self.mini_height)
             self.resize(width, height)
-        except:
-            pass
-
-        try:
-            self.lastest_field_id = config_data["last_operation"]
         except:
             pass
         
@@ -1936,13 +1878,13 @@ class Ui_MainWindow(QMainWindow):
         self.mirror_bar_update()
 
     def save_config(self):
+        self.update_recent(self.fullfilename, self.get_current_operation_index())
         '''保存配置文件'''
         config = {"blur_search": 1 if self.blur_search_bar.isChecked() else 0,
                 "coloring_field": 1 if self.coloring_field_card.isChecked() else 0,
-                "last_file": self.fullfilename,
+                "recent": self.recent_file_list,
                 "width": self.width(),
                 "height": self.height(),
-                "last_operation": self.get_current_operation_index(),
                 "version_url": self.version_url,
                 "release_url": self.release_url}
         config_data = dumps(config)
@@ -2079,7 +2021,7 @@ class Ui_MainWindow(QMainWindow):
         self.img_window_list = new_list
 
     def mirror_bar_init(self, bar):
-        self.mirror_bar_list = bar.addMenu("镜像源")
+        self.mirror_bar_list = bar.addMenu("镜像源…")
 
         self.mirror_action_dict = {}
         for m_name in mirror_setting.keys():
@@ -2120,6 +2062,227 @@ class Ui_MainWindow(QMainWindow):
         if identi is not None:
             identi.setChecked(identi_checked)
             
+    def get_recent_index(self, filename):
+        '''
+        获取指定文件的最新记录
+        '''
+        for his in self.recent_file_list:
+            if filename == his["name"]:
+                return his["idx"]
+        return None
+
+    def update_recent(self, filename, idx):
+        '''
+        更新最近文件列表
+        idx<-1时为删除
+        '''
+
+        # 更新最近记录
+        if filename is None or len(filename) <= 0:
+            return
+        if self.recent_file_list is None:
+            self.recent_file_list = []
+        try:
+            target = None
+            for his_idx in range(0, len(self.recent_file_list)) :
+                his = self.recent_file_list[his_idx]
+                if filename == his["name"]:
+                    target = his
+                    target["idx"] = idx
+                    del self.recent_file_list[his_idx]
+                    break
+            if idx >= -1:
+                if target is None:
+                    target = {"name": filename, "idx": idx}
+                if len(self.recent_file_list) >= 10:
+                    self.recent_file_list = self.recent_file_list[0:9]
+                self.recent_file_list.insert(0, target)
+        except Exception as e:
+            print(e)
+
+        # 更新bar
+        try:
+            self.recent_bar_list.clear()
+            if len(self.recent_file_list) == 0:
+                act = QAction("(无)", self)
+                act.setEnabled(False)
+                self.recent_bar_list.addAction(act)
+            else:
+                for his in self.recent_file_list:
+                    act = QAction(his["name"], self)
+                    self.recent_bar_list.addAction(act)
+        except Exception as e:
+            print(e)
+    
+    def save_and_open_file(self, filename=None):
+        '''
+        菜单栏用，先保存当前配置，然后调用打开
+        '''
+        self.save_config()
+        self.openfile(filename)
+
+    def open_recent_file(self, act=None):
+        '''
+        打开最近文件时调用
+        '''
+        if act is None:
+            return
+        self.save_and_open_file(act.text())
+    
+    def read_cdb(self, filename, card_sorted):
+        '''
+        读取cdb文件
+        '''
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
+        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
+        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
+        linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
+        cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
+
+        search_type = {0x1: 1, 0x2: 2, 0x4:3}
+        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
+            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
+
+        sql_conn = None
+        try:
+            sql_conn = connect(filename)
+            cur = sql_conn.cursor()
+            # 0 id
+            # 1 ot
+            # 2 alias
+            # 3 setcode
+            # 4 type
+            # 5 atk
+            # 6 def
+            # 7 level
+            # 8 race
+            # 9 attribute
+            # 10 category
+            # 11 name
+            # 12 desc
+            sel = cur.execute("select datas.*, texts.name, texts.desc from datas inner join texts on texts.id = datas.id;")
+            for carddata in sel:
+                if carddata[11] not in self.card_datas.keys():
+                    card_sorted_index = [0,2,0,0,0]
+                    # 卡片类型（排序）
+                    for c_type in search_type.keys():
+                        if carddata[4] & c_type != 0:
+                            card_sorted_index[0] = search_type[c_type]
+                    for c_subtype in search_subtype.keys():
+                        if carddata[4] & c_subtype != 0:
+                            card_sorted_index[1] = search_subtype[c_subtype]
+                    # 卡片颜色
+                    self.card_colors[carddata[11]] = 0xffffffff
+                    for color_set in cardcolors_list:
+                        if carddata[4] & color_set != 0:
+                            self.card_colors[carddata[11]] = color_set
+                            break
+                    # 生成描述
+                    desp = ""
+                    # 种类
+                    for types in cardtypes.keys():
+                        if carddata[4] & types != 0:
+                            if types in excardtypes.keys():
+                                self.ex_card_id_set.add(carddata[0])
+                            if desp != "":
+                                desp += "/"
+                            desp += cardtypes[types]
+                    if carddata[4] in [0x2, 0x4]:
+                        desp += "/通常"
+                    # 怪兽信息
+                    if carddata[4] & 0x1 != 0:
+                        # 等阶/Link
+                        if carddata[4] & 0x4000000 != 0:
+                            desp += " Link-%d"%carddata[7]
+                            card_sorted_index[2] = 13 - carddata[7]
+                        else:
+                            desp += " %d★"%(carddata[7]&0xffff)
+                            card_sorted_index[2] = 13 - carddata[7]&0xffff
+                        # 属性/种族
+                        attr_str = ""
+                        for attr in cardattrs.keys():
+                            if carddata[9] & attr != 0:
+                                if attr_str != "":
+                                    attr_str += "&"
+                                attr_str += cardattrs[attr]
+                        race_str = ""
+                        for race in cardraces.keys():
+                            if carddata[8] & race != 0:
+                                if race_str != "":
+                                    race_str += "&"
+                                race_str += cardraces[race]
+                        desp += " %s/%s"%(attr_str, race_str)
+                        # ATK/DEF
+                        monster_ad = [carddata[5],0]
+                        if carddata[5] < 0:
+                            desp += " ?"
+                        else:
+                            desp += " %d"%carddata[5]
+                        card_sorted_index[3] = -max(carddata[5], 0)
+                        card_sorted_index[4] = -carddata[6]
+                        if carddata[4] & 0x4000000 == 0:
+                            monster_ad[1] = carddata[6]
+                            if carddata[6] < 0:
+                                desp += "/?"
+                            else:
+                                desp += "/%d"%carddata[6]
+                        else:
+                            desp += " "
+                            for marker in linkmarkers.keys():
+                                if carddata[6] & marker != 0:
+                                    desp += linkmarkers[marker]
+                        self.monster_datas[carddata[11]] = monster_ad
+                    
+                    card_sorted[carddata[11]] = card_sorted_index
+                    # 效果换行
+                    eff_desp = carddata[12]
+                    eff_desp = sub(r"\r\n",r"<br>",eff_desp)
+                    desp += "<br>%s"%eff_desp
+                    self.card_datas[carddata[11]] = "[<a href=\"https://ygocdb.com/card/%d\">%s</a>]<br>%s"%(carddata[0], carddata[11], desp)
+                    raw_desp = "%d%s<br>%s"%(carddata[0], carddata[11], desp)
+                    raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",raw_desp)
+                    raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
+                    raw_desp = sub(r"<br>",r"",raw_desp)
+                    self.raw_datas[carddata[11]] = raw_desp
+                    self.id_map_by_name[carddata[11]] = carddata[0]
+        except Exception as e:
+            print(e)
+        finally:
+            if sql_conn:
+                sql_conn.close()
+
+    def read_cdbs_from_dir(self, dir_name, card_sorted):
+        '''
+        从文件夹中读取cdb
+        '''
+        full_dirname = os.path.join(os.getcwd(), dir_name)
+        if os.access(full_dirname, os.F_OK):
+            for root, dirs, files in os.walk(full_dirname):
+                for ex_fname in files:
+                    try:
+                        # cdb文件，直接读取
+                        if ex_fname.endswith(".cdb"):
+                            self.read_cdb(os.path.join(root, ex_fname), card_sorted)
+                        # ypk/zip文件，读取压缩包内容
+                        if ex_fname.endswith(".ypk") or ex_fname.endswith(".zip"):
+                            self.read_cdbs_from_zip(os.path.join(root, ex_fname), card_sorted)
+                    except Exception as e:
+                        print(e)
+
+    def read_cdbs_from_zip(self, zip_filename, card_sorted):
+        '''
+        从压缩包中读取cdb
+        '''
+        if zipfile.is_zipfile(zip_filename):
+            with zipfile.ZipFile(zip_filename, mode='r') as zipf:
+                tmp_path = mkdtemp()
+                for zip_fn in zipf.namelist():
+                    # 找到压缩包内的cdb，解压到临时目录读取，读取完毕后删除
+                    if zip_fn.endswith(".cdb"):
+                        zipf.extract(zip_fn, tmp_path)
+                        self.read_cdb(os.path.join(tmp_path, zip_fn), card_sorted)
+                rmtree(tmp_path)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

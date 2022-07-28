@@ -3,6 +3,7 @@ import json
 import sys
 
 import requests
+from threading import Thread
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget
 
@@ -37,23 +38,32 @@ class UI_About(QWidget):
     def check_update(self):
         self.label_3.setText("检查更新中……")
         QApplication.processEvents()
-        try:
-            json_result = json.loads(requests.get(self.url, timeout=5).content.decode("utf-8", errors="ignore"))
-            if json_result["version"] > self.last_version_idx:
-                self.label_3.setText("当前有最新版本：%s"%json_result["name"])
-                if self.parent != None:
-                    self.parent.update_signal.emit(json_result["name"])
-            elif json_result["version"] == self.last_version_idx:
-                self.label_3.setText("当前已是最新版本")
-            else:
-                self.label_3.setText("当前正在使用抢先版本")
-        except Exception as e:
-            print(e)
-            self.label_3.setText("检查更新失败")
+        self.update_thread = Update_Thread(self)
+        self.update_thread.setDaemon(True)
+        self.update_thread.start()
     
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
+
+class Update_Thread(Thread):
+    def __init__(self, windows):
+        self.windows = windows
+        super().__init__()
+    def run(self):
+        try:
+            json_result = json.loads(requests.get(self.windows.url, timeout=5).content.decode("utf-8", errors="ignore"))
+            if json_result["version"] > self.windows.last_version_idx:
+                self.windows.label_3.setText("当前有最新版本：%s"%json_result["name"])
+                if self.windows.parent != None:
+                    self.windows.parent.update_signal.emit(json_result["name"])
+            elif json_result["version"] == self.windows.last_version_idx:
+                self.windows.label_3.setText("当前已是最新版本")
+            else:
+                self.windows.label_3.setText("当前正在使用抢先版本")
+        except Exception as e:
+            print(e)
+            self.windows.label_3.setText("检查更新失败")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
