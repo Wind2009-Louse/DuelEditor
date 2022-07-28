@@ -7,3 +7,4 @@ main.spec
 *.json
 *.jsn
 !version.json
+expansions/

@@ -2,12 +2,15 @@
 import os
 import sys
 import webbrowser
+import zipfile
 from copy import deepcopy
 from functools import partial
 from json import dumps, loads
 from re import sub
 from sqlite3 import connect
 from threading import Thread
+from tempfile import mkdtemp
+from shutil import rmtree
 
 from PyQt5.QtCore import QRect, QRegExp, Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QRegExpValidator, QFont
@@ -464,17 +467,6 @@ class Ui_MainWindow(QMainWindow):
 
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
-
-        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
-        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
-        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
-        excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
-        linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
-        cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
-
-        search_type = {0x1: 1, 0x2: 2, 0x4:3}
-        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
-            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
         self.init_frame()
 
         # bar init
@@ -497,7 +489,7 @@ class Ui_MainWindow(QMainWindow):
 
         self.mirror_bar_init(bar)
 
-        self.menu_bar_list = bar.addMenu("功能")
+        self.menu_bar_list = bar.addMenu("功能…")
         self.calculator_bar = QAction("计算器",self)
         self.calculator_bar.triggered.connect(self.open_calculator)
         self.menu_bar_list.addAction(self.calculator_bar)
@@ -531,108 +523,21 @@ class Ui_MainWindow(QMainWindow):
         self.id_map_by_name = {}
         self.ex_card_id_set = set()
         card_sorted = {}
-        try:
-            if not os.path.exists("cards.cdb"):
-                raise Exception()
-            sql_conn = connect('cards.cdb')
-            cur = sql_conn.cursor()
-            sel = cur.execute("select * from texts;")
-            cur_2 = sql_conn.cursor()
-            for row in sel:
-                if row[1] not in self.card_datas.keys():
-                    carddata_search = cur_2.execute("select * from datas where id=%d;"%row[0])
-                    searched = False
-                    card_sorted_index = [0,2,0,0,0]
-                    for carddata in carddata_search:
-                        searched = True
-                        # 卡片类型（排序）
-                        for c_type in search_type.keys():
-                            if carddata[4] & c_type != 0:
-                                card_sorted_index[0] = search_type[c_type]
-                        for c_subtype in search_subtype.keys():
-                            if carddata[4] & c_subtype != 0:
-                                card_sorted_index[1] = search_subtype[c_subtype]
-                        # 卡片颜色
-                        self.card_colors[row[1]] = 0xffffffff
-                        for color_set in cardcolors_list:
-                            if carddata[4] & color_set != 0:
-                                self.card_colors[row[1]] = color_set
-                                break
-                        # 生成描述
-                        desp = ""
-                        # 种类
-                        for types in cardtypes.keys():
-                            if carddata[4] & types != 0:
-                                if types in excardtypes.keys():
-                                    self.ex_card_id_set.add(row[0])
-                                if desp != "":
-                                    desp += "/"
-                                desp += cardtypes[types]
-                        if carddata[4] in [0x2, 0x4]:
-                            desp += "/通常"
-                        # 怪兽信息
-                        if carddata[4] & 0x1 != 0:
-                            # 等阶/Link
-                            if carddata[4] & 0x4000000 != 0:
-                                desp += " Link-%d"%carddata[7]
-                                card_sorted_index[2] = 13 - carddata[7]
-                            else:
-                                desp += " %d★"%(carddata[7]&0xffff)
-                                card_sorted_index[2] = 13 - carddata[7]&0xffff
-                            # 属性/种族
-                            attr_str = ""
-                            for attr in cardattrs.keys():
-                                if carddata[9] & attr != 0:
-                                    if attr_str != "":
-                                        attr_str += "&"
-                                    attr_str += cardattrs[attr]
-                            race_str = ""
-                            for race in cardraces.keys():
-                                if carddata[8] & race != 0:
-                                    if race_str != "":
-                                        race_str += "&"
-                                    race_str += cardraces[race]
-                            desp += " %s/%s"%(attr_str, race_str)
-                            # ATK/DEF
-                            monster_ad = [carddata[5],0]
-                            if carddata[5] < 0:
-                                desp += " ?"
-                            else:
-                                desp += " %d"%carddata[5]
-                            card_sorted_index[3] = -max(carddata[5], 0)
-                            card_sorted_index[4] = -carddata[6]
-                            if carddata[4] & 0x4000000 == 0:
-                                monster_ad[1] = carddata[6]
-                                if carddata[6] < 0:
-                                    desp += "/?"
-                                else:
-                                    desp += "/%d"%carddata[6]
-                            else:
-                                desp += " "
-                                for marker in linkmarkers.keys():
-                                    if carddata[6] & marker != 0:
-                                        desp += linkmarkers[marker]
-                            self.monster_datas[row[1]] = monster_ad
-                        # 效果换行
-                        eff_desp = row[2]
-                        eff_desp = sub(r"\r\n",r"<br>",eff_desp)
-                        desp += "<br>%s"%eff_desp
-                        self.card_datas[row[1]] = "[<a href=\"https://ygocdb.com/card/%d\">%s</a>]<br>%s"%(row[0], row[1], desp)
-                        raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[row[1]])
-                        raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
-                        self.raw_datas[row[1]] = raw_desp
-                        self.id_map_by_name[row[1]] = row[0]
-                    if searched:
-                        card_sorted[row[1]] = card_sorted_index
-            sql_conn.close()
-        except Exception as e:
-            print(e)
-            self.Newcard_List.addItem("无数据库")
-            self.Newcard_List.setEnabled(False)
-            self.coloring_field_card.setEnabled(False)
+
+        # 读取Pro1默认cdb
+        if os.path.exists("cards.cdb"):
+            self.read_cdb("cards.cdb", card_sorted)
+        # 读取Pro1扩展包
+        self.read_cdbs_from_dir("expansions", card_sorted)
+        # 读取Pro2的cdb目录
+        self.read_cdbs_from_dir("cdb", card_sorted)
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
+        if len(self.card_names) <= 0:
+            self.Newcard_List.addItem("无数据库")
+            self.Newcard_List.setEnabled(False)
+            self.coloring_field_card.setEnabled(False)
         
         # sub windows
         self.calculate_window = calculator.Calculator()
@@ -2116,7 +2021,7 @@ class Ui_MainWindow(QMainWindow):
         self.img_window_list = new_list
 
     def mirror_bar_init(self, bar):
-        self.mirror_bar_list = bar.addMenu("镜像源")
+        self.mirror_bar_list = bar.addMenu("镜像源…")
 
         self.mirror_action_dict = {}
         for m_name in mirror_setting.keys():
@@ -2223,6 +2128,153 @@ class Ui_MainWindow(QMainWindow):
         if act is None:
             return
         self.save_and_open_file(act.text())
+    
+    def read_cdb(self, filename, card_sorted):
+        '''
+        读取cdb文件
+        '''
+        cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
+        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
+        cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
+        excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
+        linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
+        cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
+
+        search_type = {0x1: 1, 0x2: 2, 0x4:3}
+        search_subtype = {0x10: 1, 0x40: 3, 0x80:4, 0x2000: 5, 0x800000:6, 0x4000000:7, 0x4000:8,
+            0x10000: 3, 0x20000: 4, 0x40000:5, 0x80000:6, 0x100000: 7}
+
+        sql_conn = None
+        try:
+            sql_conn = connect(filename)
+            cur = sql_conn.cursor()
+            # 0 id
+            # 1 ot
+            # 2 alias
+            # 3 setcode
+            # 4 type
+            # 5 atk
+            # 6 def
+            # 7 level
+            # 8 race
+            # 9 attribute
+            # 10 category
+            # 11 name
+            # 12 desc
+            sel = cur.execute("select datas.*, texts.name, texts.desc from datas inner join texts on texts.id = datas.id;")
+            for carddata in sel:
+                if carddata[11] not in self.card_datas.keys():
+                    card_sorted_index = [0,2,0,0,0]
+                    # 卡片类型（排序）
+                    for c_type in search_type.keys():
+                        if carddata[4] & c_type != 0:
+                            card_sorted_index[0] = search_type[c_type]
+                    for c_subtype in search_subtype.keys():
+                        if carddata[4] & c_subtype != 0:
+                            card_sorted_index[1] = search_subtype[c_subtype]
+                    # 卡片颜色
+                    self.card_colors[carddata[11]] = 0xffffffff
+                    for color_set in cardcolors_list:
+                        if carddata[4] & color_set != 0:
+                            self.card_colors[carddata[11]] = color_set
+                            break
+                    # 生成描述
+                    desp = ""
+                    # 种类
+                    for types in cardtypes.keys():
+                        if carddata[4] & types != 0:
+                            if types in excardtypes.keys():
+                                self.ex_card_id_set.add(carddata[0])
+                            if desp != "":
+                                desp += "/"
+                            desp += cardtypes[types]
+                    if carddata[4] in [0x2, 0x4]:
+                        desp += "/通常"
+                    # 怪兽信息
+                    if carddata[4] & 0x1 != 0:
+                        # 等阶/Link
+                        if carddata[4] & 0x4000000 != 0:
+                            desp += " Link-%d"%carddata[7]
+                            card_sorted_index[2] = 13 - carddata[7]
+                        else:
+                            desp += " %d★"%(carddata[7]&0xffff)
+                            card_sorted_index[2] = 13 - carddata[7]&0xffff
+                        # 属性/种族
+                        attr_str = ""
+                        for attr in cardattrs.keys():
+                            if carddata[9] & attr != 0:
+                                if attr_str != "":
+                                    attr_str += "&"
+                                attr_str += cardattrs[attr]
+                        race_str = ""
+                        for race in cardraces.keys():
+                            if carddata[8] & race != 0:
+                                if race_str != "":
+                                    race_str += "&"
+                                race_str += cardraces[race]
+                        desp += " %s/%s"%(attr_str, race_str)
+                        # ATK/DEF
+                        monster_ad = [carddata[5],0]
+                        if carddata[5] < 0:
+                            desp += " ?"
+                        else:
+                            desp += " %d"%carddata[5]
+                        card_sorted_index[3] = -max(carddata[5], 0)
+                        card_sorted_index[4] = -carddata[6]
+                        if carddata[4] & 0x4000000 == 0:
+                            monster_ad[1] = carddata[6]
+                            if carddata[6] < 0:
+                                desp += "/?"
+                            else:
+                                desp += "/%d"%carddata[6]
+                        else:
+                            desp += " "
+                            for marker in linkmarkers.keys():
+                                if carddata[6] & marker != 0:
+                                    desp += linkmarkers[marker]
+                        self.monster_datas[carddata[11]] = monster_ad
+                    
+                    card_sorted[carddata[11]] = card_sorted_index
+                    # 效果换行
+                    eff_desp = carddata[12]
+                    eff_desp = sub(r"\r\n",r"<br>",eff_desp)
+                    desp += "<br>%s"%eff_desp
+                    self.card_datas[carddata[11]] = "[<a href=\"https://ygocdb.com/card/%d\">%s</a>]<br>%s"%(carddata[0], carddata[11], desp)
+                    raw_desp = sub(r"<font[^>]+?>([^<]+?)</font>",r"\1",self.card_datas[carddata[11]])
+                    raw_desp = sub(r"<span[^>]+?>([^<]+?)</span>",r"\1",raw_desp)
+                    self.raw_datas[carddata[11]] = raw_desp
+                    self.id_map_by_name[carddata[11]] = carddata[0]
+        except Exception as e:
+            print(e)
+        finally:
+            if sql_conn:
+                sql_conn.close()
+
+    def read_cdbs_from_dir(self, dir_name, card_sorted):
+        full_dirname = os.path.join(os.getcwd(), dir_name)
+        if os.access(full_dirname, os.F_OK):
+            for root, dirs, files in os.walk(full_dirname):
+                for ex_fname in files:
+                    try:
+                        # cdb文件，直接读取
+                        if ex_fname.endswith(".cdb"):
+                            self.read_cdb(os.path.join(root, ex_fname), card_sorted)
+                        # ypk/zip文件，读取压缩包内容
+                        if ex_fname.endswith(".ypk") or ex_fname.endswith(".zip"):
+                            self.read_cdbs_from_zip(os.path.join(root, ex_fname), card_sorted)
+                    except Exception as e:
+                        print(e)
+
+    def read_cdbs_from_zip(self, zip_filename, card_sorted):
+        if zipfile.is_zipfile(zip_filename):
+            with zipfile.ZipFile(zip_filename, mode='r') as zipf:
+                tmp_path = mkdtemp()
+                for zip_fn in zipf.namelist():
+                    # 找到压缩包内的cdb，解压到临时目录读取，读取完毕后删除
+                    if zip_fn.endswith(".cdb"):
+                        zipf.extract(zip_fn, tmp_path)
+                        self.read_cdb(os.path.join(tmp_path, zip_fn), card_sorted)
+                rmtree(tmp_path)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
