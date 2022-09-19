@@ -522,6 +522,7 @@ class Ui_MainWindow(QMainWindow):
         self.card_colors = {}
         self.id_map_by_name = {}
         self.ex_card_id_set = set()
+        self.token_card_id_set = set()
         card_sorted = {}
 
         # 读取Pro1默认cdb
@@ -1965,6 +1966,8 @@ class Ui_MainWindow(QMainWindow):
                     if card_pic_id == -1:
                         card_pic_id = 48588176
                         undefined_name.append(card_name)
+                    if card_pic_id in self.token_card_id_set:
+                        continue
                     ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
                     goal_str = idx_represent_str[ope["dest"]]
                     controller = -2
@@ -2137,6 +2140,7 @@ class Ui_MainWindow(QMainWindow):
         cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
+        tokentype = 0x4000
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
 
@@ -2185,6 +2189,8 @@ class Ui_MainWindow(QMainWindow):
                         if carddata[4] & types != 0:
                             if types in excardtypes.keys():
                                 self.ex_card_id_set.add(carddata[0])
+                            elif types == tokentype:
+                                self.token_card_id_set.add(carddata[0])
                             if desp != "":
                                 desp += "/"
                             desp += cardtypes[types]
