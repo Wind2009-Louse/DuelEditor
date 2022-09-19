@@ -3,6 +3,7 @@ import os
 import sys
 import webbrowser
 import zipfile
+import winreg
 from copy import deepcopy
 from functools import partial
 from json import dumps, loads
@@ -532,6 +533,24 @@ class Ui_MainWindow(QMainWindow):
         self.read_cdbs_from_dir("expansions", card_sorted)
         # 读取Pro2的cdb目录
         self.read_cdbs_from_dir("cdb", card_sorted)
+        # Windows系统下，读取注册表中Pro2的安装目录
+        if os.name == "nt":
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        self.read_cdbs_from_dir(pro2_path[0], card_sorted)
+            except Exception as e:
+                pass
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        self.read_cdbs_from_dir(pro2_path[0], card_sorted)
+            except Exception as e:
+                pass
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
