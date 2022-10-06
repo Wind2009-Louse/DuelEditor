@@ -3,7 +3,6 @@ import os
 import sys
 import webbrowser
 import zipfile
-import winreg
 from copy import deepcopy
 from functools import partial
 from json import dumps, loads
@@ -535,6 +534,7 @@ class Ui_MainWindow(QMainWindow):
         self.read_cdbs_from_dir("cdb", card_sorted)
         # Windows系统下，读取注册表中Pro2的安装目录
         if os.name == "nt":
+            import winreg
             try:
                 pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
                 if pro2_key:
@@ -1978,8 +1978,9 @@ class Ui_MainWindow(QMainWindow):
                     continue
                 for card_idx in ope["args"]:
                     last_place = self.get_last_location(card_idx, ope_idx)
+                    new_card_to_add = True
                     if last_place != "未知":
-                        continue
+                        new_card_to_add = False
                     card_name = self.operators["cards"][card_idx]["Name"]
                     card_pic_id = self.get_id_by_name(card_name)
                     if card_pic_id == -1:
@@ -1998,10 +1999,11 @@ class Ui_MainWindow(QMainWindow):
                         controller = last_controller
                     if controller in [-2, 0]:
                         print("[%s]找不到所在地[%s]的控制者。"%(card_name, goal_str))
-                    if controller == 1:
-                        self_deck_list[ex_idx].append(str(card_pic_id))
-                    if controller == -1:
-                        enemy_deck_list[ex_idx].append(str(card_pic_id))
+                    if new_card_to_add:
+                        if controller == 1:
+                            self_deck_list[ex_idx].append(str(card_pic_id))
+                        if controller == -1:
+                            enemy_deck_list[ex_idx].append(str(card_pic_id))
                     last_controller = controller
         except Exception as e:
             print(e)
