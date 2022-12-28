@@ -1926,17 +1926,41 @@ class Ui_MainWindow(QMainWindow):
         search_list = [card_name, card_name[:-1]]
         show_card_key = 0
         show_card_name = ""
+
+        # 本地目录图片
+        dir_list = [os.path.join(os.path.abspath('.'), "pics")]
+        # YGOPro2图片
+        if os.name == "nt":
+            import winreg
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+
         for name in search_list:
             if name in self.id_map_by_name:
                 show_card_key = self.id_map_by_name[name]
                 show_card_name = name
-                png_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%show_card_key)
-                jpg_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%show_card_key)
-                if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
-                    pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
-                    pic_window_ref.show()
-                    self.img_window_list.append(pic_window_ref)
-                    return
+                for search_dir in dir_list:
+                    png_file_name = os.path.join(search_dir, "%d.png"%show_card_key)
+                    jpg_file_name = os.path.join(search_dir, "%d.jpg"%show_card_key)
+                    if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
+                        pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
+                        pic_window_ref.show()
+                        self.img_window_list.append(pic_window_ref)
+                        return
 
         if show_card_key == 0:
             QMessageBox.warning(self, "提示", "该卡片没有图片！", QMessageBox.Yes)
@@ -1970,6 +1994,7 @@ class Ui_MainWindow(QMainWindow):
         undefined_name = []
 
         try:
+            self.make_fields()
             operation_list = self.operators["operations"]
             last_controller = -2
             for ope_idx in range(len(operation_list)):
@@ -1982,13 +2007,6 @@ class Ui_MainWindow(QMainWindow):
                     if last_place != "未知":
                         new_card_to_add = False
                     card_name = self.operators["cards"][card_idx]["Name"]
-                    card_pic_id = self.get_id_by_name(card_name)
-                    if card_pic_id == -1:
-                        card_pic_id = 48588176
-                        undefined_name.append(card_name)
-                    if card_pic_id in self.token_card_id_set:
-                        continue
-                    ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
                     goal_str = idx_represent_str[ope["dest"]]
                     controller = -2
                     for check_str in idx_represent_controller.keys():
@@ -1999,12 +2017,19 @@ class Ui_MainWindow(QMainWindow):
                         controller = last_controller
                     if controller in [-2, 0]:
                         print("[%s]找不到所在地[%s]的控制者。"%(card_name, goal_str))
+                    last_controller = controller
                     if new_card_to_add:
+                        card_pic_id = self.get_id_by_name(card_name)
+                        if card_pic_id == -1:
+                            card_pic_id = 48588176
+                            undefined_name.append(card_name)
+                        if card_pic_id in self.token_card_id_set:
+                            continue
+                        ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
                         if controller == 1:
                             self_deck_list[ex_idx].append(str(card_pic_id))
                         if controller == -1:
                             enemy_deck_list[ex_idx].append(str(card_pic_id))
-                    last_controller = controller
         except Exception as e:
             print(e)
             QMessageBox.warning(self, "提示", "生成卡组失败：%s"%str(e), QMessageBox.Yes)

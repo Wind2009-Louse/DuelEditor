@@ -25,15 +25,42 @@ class UI_PIC(QWidget):
         self.label.setAlignment(Qt.AlignCenter)
         self.resize(300, 300)
 
-        file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%pic_id)
-        if not os.path.exists(file_name):
-            file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%pic_id)
-            if not os.path.exists(file_name):
-                self.download_thread = Download_Thread(self, pic_id)
-                self.download_thread.setDaemon(True)
-                self.download_thread.start()
+        # 本地目录图片
+        dir_list = [os.path.join(os.path.abspath('.'), "pics")]
+        # YGOPro2图片
+        if os.name == "nt":
+            import winreg
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+        
+        file_name_list = []
+        for search_dir in dir_list:
+            file_name_list.append(os.path.join(search_dir, "%d.png"%pic_id))
+            file_name_list.append(os.path.join(search_dir, "%d.jpg"%pic_id))
+
+        for file_name in file_name_list:
+            if os.path.exists(file_name):
+                self.show_pic_by_path(file_name)
                 return
-        self.show_pic()
+        
+        file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%pic_id)
+        self.download_thread = Download_Thread(self, pic_id)
+        self.download_thread.setDaemon(True)
+        self.download_thread.start()
     
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
@@ -55,13 +82,10 @@ class UI_PIC(QWidget):
         if self.parent is not None:
             self.parent.clear_img_signal.emit("close")
 
-    def show_pic(self):
-        file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%self.pic_id)
+    def show_pic_by_path(self, file_name):
         if not os.path.exists(file_name):
-            file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%self.pic_id)
-            if not os.path.exists(file_name):
-                self.close()
-                return
+            self.close()
+            return
         png = QPixmap(file_name)
         width = png.width()
         height = png.height()
@@ -70,6 +94,12 @@ class UI_PIC(QWidget):
         self.old_height = height
         self.label.setPixmap(png)
         self.resize(width, height)
+
+    def show_pic(self):
+        file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%self.pic_id)
+        if not os.path.exists(file_name):
+            file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%self.pic_id)
+        self.show_pic_by_path(file_name)
 
 class Download_Thread(Thread):
     def __init__(self, window, pic_id=0):
