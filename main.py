@@ -2054,6 +2054,13 @@ class Ui_MainWindow(QMainWindow):
         try:
             with open(file_name,'w',encoding='utf-8') as f:
                 f.write(deck_str)
+            warning_msg = []
+            if len(deck_list[0]) > 60:
+                warning_msg.append("%s主卡组数量为%d，超过60张。"%(fail_by, len(deck_list[0])))
+            if len(deck_list[1]) > 15:
+                warning_msg.append("%s额外卡组数量为%d，超过15张。"%(fail_by, len(deck_list[1])))
+            if len(warning_msg) > 0:
+                QMessageBox.warning(self, "提示", "\n".join(warning_msg), QMessageBox.Yes)
             return True
         except Exception as e:
             QMessageBox.warning(self, "提示", "保存%s失败：%s"%(fail_by, str(e)), QMessageBox.Yes)
