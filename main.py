@@ -29,8 +29,8 @@ cardcolors_dict = {0x2: QColor(10,128,0), 0x4: QColor(235,30,128), 0x10: QColor(
 init_field = {"locations":{}, "desp":{}, "LP":[8000,8000], "fields":[]}
 for t in range(len(idx_represent_str)):
     init_field["fields"].append([])
-version_idx = 210
-version_name = "v1.21.0"
+version_idx = 220
+version_name = "v1.22.0"
 
 default_mirror = "Github"
 mirror_setting = {
@@ -522,6 +522,7 @@ class Ui_MainWindow(QMainWindow):
         self.card_colors = {}
         self.id_map_by_name = {}
         self.ex_card_id_set = set()
+        self.token_card_id_set = set()
         card_sorted = {}
 
         # 读取Pro1默认cdb
@@ -531,6 +532,25 @@ class Ui_MainWindow(QMainWindow):
         self.read_cdbs_from_dir("expansions", card_sorted)
         # 读取Pro2的cdb目录
         self.read_cdbs_from_dir("cdb", card_sorted)
+        # Windows系统下，读取注册表中Pro2的安装目录
+        if os.name == "nt":
+            import winreg
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        self.read_cdbs_from_dir(pro2_path[0], card_sorted)
+            except Exception as e:
+                pass
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        self.read_cdbs_from_dir(pro2_path[0], card_sorted)
+            except Exception as e:
+                pass
         
         self.card_names = list(self.card_datas.keys())
         self.card_names.sort(key=lambda x: (card_sorted[x]))
@@ -1906,17 +1926,41 @@ class Ui_MainWindow(QMainWindow):
         search_list = [card_name, card_name[:-1]]
         show_card_key = 0
         show_card_name = ""
+
+        # 本地目录图片
+        dir_list = [os.path.join(os.path.abspath('.'), "pics")]
+        # YGOPro2图片
+        if os.name == "nt":
+            import winreg
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+            try:
+                pro2_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\YGOPro2.exe", access=winreg.KEY_READ)
+                if pro2_key:
+                    pro2_path = winreg.QueryValueEx(pro2_key, "path")
+                    if len(pro2_path) > 0:
+                        dir_list.append(os.path.join(pro2_path[0], "picture", "card"))
+            except Exception as e:
+                pass
+
         for name in search_list:
             if name in self.id_map_by_name:
                 show_card_key = self.id_map_by_name[name]
                 show_card_name = name
-                png_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.png"%show_card_key)
-                jpg_file_name = os.path.join(os.path.abspath('.'), "pics", "%d.jpg"%show_card_key)
-                if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
-                    pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
-                    pic_window_ref.show()
-                    self.img_window_list.append(pic_window_ref)
-                    return
+                for search_dir in dir_list:
+                    png_file_name = os.path.join(search_dir, "%d.png"%show_card_key)
+                    jpg_file_name = os.path.join(search_dir, "%d.jpg"%show_card_key)
+                    if os.path.exists(png_file_name) or os.path.exists(jpg_file_name):
+                        pic_window_ref = pic_window.UI_PIC(self, show_card_key, name)
+                        pic_window_ref.show()
+                        self.img_window_list.append(pic_window_ref)
+                        return
 
         if show_card_key == 0:
             QMessageBox.warning(self, "提示", "该卡片没有图片！", QMessageBox.Yes)
@@ -1950,6 +1994,7 @@ class Ui_MainWindow(QMainWindow):
         undefined_name = []
 
         try:
+            self.make_fields()
             operation_list = self.operators["operations"]
             last_controller = -2
             for ope_idx in range(len(operation_list)):
@@ -1958,14 +2003,10 @@ class Ui_MainWindow(QMainWindow):
                     continue
                 for card_idx in ope["args"]:
                     last_place = self.get_last_location(card_idx, ope_idx)
+                    new_card_to_add = True
                     if last_place != "未知":
-                        continue
+                        new_card_to_add = False
                     card_name = self.operators["cards"][card_idx]["Name"]
-                    card_pic_id = self.get_id_by_name(card_name)
-                    if card_pic_id == -1:
-                        card_pic_id = 48588176
-                        undefined_name.append(card_name)
-                    ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
                     goal_str = idx_represent_str[ope["dest"]]
                     controller = -2
                     for check_str in idx_represent_controller.keys():
@@ -1976,11 +2017,19 @@ class Ui_MainWindow(QMainWindow):
                         controller = last_controller
                     if controller in [-2, 0]:
                         print("[%s]找不到所在地[%s]的控制者。"%(card_name, goal_str))
-                    if controller == 1:
-                        self_deck_list[ex_idx].append(str(card_pic_id))
-                    if controller == -1:
-                        enemy_deck_list[ex_idx].append(str(card_pic_id))
                     last_controller = controller
+                    if new_card_to_add:
+                        card_pic_id = self.get_id_by_name(card_name)
+                        if card_pic_id == -1:
+                            card_pic_id = 48588176
+                            undefined_name.append(card_name)
+                        if card_pic_id in self.token_card_id_set:
+                            continue
+                        ex_idx = 1 if card_pic_id in self.ex_card_id_set else 0
+                        if controller == 1:
+                            self_deck_list[ex_idx].append(str(card_pic_id))
+                        if controller == -1:
+                            enemy_deck_list[ex_idx].append(str(card_pic_id))
         except Exception as e:
             print(e)
             QMessageBox.warning(self, "提示", "生成卡组失败：%s"%str(e), QMessageBox.Yes)
@@ -2005,6 +2054,13 @@ class Ui_MainWindow(QMainWindow):
         try:
             with open(file_name,'w',encoding='utf-8') as f:
                 f.write(deck_str)
+            warning_msg = []
+            if len(deck_list[0]) > 60:
+                warning_msg.append("%s主卡组数量为%d，超过60张。"%(fail_by, len(deck_list[0])))
+            if len(deck_list[1]) > 15:
+                warning_msg.append("%s额外卡组数量为%d，超过15张。"%(fail_by, len(deck_list[1])))
+            if len(warning_msg) > 0:
+                QMessageBox.warning(self, "提示", "\n".join(warning_msg), QMessageBox.Yes)
             return True
         except Exception as e:
             QMessageBox.warning(self, "提示", "保存%s失败：%s"%(fail_by, str(e)), QMessageBox.Yes)
@@ -2134,9 +2190,10 @@ class Ui_MainWindow(QMainWindow):
         读取cdb文件
         '''
         cardtypes = {0x1: "怪兽", 0x2: "<font color='#0A8000'>魔法</font>", 0x4: "<font color='#EB1E80'>陷阱</font>", 0x10: "<font color='#A8A800'>通常</font>", 0x20: "<font color='#B24400'>效果</font>", 0x40: "<font color='#6C226C'>融合</font>", 0x80: "<font color='#1080EB'>仪式</font>", 0x200: "灵魂", 0x400: "同盟", 0x800: "二重", 0x1000: "调整", 0x2000: "<font color='#A8A8A8'>同调</font>", 0x4000: "<font color='#626262'>衍生物</font>", 0x10000: "速攻", 0x20000: "永续", 0x40000: "装备", 0x80000: "场地", 0x100000: "反击", 0x200000: "反转", 0x400000: "卡通", 0x800000: "<span style='background:black'><font color='#FFFFFF'>超量</font></span>", 0x1000000: "灵摆", 0x2000000: "特殊召唤", 0x4000000: "<font color='#033E74'>连接</font>"}
-        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族"}
+        cardraces = {0x1: "战士族", 0x2: "魔法师族", 0x4: "天使族", 0x8: "恶魔族", 0x10: "不死族", 0x20: "机械族", 0x40: "水族", 0x80: "炎族", 0x100: "岩石族", 0x200: "鸟兽族", 0x400: "植物族", 0x800: "昆虫族", 0x1000: "雷族", 0x2000: "龙族", 0x4000: "兽族", 0x8000: "兽战士族", 0x10000: "恐龙族", 0x20000: "鱼族", 0x40000: "海龙族", 0x80000: "爬虫类族", 0x100000: "念动力族", 0x200000: "幻神兽族", 0x400000: "创造神族", 0x800000: "幻龙族", 0x1000000: "电子界族", 0x2000000: "幻想魔族"}
         cardattrs = {0x1: "<font color='#121516'>地</font>", 0x2: "<font color='#0993D3'>水</font>", 0x4: "<font color='red'>炎</font>", 0x8: "<font color='#1B5D33'>风</font>", 0x10: "<font color='#7F5D32'>光</font>", 0x20: "<font color='#9A2B89'>暗</font>", 0x40: "<font color='DarkGoldenRod'>神</font>"}
         excardtypes = {0x40: "融合", 0x2000: "同调", 0x800000: "超量", 0x4000000: "连接"}
+        tokentype = 0x4000
         linkmarkers = {0x40:"[↖]", 0x80:"[↑]", 0x100:"[↗]", 0x8:"[←]", 0x20:"[→]", 0x1: "[↙]", 0x2:"[↓]", 0x4:"[↘]"}
         cardcolors_list = [0x2, 0x4, 0x10, 0x40, 0x80, 0x2000, 0x800000, 0x4000000, 0x4000]
 
@@ -2185,6 +2242,8 @@ class Ui_MainWindow(QMainWindow):
                         if carddata[4] & types != 0:
                             if types in excardtypes.keys():
                                 self.ex_card_id_set.add(carddata[0])
+                            elif types == tokentype:
+                                self.token_card_id_set.add(carddata[0])
                             if desp != "":
                                 desp += "/"
                             desp += cardtypes[types]
